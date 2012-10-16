@@ -27,7 +27,7 @@ Queue.prototype = {
 	_list : null,
 	_capacity : 1,
 	initWithCapacity : function( c ){
-		this._capacity = c
+		this._capacity = c;
 	},
 	push : function( e ){
 	
@@ -41,10 +41,71 @@ Queue.prototype = {
 			p = p.next;
 		
 		if( p.next != null ){
-			if( p.next.finish != null )
-				p.next.finish();
+			if( p.next.e.finish != null )
+				p.next.e.finish();
 			p.next = null;
 		}
+	},
+	pop : function(){
+		if( this._list == null )
+			return null;
+		if( this._list.next == null ){
+			var e = this._list.e
+			this._list = null;
+			return e;
+		}
+		var p = this._list;
+		while( p.next.next != null )
+			p = p.next;
+		
+		var e = p.next.e;
+		p.next = null;
+		return e;
+	},
+	/*
+	 * return the first matching element, delete it from the queue
+	 */
+	grab : function( match ){
+		if( this._list == null )
+			return;
+		if( match( this._list.e ) ){
+			var e = this._list.e;
+			this._list = this._list.next;
+			return e;
+		}
+		var last = this._list, p = this._list;
+		while( ( p = p.next ) != null ){
+			if(  match( p.e ) ){
+				var e = p.e;
+				last.next = p.next;
+				return e;
+			}
+			last = p;
+		}
+		return ;
+	},
+	flush : function(){
+		this.resetCursor();
+		
+		var i;
+		
+		while( ( i = this.next() ) != null )
+			i.finish();
+		
+		this._list = null;
+	},
+	getNbElement : function(){
+		this.resetCursor();
+		
+		var i , nb = 0;
+		
+		while( ( i = this.next() ) != null )
+			nb ++;
+			
+		return nb;
+	},
+	getCapacity : function(){
+		return this._capacity;
 	},
 	_cursor : null,
 	resetCursor : function(){
@@ -110,7 +171,7 @@ Interpret.prototype = {
 				
 				return { 
 					stroke_color : "#596968",
-					stroke_with : 10,
+					stroke_with : 2,
 					fill_color : "#02ab95",
 				};
 				
@@ -143,6 +204,7 @@ Drawer.prototype = {
 		
 		this.drawTile( tile );
 		
+		console.log( "draw" );
 	},
 	
 	/*
@@ -235,11 +297,11 @@ Tile.prototype = {
 	},
 	initWithCoord : function( x , y , zoom , el ){
 		
-		this._tilex = x;
-		this._tiley = y;
+		this.init();
 		
-		this._zoom  = zoom;
-		
+		this.unable( x , y , zoom , el );
+	},
+	init : function(  ){
 		
 		this._canvas = $("<canvas>");
 		
@@ -253,9 +315,24 @@ Tile.prototype = {
 		
 		this._canvas.css( "box-shadow" , "0 0 5px 1px #999 inset" );
 		
-		this._canvas.appendTo( el );
-		
 		this._ctx = this._canvas[0].getContext("2d");
+		
+	},
+	unable : function( x , y , zoom , el ){
+		
+		this._tilex = x;
+		this._tiley = y;
+		
+		this._zoom  = zoom;
+		
+		if( el )
+			this.attach( el );
+		
+	},
+	disable : function(){
+		
+		this.detach();
+		
 	},
 	finish : function(){
 		this.detach();
@@ -273,6 +350,9 @@ Tile.prototype = {
 	getTileY : function(){
 		return this._tiley;
 	},
+	getZoom : function(){
+		return this._zoom;
+	},
 	getContext : function(){
 		return this._ctx;
 	},
@@ -283,6 +363,61 @@ Tile.createWithCoord = function( x , y , zoom ){
 	return t;
 };
 
+var TileFactory = function(){};
+TileFactory.prototype = {
+	
+	_closedQueue : null,
+	
+	initWithCapacity : function( c ){
+		
+		this._closedQueue = Queue.createWithCapacity( c );
+		
+		
+	},
+	
+	disableTile : function( tile ){
+		
+		tile.disable();
+		
+		this._closedQueue.push( tile );
+	},
+	
+	getTile : function( x , y , zoom , el , drawer ){
+		
+		
+		//firstly search if the tile exist in the closedQueue
+		var recover;
+		if( ( recover = this._closedQueue.grab( function( a ){ 
+			return a.getZoom() == zoom &&  a.getTileX() == x && a.getTileY() == y; 
+			} )
+		) ){
+			
+			recover.attach( el );
+			
+			return recover;
+			
+		};
+		
+		// if its not found in the closed, we need to draw it
+		// acquire a blank tile, either get a new instance or get it from the queue
+		if( this._closedQueue.getNbElement() < this._closedQueue.getCapacity() * 0.8 )
+			var e = Tile.createWithCoord( x , y , zoom , el );
+		else
+			var e = this._closedQueue.pop();
+		
+		e.unable( x , y , zoom , el );
+		
+		drawer.pushToRenderQueue ( e );
+		
+		return e;
+	},
+	
+};
+TileFactory.createWithCapacity = function( c ){
+	var t = new TileFactory();
+	t.initWithCapacity( c );
+	return t;
+};
 
 var TileEngine = function(){};
 TileEngine.prototype = {
@@ -290,9 +425,6 @@ TileEngine.prototype = {
 	_container : null,
 	_screenW : 0,
 	_screenH : 0,
-	_tiles : null,
-	
-	_unused : null,				// tiles that arent displayed on the screen, we saved them in a limited queue, in case the user reverse it move
 	
 	_visibleGrid : null,		// matrix of the tile that are currently displayed, indexed as y * w + x
 	_gridW : 0,
@@ -309,13 +441,14 @@ TileEngine.prototype = {
 	
 	
 	_drawer : null,
+	_tileFactory : null,
 	
 	
 	init : function( element , drawer ){
 		
 		this._container = element;
 		
-		this.unused = Queue.createWithCapacity( 20 );
+		this._tileFactory = TileFactory.createWithCapacity( 50 );
 		
 		this._drawer = drawer;
 		
@@ -343,11 +476,11 @@ TileEngine.prototype = {
 		for( var x = 0 ; x < this._gridW ; x ++ )
 		for( var y = 0 ; y < this._gridH ; y ++ ){
 			
-			var tile = Tile.createWithCoord( originX + x , originY + y , this._viewZoom );
-			tile.attach( this._container );
-			
-			this._drawer.pushToRenderQueue( tile );
-			
+			var tile = this._tileFactory.getTile( 	originX + x ,
+													originY + y ,
+													this._viewZoom ,
+													this._container ,
+													this._drawer );
 			this._visibleGrid[ x + y * this._gridW ] = tile;
 			
 		}
@@ -369,17 +502,18 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the right element
-				this._visibleGrid[ this._gridW-1 + y * this._gridW ].finish();
+				this._tileFactory.disableTile( this._visibleGrid[ this._gridW-1 + y * this._gridW ] );
 				
 				// shift the middle element
 				for( var x = this._gridW-2 ; x >= 0 ; x -- )
 					this._visibleGrid[ ( x+1) + y * this._gridW ] = this._visibleGrid[ x + y * this._gridW ];
 				
 				// add the new element
-				var tile = Tile.createWithCoord( this._visibleGrid[ y * this._gridW ].getTileX() - 1 , this._visibleGrid[ 0 ].getTileY() + y , this._viewZoom );
-				tile.attach( this._container );
-				this._drawer.pushToRenderQueue( tile );
-				
+				var tile = this._tileFactory.getTile( 	this._visibleGrid[ y * this._gridW ].getTileX() - 1 ,
+														this._visibleGrid[ 0 ].getTileY() + y , 
+														this._viewZoom ,
+														this._container ,
+														this._drawer );
 				this._visibleGrid[ y * this._gridW ] = tile;
 			}
 		}
@@ -392,17 +526,18 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the left element
-				this._visibleGrid[ y * this._gridW ].finish();
+				this._tileFactory.disableTile( this._visibleGrid[ y * this._gridW ] );
 				
 				// shift the middle element
 				for( var x = 1 ; x < this._gridW ; x ++ )
 					this._visibleGrid[ ( x-1) + y * this._gridW ] = this._visibleGrid[ x + y * this._gridW ];
 				
 				// add the new element
-				var tile = Tile.createWithCoord( this._visibleGrid[ y * this._gridW + this._gridW - 1 ].getTileX() + 1 , this._visibleGrid[ 0 ].getTileY() + y , this._viewZoom );
-				tile.attach( this._container );
-				this._drawer.pushToRenderQueue( tile );
-				
+				var tile = this._tileFactory.getTile( 	this._visibleGrid[ y * this._gridW + this._gridW - 1 ].getTileX() + 1 ,
+														this._visibleGrid[ 0 ].getTileY() + y , 
+														this._viewZoom ,
+														this._container ,
+														this._drawer );
 				this._visibleGrid[ y * this._gridW + this._gridW - 1 ] = tile;
 			}
 		}
@@ -433,6 +568,8 @@ scope.Drawer = Drawer;
 
 scope.TileEngine = TileEngine;
 
+
+scope.Queue = Queue;
 
 })( mrc );
 
