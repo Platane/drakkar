@@ -11,10 +11,33 @@ mrc.engine = function(){};
 //enum
 var ELEMENT_DOT = 0,
 	ELEMENT_PATH = 1;
+
+var WorkerAllowed = true;
 	
 var tileSize = {
 	w : 128,
 	h : 128
+};
+
+//object skeleton for the worker message passing
+var WorkerMessage = {
+	SendInterpret : function(){
+		this.type = "SendInterpret";
+		this.interpret = null;
+	},
+	SendElements : function(){
+		this.type = "SendElements";
+		this.elements = null;
+	},
+	SendTileRenderRequest : function(){
+		this.type = "SendTileRenderRequest";
+		this.x = 0;
+		this.y = 0;
+		this.zoom = 0;
+		this.w = 0;
+		this.h = 0;
+		this.globalAttributes = null;
+	},
 };
 
 /*
@@ -139,135 +162,44 @@ Queue.createWithCapacity = function( c ){
 }
 
 
-/*
- *
- * know how to style an element
- * gather information from the .mss file
- */
-var Interpret = function(){};
-Interpret.prototype = {
 
-	init : function(){
+var DrawerDelegator = function(){};
+DrawerDelegator.prototype = {
 	
+	_drawer : null,
 	
-	
-	},
-	
-	getStyleFor : function( attrEl , attrGlob ){
-		
-		switch( attrEl.type ){
-			
-			case  ELEMENT_DOT :
-				
-				return { 
-					stroke_color : "#586b5a",
-					stroke_with : 10,
-					fill_color : "#586412",
-					icon_path : "M0,0l10,0l0,10l-10,0l0,-10z",
-				};
-			
-			
-			case  ELEMENT_PATH :
-				
-				return { 
-					stroke_color : "#596968",
-					stroke_with : 2,
-					fill_color : "#02ab95",
-				};
-				
-		}
-		
-	},
-
-};
-Interpret.create = function(  ){
-	var i = new Interpret();
-	i.init();
-	return i;
-};
-
-var Drawer = function(){};
-Drawer.prototype = {
-	
-	_elements : null,
-	
-	_interpret : null,
+	_els : null,
 	
 	init : function( elements ){
 		
-		this._elements = elements;
+		this._drawer = mrc.PseudoParallelDrawer.create();
 		
-		this._interpret = Interpret.create();
 	},
 	
 	pushToRenderQueue : function( tile ){
 		
-		this.drawTile( tile );
-		
-		console.log( "draw" );
+		this._drawer.pushToRenderQueue( 	tile.getContext() ,
+											this._els,
+											tile.getTileX() * tileSize.w ,
+											tile.getTileY() * tileSize.h ,
+											tileSize.w ,
+											tileSize.h ,
+											tile.getZoom(),
+											{}
+										);
+			
+			
 	},
+	abord : function( tile ){
 	
-	/*
-	 * draw the map on the context,
-	 * draw the rect define by s, the top left corner of the rect and w, h it size
-	 */
-	drawTile : function( tile ){
-		
-		var el, style;
-		
-		
-		var ctx = tile.getContext();
-		
-		ctx.clearRect( 0 , 0 , tileSize.w , tileSize.h );
-		
-		ctx.save();
-		
-		ctx.translate( -tile.getTileX() * tileSize.w , -tile.getTileY() * tileSize.h );
-		
-		for( var i = 0 ; i < this._elements.length ; i ++ ){
-			
-			el = this._elements[ i ];
-			
-			style = this._interpret.getStyleFor( el );
-			
-			ctx.save();
-			
-			ctx.strokeStyle = style.stroke_color;
-			ctx.fillStyle = style.fill_color;
-			ctx.lineWidth = style.stroke_with;
-			
-			
-			switch( el.type ){
-				
-				case ELEMENT_PATH :
-					
-					ctx.beginPath();
-					ctx.moveTo( el.path[ el.path.length-1 ].x , el.path[ el.path.length-1 ].y );
-					for( var k = 0 ; k < el.path.length ; k ++ )
-						ctx.lineTo( el.path[ k ].x , el.path[ k ].y );
-					
-					ctx.stroke();
-					ctx.fill();
-					
-					
-					
-				break;
-			}
-			
-			ctx.restore();
-		}
-		
-		
-		ctx.restore();
-		
-	},
-	getBBox : function(){
-	
-	
+		return this._drawer.abord( tile.getTileX() * tileSize.w ,
+							tile.getTileY() * tileSize.h ,
+							tile.getZoom()
+							);
 	},
 };
-Drawer.createWithElements = function( els ){
-	var i = new Drawer();
+DrawerDelegator.createWithElements = function( els ){
+	var i = new DrawerDelegator();
 	i.init( els );
 	return i;
 };
@@ -356,6 +288,9 @@ Tile.prototype = {
 	getContext : function(){
 		return this._ctx;
 	},
+	clear : function(){
+		this._ctx.clearRect( 0 , 0 , tileSize.w , tileSize.h );
+	}
 };
 Tile.createWithCoord = function( x , y , zoom ){
 	var t = new Tile();
@@ -375,14 +310,16 @@ TileFactory.prototype = {
 		
 	},
 	
-	disableTile : function( tile ){
+	disableTile : function( tile , dd ){
 		
 		tile.disable();
 		
-		this._closedQueue.push( tile );
+		if( !dd.abord( tile ) )
+			this._closedQueue.push( tile );
+		
 	},
 	
-	getTile : function( x , y , zoom , el , drawer ){
+	getTile : function( x , y , zoom , el , dd ){
 		
 		
 		//firstly search if the tile exist in the closedQueue
@@ -407,9 +344,14 @@ TileFactory.prototype = {
 		
 		e.unable( x , y , zoom , el );
 		
-		drawer.pushToRenderQueue ( e );
+		e.clear();
+		
+		dd.pushToRenderQueue ( e );
 		
 		return e;
+	},
+	flush : function(){
+		this._closedQueue.flush();
 	},
 	
 };
@@ -440,17 +382,17 @@ TileEngine.prototype = {
 	_sceneH : 0,
 	
 	
-	_drawer : null,
+	_dd : null,
 	_tileFactory : null,
 	
 	
-	init : function( element , drawer ){
+	init : function( element , dd ){
 		
 		this._container = element;
 		
-		this._tileFactory = TileFactory.createWithCapacity( 50 );
+		this._tileFactory = TileFactory.createWithCapacity( 30 );
 		
-		this._drawer = drawer;
+		this._dd = dd;
 		
 		this._initTiles();
 		
@@ -480,7 +422,7 @@ TileEngine.prototype = {
 													originY + y ,
 													this._viewZoom ,
 													this._container ,
-													this._drawer );
+													this._dd );
 			this._visibleGrid[ x + y * this._gridW ] = tile;
 			
 		}
@@ -502,7 +444,7 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the right element
-				this._tileFactory.disableTile( this._visibleGrid[ this._gridW-1 + y * this._gridW ] );
+				this._tileFactory.disableTile( this._visibleGrid[ this._gridW-1 + y * this._gridW ] , this._dd );
 				
 				// shift the middle element
 				for( var x = this._gridW-2 ; x >= 0 ; x -- )
@@ -513,7 +455,7 @@ TileEngine.prototype = {
 														this._visibleGrid[ 0 ].getTileY() + y , 
 														this._viewZoom ,
 														this._container ,
-														this._drawer );
+														this._dd );
 				this._visibleGrid[ y * this._gridW ] = tile;
 			}
 		}
@@ -526,7 +468,7 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the left element
-				this._tileFactory.disableTile( this._visibleGrid[ y * this._gridW ] );
+				this._tileFactory.disableTile( this._visibleGrid[ y * this._gridW ] , this._dd );
 				
 				// shift the middle element
 				for( var x = 1 ; x < this._gridW ; x ++ )
@@ -537,7 +479,7 @@ TileEngine.prototype = {
 														this._visibleGrid[ 0 ].getTileY() + y , 
 														this._viewZoom ,
 														this._container ,
-														this._drawer );
+														this._dd );
 				this._visibleGrid[ y * this._gridW + this._gridW - 1 ] = tile;
 			}
 		}
@@ -562,12 +504,10 @@ TileEngine.create = function( el , dr ){
 
 
 // link public function to scope
-scope.MSSInterpret = Interpret;
 
-scope.Drawer = Drawer;
+scope.DrawerDelegator = DrawerDelegator;
 
 scope.TileEngine = TileEngine;
-
 
 scope.Queue = Queue;
 

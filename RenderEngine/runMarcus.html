@@ -2,9 +2,11 @@
 
 <head>
 
-
-<script src="Marcus.js" ></script>
 <script src="http://code.jquery.com/jquery-1.8.2.min.js" ></script>
+
+<script src="TileRender.js" ></script>
+<script src="Marcus.js" ></script>
+
 <script>
 
 	if( ( pseudoRandom = true ) ){
@@ -52,25 +54,27 @@
 			},
 		];
 		
-		
-		for( var i = 0 ; i < 30 ; i ++ )
+		var l = 1200;
+		for( var i = 0 ; i < 3000 ; i ++ )
 			els.push( {
 				type : 1,
 				path : [ 
-						{ x : Math.random() * 500 , y : Math.random() * 500 },
-						{ x : Math.random() * 500 , y : Math.random() * 500 },
-						{ x : Math.random() * 500 , y : Math.random() * 500 },
+						{ x : Math.random() * l , y : Math.random() * l },
+						{ x : Math.random() * l , y : Math.random() * l },
+						{ x : Math.random() * l , y : Math.random() * l },
 						]
 				} );
 		
-		var drw = mrc.Drawer.createWithElements( els );
+		var drw = mrc.DrawerDelegator.createWithElements( els );
 		
-		
+		drw._els = els;
 		
 		window.te = mrc.TileEngine.create( $( "#tilesContainer" ) , drw );
 		
+		
+		
 		window.onkeypress = function( e ){
-			switch( e.keyCode ){
+			switch( e.charCode ){
 				case 122 :
 					window.te.translate( 0 , -10 );
 				break;
@@ -84,19 +88,18 @@
 					window.te.translate( 10 , 0 );
 				break;
 			}
-			//console.log( e.keyCode );
 		}
 		$("#upbutton").click( function(){
-			window.te.translate( 0 , -15 );
+			window.te.translate( 0 , -35 );
 		});
 		$("#downbutton").click( function(){
-			window.te.translate( 0 , 15 );
+			window.te.translate( 0 , 35 );
 		});
 		$("#rightbutton").click( function(){
-			window.te.translate( -15 , 0 );
+			window.te.translate( -35 , 0 );
 		});
 		$("#leftbutton").click( function(){
-			window.te.translate( 15 , 0 );
+			window.te.translate( 35 , 0 );
 		});
 	}
 </script>
@@ -106,14 +109,21 @@
 
 <body>
 
-<div id="tilesContainer" style="position:absolute;top:20%;left:20%;box-shadow:0 0 5px 5px #000;width:500;height:500;" ></div>
-
 <div >
-<input id="upbutton" type="submit" value="up"></input>
+<input id="upbutton" type="submit" value="up "></input>
 <input id="downbutton" type="submit" value="down"></input>
 <input id="rightbutton" type="submit" value="right"></input>
 <input id="leftbutton" type="submit" value="left"></input>
+
+or z s d q
 </div>
+
+
+<div style="position:absolute;top:20%;left:20%;width:500;height:500;">
+<div style="position:absolute;top:0px;left:0px;width:inherit;height:inherit;z-index:2;box-shadow: 0 0 2px 6px #333 ;"></div>
+<div id="tilesContainer" style="position:absolute;top:0px;left:0px;width:inherit;height:inherit;z-index:-1;"></div>
+<div>
+
 
 </body>
 </html>
