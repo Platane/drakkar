@@ -4,8 +4,8 @@
 
 <script src="http://code.jquery.com/jquery-1.8.2.min.js" ></script>
 
-<script src="TileRender.js" ></script>
-<script src="Marcus.js" ></script>
+<script src="Marcus-TileRender.js" ></script>
+<script src="Marcus-TileEngine.js" ></script>
 
 <script>
 
@@ -116,6 +116,14 @@
 <input id="leftbutton" type="submit" value="left"></input>
 
 or z s d q
+<p>
+<br>
+The rendering of a tile have been virtually increase,
+<p>
+As the user translate the map, tiles which are in the frame are asked to be drawn ( on x axis only )
+<p>
+note that a buffer retain the last deleted tile, preventing from redrawing it if thay have to be displayed again
+
 </div>
 
 
