@@ -45,15 +45,21 @@ Map.prototype = {
 	},
 	
 	//function to remove all the layers of this map
-	removeAllLayers(){
+	removeAllLayers : function(){
 		
 		this._layers = new Array();
 	},
 	
 	//function to get a particular layer on this map
-	getLayer( layer_index ){
+	getLayer : function( layer_index ){
 		
 		return this._layers[layer_index];
+	},
+	
+	//function that return all the layers on this map (array)
+	getLayers : function(){
+	
+		return this._layers;
 	},
 	
 	//function to transduce the map into XML
@@ -176,21 +182,26 @@ Layer.prototype = {
 	},
 	
 	//function to remove all the elements of this layer
-	removeAllElements(){
+	removeAllElements : function(){
 		
 		this._elements = new Array();
-	}
+	},
 	
 	//function to get a particular element on this layer
-	getLayer( elem_index ){
+	getElement : function( elem_index ){
 		
 		return this._elements[elem_index];
+	},
+	
+	//function that return all the elements on this layer (array)
+	getElements : function(){
+		return this._elements;
 	},
 	
 	//Function to transduce this layer into XML
 	toXML : function(){
 	
-		var xml = ident(2)+"<layer>\n
+		var xml = ident(2)+"<layer>\n";
 		xml += ident(3)+"<name>"+this._name+"</name>\n";
 		xml += ident(3)+"<description>"+this._description+"</description>\n";
 		xml += ident(3)+"<type>"+this._type+"</type>\n";
