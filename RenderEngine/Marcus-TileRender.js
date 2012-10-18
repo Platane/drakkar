@@ -9,14 +9,15 @@ var mrc = mrc || {};
 var ELEMENT_DOT = 0,
 	ELEMENT_PATH = 1;
 
-var PARALELL_SLEEP = 10,
-	PARALELL_POINT_PER_CYCLE = 200;
+var PARALELL_SLEEP = 5,
+	PARALELL_POINT_PER_CYCLE = 500;
 
 /*
  *
  * draw a unique element
  * return the estimate complexity of the process
  */
+ /*
 var AtomicDraw = function( ctx , el , x , y , w , h , zoom , style ){
 	
 	ctx.save();
@@ -38,6 +39,39 @@ var AtomicDraw = function( ctx , el , x , y , w , h , zoom , style ){
 			ctx.moveTo( el.path[ el.path.length-1 ].x , el.path[ el.path.length-1 ].y );
 			for( var k = 0 ; k < el.path.length ; k ++ )
 				ctx.lineTo( el.path[ k ].x , el.path[ k ].y );
+						
+			ctx.stroke();
+			ctx.fill();
+			
+			c = el.path.length;
+			
+		break;
+	}
+	
+	
+	ctx.restore();
+	
+	return c;
+	
+};*/
+var AtomicDraw = function( ctx , el , x , y , w , h , zoom , style ){
+	
+	ctx.save();
+	
+	ctx.strokeStyle = style.stroke_color;
+	ctx.fillStyle = style.fill_color;
+	ctx.lineWidth = style.stroke_with;
+	
+	var c = 0;
+	
+	switch( el.type ){
+				
+		case ELEMENT_PATH :
+					
+			ctx.beginPath();
+			ctx.moveTo( el.path[ el.path.length-1 ].x * zoom - x , el.path[ el.path.length-1 ].y * zoom - y );
+			for( var k = 0 ; k < el.path.length ; k ++ )
+				ctx.lineTo( el.path[ k ].x * zoom - x , el.path[ k ].y * zoom - y );
 						
 			ctx.stroke();
 			ctx.fill();

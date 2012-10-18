@@ -2,7 +2,7 @@
 
 <head>
 
-<script src="http://code.jquery.com/jquery-1.8.2.min.js" ></script>
+<script src="Support/jquery-1.8.2.min.js" ></script>
 
 <script src="Marcus-TileRender.js" ></script>
 <script src="Marcus-TileEngine.js" ></script>
@@ -101,6 +101,26 @@
 		$("#leftbutton").click( function(){
 			window.te.translate( 35 , 0 );
 		});
+		
+		$("#plusbutton").click( function(){
+			window.te.zoom( window.te.getZoom() * 1.8  );
+		});
+		$("#moinsbutton").click( function(){
+			window.te.zoom( window.te.getZoom() /1.8  );
+		});
+		
+		$("#superContainer")[0].onmousewheel = function( e ){
+				
+			var px = e.pageX - $( "#tilesContainer" ).offset().left,
+				py = e.pageY - $( "#tilesContainer" ).offset().top;
+				
+			$( "#tilesContainer" )
+				
+			if(  e.wheelDelta > 0 )
+				window.te.zoom( window.te.getZoom() * 1.8 , px , py );
+			else
+				window.te.zoom( window.te.getZoom() / 1.8 , px , py );
+		}
 	}
 </script>
 <title>proto</title>
@@ -115,7 +135,11 @@
 <input id="rightbutton" type="submit" value="right"></input>
 <input id="leftbutton" type="submit" value="left"></input>
 
+
 or z s d q
+<p>
+<input id="plusbutton" type="submit" value="+"></input>
+<input id="moinsbutton" type="submit" value="-"></input>
 <p>
 <br>
 The rendering of a tile have been virtually increase,
@@ -127,7 +151,7 @@ note that a buffer retain the last deleted tile, preventing from redrawing it if
 </div>
 
 
-<div style="position:absolute;top:20%;left:20%;width:500;height:500;">
+<div id="superContainer" style="position:absolute;top:20%;left:20%;width:500;height:500;">
 <div style="position:absolute;top:0px;left:0px;width:inherit;height:inherit;z-index:2;box-shadow: 0 0 2px 6px #333 ;"></div>
 <div id="tilesContainer" style="position:absolute;top:0px;left:0px;width:inherit;height:inherit;z-index:-1;"></div>
 <div>

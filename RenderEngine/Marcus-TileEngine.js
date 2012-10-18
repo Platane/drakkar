@@ -14,6 +14,8 @@ var ELEMENT_DOT = 0,
 
 var WorkerAllowed = true;
 	
+var RECOVER_SIZE = 50;
+	
 var tileSize = {
 	w : 128,
 	h : 128
@@ -162,7 +164,12 @@ Queue.createWithCapacity = function( c ){
 }
 
 
-
+/*
+ *
+ * proxy between the tileEngine and the tileRenderer
+ * for now its just deleguate the pushToRenderQueue,
+ * in the future it could calculate which element collapse with the tile and tell the render to draw only them
+ */
 var DrawerDelegator = function(){};
 DrawerDelegator.prototype = {
 	
@@ -262,9 +269,7 @@ Tile.prototype = {
 		
 	},
 	disable : function(){
-		
 		this.detach();
-		
 	},
 	finish : function(){
 		this.detach();
@@ -310,13 +315,16 @@ TileFactory.prototype = {
 		
 	},
 	
-	disableTile : function( tile , dd ){
-		
+	/*
+	 * remove the tile from the displayed Dom 
+	 * try to abord the rendering of the tile
+	 * if the tile is already drawn ( assuming that if its not in the rendering queue, its drawn ), put it in the buffer queue
+	 */
+	disableTile : function( tile , dd ){	
 		tile.disable();
 		
 		if( !dd.abord( tile ) )
 			this._closedQueue.push( tile );
-		
 	},
 	
 	getTile : function( x , y , zoom , el , dd ){
@@ -374,12 +382,7 @@ TileEngine.prototype = {
 	
 	_viewX : 0,
 	_viewY : 0,
-	_viewW : 0,
-	_viewH : 0,
 	_viewZoom : 1,
-	
-	_sceneW : 0,
-	_sceneH : 0,
 	
 	
 	_dd : null,
@@ -390,7 +393,7 @@ TileEngine.prototype = {
 		
 		this._container = element;
 		
-		this._tileFactory = TileFactory.createWithCapacity( 30 );
+		this._tileFactory = TileFactory.createWithCapacity( RECOVER_SIZE );
 		
 		this._dd = dd;
 		
@@ -407,8 +410,6 @@ TileEngine.prototype = {
 		this._gridW = Math.floor( this._screenW / tileSize.w )+2;
 		this._gridH = Math.floor( this._screenH / tileSize.h )+2;
 		
-		
-		this._tiles = new Array( this._gridW * this._gridH );
 		
 		var originX = Math.floor( this._viewX / tileSize.w ),
 			originY = Math.floor( this._viewY / tileSize.h );
@@ -430,6 +431,11 @@ TileEngine.prototype = {
 		this.translate( 0 , 0 );
 		
 	},
+	
+	// UI methods
+	/*
+	 * dx and dy relative
+	 */
 	translate : function( dx , dy ){
 		
 		
@@ -490,8 +496,56 @@ TileEngine.prototype = {
 		
 	},
 	
+	/*
+	 * zoom , absolute zoom
+	 * cx cy , point of zoom, relative to the screen
+	 * the point of zoom is the point that after homotety, is at the same position
+	 */
+	zoom : function( zoom , cx , cy ){
+		
+		cx = cx || this._screenW/2;
+		cy = cy || this._screenH/2;
+		
+		//calc the new viewport coordonates
+		var cx_scene = this._viewX + cx,
+			cy_scene = this._viewY + cy;
+		
+		var nViewX = cx_scene * zoom / this._viewZoom - cx,
+			nViewY = cy_scene * zoom / this._viewZoom - cy;
+		
+		// change the attribute
+		this._viewX = nViewX;
+		this._viewY = nViewY;
+		
+		this._viewZoom = zoom;
+		
+		// ask for tiles update
+		var originX = Math.floor( this._viewX / tileSize.w ),
+			originY = Math.floor( this._viewY / tileSize.h );
+		
+		for( var x = 0 ; x < this._gridW ; x ++ )
+		for( var y = 0 ; y < this._gridH ; y ++ ){
+			
+			this._tileFactory.disableTile( this._visibleGrid[ x + y * this._gridW ] , this._dd );
+			
+			var tile = this._tileFactory.getTile( 	originX + x ,
+													originY + y ,
+													this._viewZoom ,
+													this._container ,
+													this._dd );
+			this._visibleGrid[ x + y * this._gridW ] = tile;
+			
+		}
+		
+		for( var k = 0 ; k < this._visibleGrid.length ; k ++ )
+			this._visibleGrid[ k ].positionFrom( this._viewX  , this._viewY );
 	
-
+	},
+	
+	//getters
+	getZoom : function(){
+		return this._viewZoom;
+	},
 };
 TileEngine.create = function( el , dr ){
 	var t = new TileEngine();
@@ -513,10 +567,6 @@ scope.Queue = Queue;
 
 })( mrc );
 
-
-
-// mss reader related
-mrc.Mss = mrc.Mss || {};
 
 
 
