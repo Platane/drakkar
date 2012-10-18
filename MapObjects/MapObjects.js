@@ -222,7 +222,7 @@ Layer.prototype = {
 Layer.createLayer = function( name, desc, type ){
 	var l = new Layer();
 	l._name = name;
-	l._desc = desc;
+	l._description = desc;
 	l._type = type;
 	return l;
 }
