@@ -28,12 +28,12 @@ function createMapFromForm(){
 	var description = $('textarea').val();
 	
 	actual_map = Map.createMap(name, description);
-	alert(actual_map.toXML());
 	
 	var head = "<h2>"+name+"</h2><i>"+description+"</i>";
 	
 	var options = "<input type=button name=createlayer value=\"Add Layer\" onclick=createLayerForm() /input></br>";
 	options += "<input type=button name=loadlayer value=\"Load an existing layer\" /input></br>";
+	options += "<input type=button name=savemap value=\"Generate XML\" onclick=generateXML() /input></br>";
 	
 	var box = generateLayersList();
 	
@@ -84,10 +84,22 @@ function createLayerFromForm(){
 	var layer = Layer.createLayer(name, description, type);
 	
 	actual_map.addLayer(layer);
-	alert(actual_map.toXML());
 	
 	$('#layercreationbox').remove();
 	$('#box').html(generateLayersList());
 	
 	
+}
+
+//function to save the map on your computer (xml file)
+
+function saveMap(){
+	
+	
+}
+
+//function that generate the XML code of the map on the screen
+function generateXML(){
+	
+	alert(actual_map.toXML());
 }
