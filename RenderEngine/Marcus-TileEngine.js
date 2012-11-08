@@ -192,7 +192,11 @@ DrawerDelegator.prototype = {
 											tileSize.w ,
 											tileSize.h ,
 											tile.getZoom(),
-											{}
+											{},
+											function(){
+												tile._drawn = true;
+											},
+											this
 										);
 			
 			
@@ -221,6 +225,8 @@ Tile.prototype = {
 	
 	_canvas : null,
 	_ctx : null,
+	
+	_drawn : false,
 	
 	positionFrom : function( viewX , viewY ){
 		
@@ -293,7 +299,11 @@ Tile.prototype = {
 	getContext : function(){
 		return this._ctx;
 	},
+	isDrawn : function(){
+		return this._drawn;
+	},
 	clear : function(){
+		this._drawn = false;
 		this._ctx.clearRect( 0 , 0 , tileSize.w , tileSize.h );
 	}
 };
@@ -318,16 +328,17 @@ TileFactory.prototype = {
 	/*
 	 * remove the tile from the displayed Dom 
 	 * try to abord the rendering of the tile
-	 * if the tile is already drawn ( assuming that if its not in the rendering queue, its drawn ), put it in the buffer queue
+	 * if the tile is already drawn, put it in the buffer queue
+	 * if not try to abord the render ( it fail if the tile is currently rendered )
 	 */
 	disableTile : function( tile , dd ){	
 		tile.disable();
 		
-		if( !dd.abord( tile ) )
+		if( tile.isDrawn() || !dd.abord( tile ) )
 			this._closedQueue.push( tile );
 	},
 	
-	getTile : function( x , y , zoom , el , dd ){
+	getTile : function( x , y , zoom , el , dd , dontForceDraw ){
 		
 		
 		//firstly search if the tile exist in the closedQueue
@@ -350,14 +361,24 @@ TileFactory.prototype = {
 		else
 			var e = this._closedQueue.pop();
 		
+		// make the tile append its need coord
 		e.unable( x , y , zoom , el );
 		
+		//clear the bitmap
 		e.clear();
 		
+		//ask for a render
 		dd.pushToRenderQueue ( e );
 		
 		return e;
 	},
+	
+	peek : function( x , y , zoom ){
+		return this._closedQueue.grab( function( a ){ 
+			return a.getZoom() == zoom &&  a.getTileX() == x && a.getTileY() == y; 
+		} );
+	},
+	
 	flush : function(){
 		this._closedQueue.flush();
 	},
@@ -442,6 +463,9 @@ TileEngine.prototype = {
 		this._viewX += dx;
 		this._viewY += dy;
 		
+		
+		var toDisable = [];
+		
 		if( dx < 0 )
 		while( this._visibleGrid[ 0 ].getTileX() * tileSize.w > this._viewX  ){
 			// need a new colomn before
@@ -450,7 +474,8 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the right element
-				this._tileFactory.disableTile( this._visibleGrid[ this._gridW-1 + y * this._gridW ] , this._dd );
+				// not right now, do not surcharge the queue until all the element have been retreive 
+				toDisable.push( this._visibleGrid[ this._gridW-1 + y * this._gridW ] );
 				
 				// shift the middle element
 				for( var x = this._gridW-2 ; x >= 0 ; x -- )
@@ -474,7 +499,8 @@ TileEngine.prototype = {
 			for( var y = 0 ; y < this._gridH ; y ++ ){
 			
 				// delete the left element
-				this._tileFactory.disableTile( this._visibleGrid[ y * this._gridW ] , this._dd );
+				// not right now, do not surcharge the queue until all the element have been retreive 
+				toDisable.push( this._visibleGrid[ y * this._gridW ] );
 				
 				// shift the middle element
 				for( var x = 1 ; x < this._gridW ; x ++ )
@@ -490,6 +516,11 @@ TileEngine.prototype = {
 			}
 		}
 		
+		// disable
+		for( var k = 0 ; k < toDisable.length ; k ++ )
+			this._tileFactory.disableTile( toDisable[ k ] , this._dd );
+			
+		// reposition
 		for( var k = 0 ; k < this._visibleGrid.length ; k ++ )
 			this._visibleGrid[ k ].positionFrom( this._viewX  , this._viewY );
 			
@@ -517,29 +548,103 @@ TileEngine.prototype = {
 		this._viewX = nViewX;
 		this._viewY = nViewY;
 		
+		var prevZoom = this._viewZoom;
+		
 		this._viewZoom = zoom;
 		
 		// ask for tiles update
+		
+		var toDisable = [];
+		
 		var originX = Math.floor( this._viewX / tileSize.w ),
 			originY = Math.floor( this._viewY / tileSize.h );
+		
+		var tmpGrid = new Array( this._gridW * this._gridH );
 		
 		for( var x = 0 ; x < this._gridW ; x ++ )
 		for( var y = 0 ; y < this._gridH ; y ++ ){
 			
-			this._tileFactory.disableTile( this._visibleGrid[ x + y * this._gridW ] , this._dd );
+			toDisable.push( this._visibleGrid[ x + y * this._gridW ]  );
 			
 			var tile = this._tileFactory.getTile( 	originX + x ,
 													originY + y ,
 													this._viewZoom ,
 													this._container ,
 													this._dd );
-			this._visibleGrid[ x + y * this._gridW ] = tile;
 			
+			if( !tile.isDrawn() )
+				this.composeAfterZoom( tile , this._visibleGrid , prevZoom );
+			
+			//this._visibleGrid[ x + y * this._gridW ] = tile;
+			
+			tmpGrid[ x + y * this._gridW ] = tile;
 		}
 		
+		
+		
+		this._visibleGrid = tmpGrid;
+		
+		
+		// reposition
 		for( var k = 0 ; k < this._visibleGrid.length ; k ++ )
 			this._visibleGrid[ k ].positionFrom( this._viewX  , this._viewY );
+		
+		// disable
+		for( var k = 0 ; k < toDisable.length ; k ++ )
+			this._tileFactory.disableTile( toDisable[ k ] , this._dd );
+	},
 	
+	composeAfterZoom : function( tile , prevGrid , prevZoom ){
+		
+		var orx = Math.floor( tile.getTileX() * this._viewZoom / prevZoom ),
+			ory = Math.floor( tile.getTileY() * this._viewZoom / prevZoom );
+		
+		
+		var ctx = tile.getContext();
+		
+		ctx.fillStyle = "#589";
+		ctx.strokeStyle = "#abc";
+		ctx.beginPath();
+		ctx.rect( 20 ,  20 , 30 , 30 );
+		ctx.fill();
+		
+		for( var x = 0 ; x < Math.floor( prevZoom / this._viewZoom ) +10 ; x ++ )
+		for( var y = 0 ; y < Math.floor( prevZoom / this._viewZoom ) +10 ; y ++ ){
+			
+			ctx.beginPath();
+			ctx.rect( 	( ( orx + x ) * prevZoom - tile.getTileX() * this._viewZoom ) * tileSize.w / this._viewZoom , 
+						( ( ory + y ) * prevZoom - tile.getTileY() * this._viewZoom ) * tileSize.h / this._viewZoom , 
+						tileSize.w * this._viewZoom / prevZoom ,
+						tileSize.h * this._viewZoom / prevZoom 
+			);
+			ctx.stroke();
+		}
+		
+		/*
+		var orx = Math.floor( tile.getTileX() * this._viewZoom / prevZoom ),
+			ory = Math.floor( tile.getTileY() * this._viewZoom / prevZoom );
+		
+		
+		var ctx = tile.getContext();
+		
+		ctx.fillStyle = "#589";
+		ctx.strokeStyle = "#abc";
+		ctx.beginPath();
+		ctx.rect( 20 ,  20 , 30 , 30 );
+		ctx.fill();
+		
+		for( var x = 0 ; x < Math.floor( prevZoom / this._viewZoom ) +10 ; x ++ )
+		for( var y = 0 ; y < Math.floor( prevZoom / this._viewZoom ) +10 ; y ++ ){
+			
+			ctx.beginPath();
+			ctx.rect( 	( ( orx + x ) * prevZoom - tile.getTileX() * this._viewZoom ) * tileSize.w / this._viewZoom , 
+						( ( ory + y ) * prevZoom - tile.getTileY() * this._viewZoom ) * tileSize.h / this._viewZoom , 
+						tileSize.w / this._viewZoom * prevZoom ,
+						tileSize.h / this._viewZoom * prevZoom 
+			);
+			ctx.stroke();
+		}
+		*/
 	},
 	
 	//getters

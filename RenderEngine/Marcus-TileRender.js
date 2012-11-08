@@ -10,7 +10,7 @@ var ELEMENT_DOT = 0,
 	ELEMENT_PATH = 1;
 
 var PARALELL_SLEEP = 5,
-	PARALELL_POINT_PER_CYCLE = 500;
+	PARALELL_POINT_PER_CYCLE = 200;
 
 /*
  *
@@ -120,7 +120,7 @@ PseudoParallelDrawer.prototype = {
 			
 		return false;
 	},
-	pushToRenderQueue : function( ctx , els , x , y , w , h , zoom , glbAttr , callBackF , callBackO ){
+	pushToRenderQueue : function( ctx , els , x , y , w , h , zoom , glbAttr , callBackF , callBackO  ){
 		
 		this._queue.push( new PseudoParallelDrawer.Ticket( ctx , els , x , y , w , h , zoom , glbAttr , callBackF , callBackO ) );
 		
@@ -135,6 +135,9 @@ PseudoParallelDrawer.prototype = {
 		var cur = this._queue[ 0 ],
 			n = 0;
 		
+		// need to be done only on the temporary zoomed items,
+		if( this._progression == 0 )
+			cur.ctx.clearRect( 0 , 0 , cur.w , cur.h );
 		
 		for(  ; this._progression < cur.els.length && n < PARALELL_POINT_PER_CYCLE ; this._progression ++ )
 			n += AtomicDraw( 	cur.ctx ,
@@ -168,22 +171,27 @@ PseudoParallelDrawer.prototype = {
 		}
 	},
 	timeOutHandler : function(){
-		
-		
 		this.cycle();
 		
-		var self = this;
-		if( this._run )
+		
+		if( this._run ){
+			var self = this;
 			setTimeout(function() {
 				self.timeOutHandler();
 			}, PARALELL_SLEEP );
+		}
 	},
 	stop : function(){
 		this._run = false;
 	},
 	start : function(){
-		this._run = true;
-		this.timeOutHandler();
+		if( !this._run  ){
+			this._run = true;
+			var self = this;
+			setTimeout(function() {
+				self.timeOutHandler();
+			}, PARALELL_SLEEP );
+		}
 	},
 };
 PseudoParallelDrawer.create = function(  ){
