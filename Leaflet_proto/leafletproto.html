@@ -1,0 +1,48 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+		<script src="kothic.js"></script>
+		<script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+		<script src="countries.js"></script>
+		
+		<!--This style is to hide the little white square
+		that is generated when we want to draw text on the map-->
+		<style type=\"text/css\">
+		.t {
+
+			background-image: none;
+			color: red;
+		}
+		</style>
+	</head>
+	
+	<body>
+	
+		<div id="title">
+			<h3>Map Editor</h3>
+			<h4>Leaflet.js based prototype</h4>
+		</div>
+		
+		<div id="toolbox" style="float: left; margin-right: 50px;">
+			<b>Tools</b><br/>
+			<button onclick="selectTool('marker')">Add Marker</button><br/>
+			<button onclick="selectTool('color')">Add Color</button><br/>
+			<button onclick="selectTool('line')">Add line</button><br/>
+			<button onclick="selectTool('rectangle')">Add Rectangle</button><br/>
+			<button onclick="selectTool('text')">Add Text</button><br/>
+			<button onclick="selectTool('')">Unselect tool</button><br/>
+			<b>Colors</b><br/>
+			<button onclick=selectColor('red')>red</button>
+			<button onclick=selectColor('blue')>blue</button><br/>
+			
+			<div id="ctool">Current tool : </div>
+			<div id="ccolor">Current color : </div>
+		</div>
+		
+		<div id="map" style="width: 600px; height: 400px"></div>
+
+		<script src="mapeditor.js"></script>
+</body>
+	
+</html>
