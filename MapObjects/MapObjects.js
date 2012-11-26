@@ -26,16 +26,28 @@ Map.prototype = {
 	//list of layers on this map
 	_layers : new Array(),
 	
-	//function to add a layer to this map
-	addLayer : function( layer ){
+	/** Add layer to the map
+     * @public
+     * @param Layer the layer to add
+     * @param optional | Number z-index position of the layer
+     */
+	addLayer : function( layer , z ){
 	
 		this._layers.push(layer);
+	},
+	
+	getLayerCount : function(){
+		return this._layers.length;
 	},
 	
 	//function to remove a layer from this map
 	removeLayer : function( layer ){
 		
-		arrayUnset(this._layers, layer);
+		//arrayUnset(this._layers, layer);
+		
+		for( var i = 0 ; i < this._layers.length ; i ++ )
+			if( this._layers[ i ] == layer )
+				this._layers.splice( i , 1 );
 	},
 	
 	//function to remove a layer using his index on the array of layers of this map
@@ -154,9 +166,9 @@ var Layer = function(){};
 Layer.prototype = {
 
 	//name of the layer
-	_name : null,
+	name : null,
 	//description of the layer (his content)
-	_description : null,
+	description : null,
 	//type of layer (dots or paths)
 	_type : null,
 	//list of elements presents in this layer
@@ -198,6 +210,21 @@ Layer.prototype = {
 		return this._elements;
 	},
 	
+	getElementCount : function(){
+		this._elements.length;
+	},
+	
+	// eaxctly what you think
+	copy : function(){
+		
+		var l = Layer.createLayer( this.name , this.desc , this.type );
+		
+		for( var i = 0 ; i < this.getElementCount() ; i ++ )
+			l.addElement( this.getElement( i ).copy() );
+		
+		return l;
+	},
+	
 	//Function to transduce this layer into XML
 	toXML : function(){
 	
@@ -221,8 +248,8 @@ Layer.prototype = {
 //Function to create a layer with a name, a description and a type
 Layer.createLayer = function( name, desc, type ){
 	var l = new Layer();
-	l._name = name;
-	l._description = desc;
+	l.name = name;
+	l.description = desc;
 	l._type = type;
 	return l;
 }

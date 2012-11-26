@@ -1,0 +1,36 @@
+
+.menu {
+	height : 100px;
+	
+}
+
+.menu ul {
+
+	list-style: none;
+	
+	
+}
+
+.menu li {
+
+	float: left;
+	position: relative;
+	padding : 10px;
+}
+
+#main {
+	display : block;
+}
+
+.block {
+
+box-shadow : 0 0 5px 5px #555;
+	
+	margin : 20px;
+	
+	border-radius : 5px;
+		
+	padding : 5px;
+	
+	background-color : rgba( 224 , 224 , 224 , 0.8 );
+}
