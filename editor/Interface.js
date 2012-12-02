@@ -7,6 +7,15 @@ var extend = function( child , f ){
 
 ( function( scope ){
 
+
+var currentLayer = null;
+function changeCurrentLayer( i ){
+	currentLayer = i;
+	
+	//upadate
+};
+this.changeCurrentLayer = changeCurrentLayer;
+
 // pop up manager
 var popUp = {};
 ( function( scope ){
@@ -22,7 +31,7 @@ var popUp = {};
 		
 		init : function(){
 			
-			this.container = $("<div>").addClass( "popUp" );
+			this.container = $("<div>").addClass( "popUp" ).css( { "position" : "absolute" } );
 			this.main = $("<div>");
 			
 			var self = this;
@@ -43,18 +52,73 @@ var popUp = {};
 			this.main.appendTo( this.container );
 			this.container.appendTo( $("#popUpPanel") );
 			currentlyDisplayed = this;
+			
+			this.initInteraction();
+			this.moveable( true );
 		},
 		valid : function(){
 			
 			this.close();
 		},
 		close : function(){
-			$("#popUpPanel").css( {"z-index" : 100 , "display" : "block" } );
+			$("#popUpPanel").css( {"z-index" : -10 , "display" : "none" } );
 			this.container.remove();
 			currentlyDisplayed = null;
 		},
 		finish : function(){},
 		prepare : function(){},
+		initInteraction : function(){
+			
+			var self = this;
+			
+			(function( scope ){
+				var drag = false,
+					anchorM = {x:0 , y:0},
+					anchorE = {x:0 , y:0};
+					
+				var start = function( e ){
+					drag = true;
+					anchorM.x = e.pageX;
+					anchorM.y = e.pageY;
+					anchorE.x = self.container.position().left;
+					anchorE.y = self.container.position().top;
+				};
+				var move = function( e ){
+					if( !drag )
+						return;
+					
+					var x = anchorE.x + ( e.pageX - anchorM.x ),
+						y = anchorE.y + ( e.pageY - anchorM.y );
+					
+					self.container.css( { 'top' : y+'px' , 'left' : x+'px' } );
+					
+				};
+				var stop = function( e ){
+					if( !drag )
+						return;
+					drag = false;
+				}
+				
+				var bind = function( unable ){
+					if( unable ){
+						self.container.unbind( "mousedown" , start ).bind( "mousedown" , start );
+						$("body").unbind( "mousemove" , move ).bind( "mousemove" , move );
+						$("body").unbind( "mouseup" , stop ).bind( "mouseup" , stop );
+					}else{
+						self.container.unbind( "mousedown" , start );
+						$("body").unbind( "mousemove" , move );
+						$("body").unbind( "mouseup" , stop );
+					}
+					return self;
+				};
+				
+				scope.moveable = bind;
+				
+			})( this );
+			
+		},
+		moveable : function(  ){},
+		
 	};
 	
 	
@@ -109,8 +173,14 @@ var popUp = {};
 							name.after( $("<span>name must be at least 3 characters long</span>").attr("id" , "hintAddLayerName" ).addClass("hint") );
 						else
 							name.after( $("<span>name can contain letters or numbers only</span>").attr("id" , "hintAddLayerName" ).addClass("hint") );
-						
 					
+					var layers = self._map.getLayers();
+					for( var i = 0 ; i< layers.length ; i ++ )
+						if( layers[ i ].name == n ){
+							nameValid = false;
+							name.after( $("<span>this name is already taken</span>").attr("id" , "hintAddLayerName" ).addClass("hint") );
+						}
+						
 					updateValidation();
 				};
 				var descriptionValidation = function( n ){
@@ -174,79 +244,9 @@ function swapFrame( id ){
 	targetFrame.appendTo( $("#main") );
 }
 
-
-function initLayerMgr(){
+function initEditableToolBox(){
 	
-	function updateLayerMgr(){
 	
-		var liste = $("#layerMgr").find("ul");
-		
-		// clear the list
-		liste.children("li").remove();
-		
-		// 
-		var layers = map.getLayers();
-		
-		for( var i = 0 ; i < layers.length ; i ++ ){
-			
-			(function(){
-				// create this anonymous scope make the var set persistent
-				var j = i;
-				var item = $("<li>").attr( "i" , ""+i );
-				var bin = $("<span> |_| </span>");
-				
-				// the name
-				$("<span>"+layers[i].name+"</span>").appendTo( item );
-				
-				
-				// bind event on the trash bin
-				bin.bind( "click" , function(){
-					
-					cmd.mgr.execute( cmd.deleteLayer.create( map.getLayer( j ) , map , { f : updateLayerMgr , o : this } ) );
-					
-				});
-				
-				// attach the trash bin
-				bin.appendTo( item );
-				bin.hide();
-				
-				//bind event on the item
-				var over = function(){
-					bin.show();
-				};
-				var out = function(){
-					bin.hide();
-				};
-				item.bind("mouseover", over );
-				item.bind("mouseout", out );
-				
-				// attach the item to the list
-				item.appendTo( liste );
-				
-			})();
-		}
-	}
-	
-	updateLayerMgr();
-	
-	// bind action on tool bn
-	// delete all
-	$("#layerMgr>.tools").find("#delAllLayerBn").bind( "click" , function(){
-		
-		var cmds = [];
-		
-		for( var i = 0 ; i < map.getLayerCount() ; i ++ )
-			cmds.push( cmd.deleteLayer.create( map.getLayer( i ) , map ) );
-		
-		cmd.mgr.execute( cmd.multi.createWithTab( cmds , { f : updateLayerMgr , o : this } )  );
-		
-	});
-	// add
-	$("#layerMgr>.tools").find("#addLayerBn").bind( "click" , function(){
-		
-		popUp.addLayer.create( map , { f : updateLayerMgr , o : this } );
-		
-	});
 	
 };
 
@@ -265,11 +265,24 @@ function initMenuAction(){
 };
 
 function init(){
-	
 	initMenuAction();
-	initLayerMgr();
+	
+	var map = MapPanel.create( null , "block-Map" )
+	map.getElement().appendTo( $(".container") );
+	
+	var lm = LayerMgr.create( map , "block-layerMgr" ).layerDeletable( true ).layerSelectionable( true ).layerAddable( true );
+	lm.getElement().appendTo( $(".container") );
+	
+	$("#tracePathBn").bind( "click" , function(){
+		map.pathTraceable( true );
+	});
+	$("#editPathBn").bind( "click" , function(){
+		map.pathEditable( true , [ { x : 50 , y : 50 } , { x : 50 , y : 150 } , { x : 150 , y : 50 } ] );
+	});
 };
 
 scope.init = init;
 
 })( this );
+
+//window.onload = function(){ init(); }

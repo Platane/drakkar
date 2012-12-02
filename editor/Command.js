@@ -267,6 +267,56 @@ CmdAddLayer.create = function( layer , map , update ){
 	return c;
 };
 
+var CmdChangeCurrentLayer = function(){};
+extend( CmdChangeCurrentLayer , AbstractCmd.prototype );
+extend( CmdChangeCurrentLayer , {	
+	_i : null,
+	_j : null,
+	_mgr : null,
+	_update : null,
+	init : function( i , mgr , update ){
+		
+		this._i = i;
+		this._mgr = mgr;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._j = this._mgr.selected;
+		this._mgr.selected = this._i;
+		
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		
+		this._mgr.selected = this._j;
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdChangeCurrentLayer.create = function( i , mgr , update ){
+	var c = new CmdChangeCurrentLayer();
+	c.init( i , mgr , update );
+	return c;
+};
+
 
 
 
@@ -324,6 +374,7 @@ CmdMgr.create = function(){
 scope.multi = CmdMultiple;
 scope.deleteLayer = CmdDeleteLayer;
 scope.addLayer = CmdAddLayer;
+scope.changeCurrentLayer = CmdChangeCurrentLayer;
 scope.mgr = CmdMgr.create();
 
 
