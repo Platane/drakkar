@@ -16,7 +16,8 @@ var ELEMENT_DOT = 0,
 	return ident;
 }*/
 
-//Map prototype
+/** @class Prototype for designing the Map
+*/
 var Map = function(){};
 Map.prototype = {
 
@@ -25,7 +26,7 @@ Map.prototype = {
 	//name of the map
 	_name : null,
 	//description
-	_description : null, 
+	_desc : null, 
 	//list of layers on this map
 	_layers : new Array(),
 	
@@ -75,41 +76,33 @@ Map.prototype = {
 	
 	//function that return all the layers on this map (array)
 	getLayers : function(){
-	
 		return this._layers;
 	},
 	//function that return the leaflet map object associated to this Map
 	getLeafletMap : function(){
 		return this._lmap;
 	},
-	
-	//function to transduce the map into XML
-	/*toXML : function(){
-		
-		var xml = "<map>\n";
-		xml += ident(1)+"<name>"+this._name+"</name>\n";
-		xml += ident(1)+"<description>"+this._description+"</description>\n";
-		xml += ident(1)+"<layers>\n";
-		
-		for( var i = 0 ; i < this._layers.length; i++ ){
-			xml += this._layers[i].toXML();
-		}
-		
-		xml += ident(1)+"</layers>\n";
-		xml += "</map>";
-		
-		return xml;
-	}*/
+	//function that return the name of the map
+	getName : function(){
+		return this._name;
+	},
+	//function that return the description of the map
+	getDescription : function(){
+		return this._desc;
+	}
 	
 }
 //Function to create a new map with a name, a description and the div id of the element where we display the map
-Map.createMap = function( name, desc, div_id, leaflet_options ){
+//for map options see : http://leafletjs.com/reference.html#map-constructor
+Map.createMap = function( name, desc, div_id, leaflet_map_options ){
 	var m = new Map();
-	m._lmap = new L.Map(div_id, leaflet_options);
+	m._lmap = new L.Map(div_id, leaflet_map_options);
 	m._name = name;
 	m._description = desc;
 	return m;
 }
+
+/*###########################################################################################################################*/
 
 //Layer prototype
 //It contains the name of the layer, his description, an array of 'elements'
@@ -122,7 +115,7 @@ Layer.prototype = {
 	//name of the layer
 	_name : null,
 	//description of the layer (his content)
-	_description : null,
+	_desc : null,
 	//type of layer (dots or paths)
 	//_type : null,
 	//The leaflet LayerGroup associated
@@ -135,6 +128,8 @@ Layer.prototype = {
 		
 		this._elements.push( elem );
 		this._llayer.addLayer( elem );
+		//we need to add here the correct listener to the element
+		//so we don't need to do it directly in the editor
 		
 	},
 	
@@ -170,37 +165,21 @@ Layer.prototype = {
 	getElements : function(){
 		return this._elements;
 	},
-	
+	//return the leaflet layer associated to this 'layer'
 	getLeafletLayer : function(){
 		return this._llayer;
+	},
+	//return the name of the layer
+	getName : function(){
+		return this._name;
+	},
+	//return the description of the layer
+	getDescription : function(){
+		return this._desc;
 	}
 	
-	//Function to transduce this layer into XML
-	/*toXML : function(){
-	
-		var xml = ident(2)+"<layer>\n";
-		xml += ident(3)+"<name>"+this._name+"</name>\n";
-		xml += ident(3)+"<description>"+this._description+"</description>\n";
-		xml += ident(3)+"<type>"+this._type+"</type>\n";
-		xml += ident(3)+"<elements>\n";
-		
-		for(var i = 0; i < this._elements.length; i++){
-			
-			xml += this._elements[i].toXML();
-		}
-		
-		xml += ident(3)+"</elements>\n";
-		xml += ident(2)+"</layer>\n";
-		
-		return xml;
-	}*/
-	/*addMarker : function( lat, lon, marker_options ){
-	
-		var layer = new L.Marker([lat, lon], marker_options);
-		this.addElement(layer);
-	}*/
-	
 }
+
 //Function to create a layer with a name, a description and a leaflet Layer
 //if there is no leaflet layer, it automatically create an empty leaflet LayerGroup
 Layer.createLayer = function( name, desc, llayer ){
@@ -214,15 +193,76 @@ Layer.createLayer = function( name, desc, llayer ){
 
 //Function that create a layer with a name and a description using a geoJSON Object
 //The function create A LayerGroup and add to it the geoJSON Layer corresponding to geoJSON Object in parameter
-Layer.createLayerFromGeoJSON = function( name, desc, geoJSON_object ){
+//Parameter f_style : a function that will describe 
+Layer.createLayerFromGeoJSON = function( name, desc, geoJSON_object, jsondata_style ){
 	
 	var layer = Layer.createLayer(name, desc);
-	layer.addElement(L.geoJSON(geoJSON_object));
+	var llayer = L.geoJSON(geoJSON_object, {onEachFeature : _onEachFeature, style : _geoJSONStyle});
+	
+	llayer.onEachLayer(function ( layer ){
+		layer.addElement( layer );
+	});
+	
 	return layer;
 	
 }
 
+//private function which will be called when we create a layer using geoJSON data to add correct listeners to each features
+//should never be called directly
+function _onEachFeature(feature, layer){
+	
+	if(feature.geometry == 'Point'){/*add the correct listener*/}
+	if(feature.geometry == 'MultiPoint'){/*add the correct listener*/}
+	if(feature.geometry == 'LineString'){/*add the correct listener*/}
+	if(feature.geometry == 'MultiLineString'){/*add the correct listener*/}
+	if(feature.geometry == 'Polygon'){/*add the correct listener*/}
+	if(feature.geometry == 'MultiPolygon'){/*add the correct listener*/}
+	
+}
+//private function that modify style of each feature of a geoJSON layer
+//Should never be called directly
+function _geoJSONStyle( feature ){}
 
+/*#################################################################################################################################################*/
+
+//Function that allow to read a file that contains json data relative to 'style' (color, stroke, opacity, ...)
+//return an object containing style properties
+function _loadStyle( jsondata_style ){}
+
+
+//Describe every elements on the map
+//it contains several properties and also the leaflet layer associated (because leaflet elements like markers, polygon etc... are also layers)
+var Element = function(){};
+Element.prototype = {
+
+	//name of the element
+	_name : null,
+	//description of the element
+	_desc : null,
+	//properties of the element (json like e.g : _properties.color = 'red')
+	_properties : null,
+	//the leaflet layer associated (e.g : Marker, Polyline, Polygon, ...)
+	_lelement : null,
+	
+	//return the name of this element
+	getName : function(){
+		return this._name;
+	}
+	//return the description of this element
+	getDescription : function(){
+		return this._desc;
+	}
+	
+	//return the properties of this element (json like e.g : _properties.color = 'red')
+	getProperties : function(){
+		return this._properties;
+	}
+	//return the associated Leaflet layer to this element
+	getLeafletElement : function(){
+		return this._lelement;
+	}
+	
+}
 // City prototype
 // var City = function(){};
 // City.prototype = {
