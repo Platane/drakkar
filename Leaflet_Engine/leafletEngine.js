@@ -1,24 +1,8 @@
-//enum for the different types of layers - UNUSED
-/*
-var ELEMENT_DOT = 0,
-	ELEMENT_PATH = 1;
-*/
 
-//function that return a certain amount of tabulation ( \t ) depending on the parameter "times" - UNUSED
-/*function ident( times ){
-
-	var ident = "";
-	
-	for(var x = 0;x<times;x++){
-		ident += "\t";
-	}
-	
-	return ident;
-}*/
-
-/** @class Prototype for designing the Map
-*/
-var Map = function(){};
+/**  @class Prototype for designing the Map
+ *
+ */
+var Map = function(){}
 Map.prototype = {
 
 	//the leaflet map
@@ -29,71 +13,141 @@ Map.prototype = {
 	_desc : null, 
 	//list of layers on this map
 	_layers : new Array(),
+	mp : null,
 	
-	//function that create a layer, add it to the map and return it
+	/** Create a layer, add it to the map and return it
+	 *@param {String} name The name of the layer
+	 *@param {String} desc A description of the layer
+	 *@returns {Layer} The layer created and added to the map
+	 */
 	createLayer : function( name, desc ){
 		var layer = Layer.createLayer(name, desc);
 		this.addLayer(layer);
 		return layer;
 	},
 	
-	//function to add a layer to this map
+	/** Add a layer to this map
+	 *@param {Layer} layer the layer to add 
+	 */
 	addLayer : function( layer ){
 	
 		this._layers.push(layer);
 		layer._llayer.addTo(this._lmap);
 	},
 	
-	//function to remove a layer from this map
+	/**
+	 *Remove a layer from this map
+	 * @param {Layer} layer the layer to remove 
+	 */
 	removeLayer : function( layer ){
 		
 		arrayUnset(this._layers, layer);
 		this._lmap.removeLayer( layer._llayer );
 	},
 	
-	//function to remove a layer using his index on the array of layers of this map
+	/**
+	 *Remove a layer from this map using his index number
+	 * @param {int} layer_index Index of the layer
+	 * @returns {Layer} the layer removed
+	 */
 	removeLayerByIndex : function( layer_index ){
 		
 		var layer = this._layers[layer_index];
 		this.removeLayer( layer );
+		return layer;
 	},
 	
-	//function to remove all the layers of this map
+	/**
+	 *Remove all the layers from this map 
+	 */
 	removeAllLayers : function(){
 		
-		for(var layer : this._layers){
-				this._lmap.removeLayer( layer );
+		for(var i = 0; i< this._layers.length;i++){
+			this._lmap.removeLayer( layer );
 		}
 		this._layers = new Array();
 		
 	},
 	
-	//function to get a particular layer on this map
+	/**
+	 *Return the layer at the specified index
+	 * @param {int} layer_index The index of the layer to get
+	 * @returns {Layer} The layer at the specified index
+	 */
 	getLayer : function( layer_index ){
 		
 		return this._layers[layer_index];
 	},
 	
-	//function that return all the layers on this map (array)
+	/**
+	 *Returns all the layers on this map
+	 * @returns {Layer[]} all the layers on this map
+	 */
 	getLayers : function(){
 		return this._layers;
 	},
-	//function that return the leaflet map object associated to this Map
+	
+	/**
+	 * Set the Layers of this map with the specified array of Layers
+	 * @param {Layer[]} layers The array of Layers
+	 */
+	setLayers : function( layers ){
+		
+		this._layers = layers;
+	},
+	
+	/**
+	 *Return the leaflet map object associated to this Map
+	 * @see <a href="http://leafletjs.com/reference.html#map-constructor">Leaflet Map Object</a>
+	 * @returns {<a href="http://leafletjs.com/reference.html#map-constructor">L.Map</a>} The leaflet map object associated 
+	 */
 	getLeafletMap : function(){
 		return this._lmap;
 	},
-	//function that return the name of the map
+	
+	/**
+	 *Return the name of this map
+	 * @returns {String} the name of this map 
+	 */
 	getName : function(){
 		return this._name;
 	},
-	//function that return the description of the map
+	
+	/**
+	 *Change the name of this map
+	 * @param {String} name New name 
+	 */
+	setName : function( name ){
+		this._name = name;
+	},
+	/**
+	 *Return the description of the map
+	 * @returns {String} the description of the map 
+	 */
 	getDescription : function(){
 		return this._desc;
+	},
+	
+	/**
+	 *Change the description of this map
+	 * @param {String} desc New Description 
+	 */
+	setDescription : function( desc ){
+		this._desc = desc;
 	}
 	
 }
-//Function to create a new map with a name, a description and the div id of the element where we display the map
-//for map options see : http://leafletjs.com/reference.html#map-constructor
+
+/**
+ *Create a map with a name, a description, the div id where to put it and some options
+ * @see <a href="http://leafletjs.com/reference.html#map-options">leaflet map options</a>
+ * @param {String} name The name of the map
+ * @param {String} desc A description of the map
+ * @param {String} div_id The div id of the html element where to put this map
+ * @param {<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>} leaflet_map_options Options for the map
+ * @returns {Map} A map with a name, a description and some options (when this function is 
+ * 	called the map will be automatically drawn on the specified html element) 
+ */
 Map.createMap = function( name, desc, div_id, leaflet_map_options ){
 	var m = new Map();
 	m._lmap = new L.Map(div_id, leaflet_map_options);
@@ -102,13 +156,9 @@ Map.createMap = function( name, desc, div_id, leaflet_map_options ){
 	return m;
 }
 
-/*###########################################################################################################################*/
-
-//Layer prototype
-//It contains the name of the layer, his description, an array of 'elements'
-//and a LayerGroup objects of leaflet Library
-//'elements' should only be leaflet layers (not layerGroup if possible to avoid Layer containing Layer containing other layers and so on...)
-//To add an Elements, just call the function addElement(elem) where elem is a leaflet layer like : L.marker([55, 54])
+/**@class Prototype for designing layers. Layers are objects that allows to regroup several Elements.
+ **Layers should not contains another layers.
+ */
 var Layer = function(){};
 Layer.prototype = {
 
@@ -123,17 +173,23 @@ Layer.prototype = {
 	//list of elements presents in this layer
 	_elements : new Array(),
 	
-	//function that add an element to this layer
+	/**
+	 *Add an element to this Layer
+	 * @param {Element} elem The element to add.  
+	 */
 	addElement : function( elem ){
 		
 		this._elements.push( elem );
 		this._llayer.addLayer( elem );
-		//we need to add here the correct listener to the element
-		//so we don't need to do it directly in the editor
+		//TODO : Add the listeners
+		
 		
 	},
 	
-	//function to remove an element from this layer
+	/**
+	 *Remove an element from this Layer
+	 * @param {Element} elem The element to remove 
+	 */
 	removeElement : function( elem ){
 		
 		arrayUnset(this._elements, elem);
@@ -141,60 +197,118 @@ Layer.prototype = {
 		
 	},
 	
-	//function to remove an element using his index on the array of elements of this layer
+	/**
+	 *Remove an element at the specified index from this layer
+	 * @param {int} elem_index The index of the Element to remove
+	 * @returns {Element} The Element removed 
+	 */
 	removeElementByIndex : function( elem_index ){
 		
 		var element = this._elements[elem_index];
 		this.removeElement( element );
+		return element;
 	},
 	
-	//function to remove all the elements of this layer
+	/**
+	 *Remove all Elements from this Layer 
+	 */
 	removeAllElements : function(){
 		
 		this._elements = new Array();
 		this._llayer.clearLayers();
 	},
 	
-	//function to get a particular element on this layer
+	/**
+	 *Return the Element at the specified index
+	 * @param {int} elem_index The index of the Element to get
+	 * @returns {Element} The element at the specified index of this Layer 
+	 */
 	getElement : function( elem_index ){
 		
 		return this._elements[elem_index];
 	},
 	
-	//function that return all the elements on this layer (array)
+	/**
+	 *Return all the Elements of this Layer
+	 * @returns {Element[]} Elements of this layer 
+	 */
 	getElements : function(){
 		return this._elements;
 	},
-	//return the leaflet layer associated to this 'layer'
+	
+	/**
+	 *Set all the Elements of this Layer with the specified array of Elements
+	 * @param {Element[]} elems The array of Elements 
+	 */
+	setElements : function( elems ){
+		this._elements = elems;
+	},
+	
+	/**
+	 *Return the leaflet Layer Group object associated to this Layer
+	 * @see <a href="http://leafletjs.com/reference.html#layergroup">Leaflet layer group object</a>
+	 * @returns {<a href="http://leafletjs.com/reference.html#layergroup">L.LayerGroup</a>} The leaflet ILayer object associated
+	 */
 	getLeafletLayer : function(){
 		return this._llayer;
 	},
-	//return the name of the layer
+	
+	/**
+	 *Return the name of this Layer
+	 * @returns {String} The name of this Layer 
+	 */
 	getName : function(){
 		return this._name;
 	},
-	//return the description of the layer
+	
+	/**
+	 *Return the description of this Layer
+	 * @returns {String} The description of this Layer 
+	 */
 	getDescription : function(){
 		return this._desc;
+	},
+	
+	/**
+	 *Change the name of this Layer
+	 * @param {String} name New name 
+	 */
+	setName : function( name ){
+		this._name = name;
+	},
+	
+	/**
+	 *Change the description of this Layer
+	 * @param {String} desc New Description 
+	 */
+	setDescription : function( desc ){
+		this._desc = desc;
 	}
 	
 }
 
-//Function to create a layer with a name, a description and a leaflet Layer
-//if there is no leaflet layer, it automatically create an empty leaflet LayerGroup
-Layer.createLayer = function( name, desc, llayer ){
+/**
+ *Create a new Layer
+ * @param {String} name The name of the Layer
+ * @param {String} desc a description of the Layer 
+ * @returns {Layer} The Layer created 
+ */
+Layer.createLayer = function( name, desc ){
 	var l = new Layer();
 	l._name = name;
 	l._description = desc;
 	l._llayer = L.LayerGroup();
-	if(llayer)l._llayer.addLayer(llayer);
 	return l;
 }
 
-//Function that create a layer with a name and a description using a geoJSON Object
-//The function create A LayerGroup and add to it the geoJSON Layer corresponding to geoJSON Object in parameter
-//Parameter f_style : a function that will describe 
-Layer.createLayerFromGeoJSON = function( name, desc, geoJSON_object, jsondata_style ){
+/**
+ *Create a new Layer from a valid GeoJSON Object
+ * @param {String} name The name of the Layer
+ * @param {String} desc A description of the Layer
+ * @param {<a href="http://geojson.org/geojson-spec.html">GeoJSON</a>} geoJSON_object The GeoJSON object to read
+ * @returns {Layer} The layer created
+ */
+Layer.createLayerFromGeoJSON = function( name, desc, geoJSON_object){
 	
 	var layer = Layer.createLayer(name, desc);
 	var llayer = L.geoJSON(geoJSON_object, {onEachFeature : _onEachFeature, style : _geoJSONStyle});
@@ -202,13 +316,14 @@ Layer.createLayerFromGeoJSON = function( name, desc, geoJSON_object, jsondata_st
 	llayer.onEachLayer(function ( layer ){
 		layer.addElement( layer );
 	});
-	
+	//TODO : test what happens if the geojson object is invalid or unrecognized
 	return layer;
 	
 }
 
-//private function which will be called when we create a layer using geoJSON data to add correct listeners to each features
-//should never be called directly
+/**
+ *@ignore 
+ */
 function _onEachFeature(feature, layer){
 	
 	if(feature.geometry == 'Point'){/*add the correct listener*/}
@@ -219,19 +334,27 @@ function _onEachFeature(feature, layer){
 	if(feature.geometry == 'MultiPolygon'){/*add the correct listener*/}
 	
 }
-//private function that modify style of each feature of a geoJSON layer
-//Should never be called directly
+
+/**
+ *@ignore 
+ */
 function _geoJSONStyle( feature ){}
 
-/*#################################################################################################################################################*/
 
-//Function that allow to read a file that contains json data relative to 'style' (color, stroke, opacity, ...)
-//return an object containing style properties
+/**
+ *@ignore 
+ * @param {Object} jsondata_style
+ */
 function _loadStyle( jsondata_style ){}
 
 
-//Describe every elements on the map
-//it contains several properties and also the leaflet layer associated (because leaflet elements like markers, polygon etc... are also layers)
+/**
+ *@class Prototype for designing Elements. Elements are object that can be added to a layer, and which can be displayed on the map.
+ * Elements object are containers for leaflet Vector layers objects like Marker, Line, PolyLine, Polygon, etc...
+ * An Element object SHOULD NOT contains something else than Vector Layers
+ * <b>Leaflet Vector Layers objects</b> are defined <a href="http://leafletjs.com/reference.html#path">here</a>
+ * 
+ */
 var Element = function(){};
 Element.prototype = {
 
@@ -244,20 +367,51 @@ Element.prototype = {
 	//the leaflet layer associated (e.g : Marker, Polyline, Polygon, ...)
 	_lelement : null,
 	
-	//return the name of this element
+	/**
+	 *Return the name of this Element
+	 * @returns {String} the name of this Element 
+	 */
 	getName : function(){
 		return this._name;
-	}
-	//return the description of this element
+	},
+	
+	/**
+	 *Return the description of this Element
+	 * @returns {String} the description of this Element 
+	 */
 	getDescription : function(){
 		return this._desc;
-	}
+	},
 	
-	//return the properties of this element (json like e.g : _properties.color = 'red')
+	/**
+	 *Change the name of this Element
+	 * @param {String} name New name 
+	 */
+	setName : function( name ){
+		this._name = name;
+	},
+	
+	/**
+	 *Change the description of this Element
+	 * @param {String} desc New Description 
+	 */
+	setDescription : function( desc ){
+		this._desc = desc;
+	},
+	
+	/**
+	 *@ignore 
+	 * return the properties of this element (json like e.g : _properties.color = 'red')
+	 */
 	getProperties : function(){
 		return this._properties;
-	}
-	//return the associated Leaflet layer to this element
+	},
+	
+	/**
+	 *Return the leaflet ILayer associated to this Element
+	 * @see <a href="http://leafletjs.com/reference.html#path">Leaflet Vector layers</a>
+	 * @returns {<a href="http://leafletjs.com/reference.html#path">L.Path</a>} the leaflet Vector layer associated 
+	 */
 	getLeafletElement : function(){
 		return this._lelement;
 	}
@@ -322,3 +476,4 @@ Element.prototype = {
 	// c._path = path;
 	// return c;
 // }
+
