@@ -93,7 +93,8 @@ function onEachFeature(feature, layer){
 map.fitWorld();
 //we load geoJSON data to draw on the map and attach the function onEachFeature which indicate that
 //for each "feature" of the geoJSON object, the function "onEachFeature" will be called
-L.geoJson(countriesGeoJSON, {onEachFeature: onEachFeature}).addTo(map);
+L.geoJson(den, {onEachFeature: onEachFeature}).addTo(map);
+
 
 
 

@@ -197,6 +197,8 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Map.html">Map</a></li>
 	
+	<li><a href="../symbols/Util.html">Util</a></li>
+	
 </ul>
 <hr />
 			<!-- end publish.classesIndex -->
@@ -214,10 +216,10 @@ ul.inheritsList
 				
 				
 			
-				Prototype for designing Elements. Elements are object that can be added to a layer, and which can be displayed on the map.Elements object are containers for leaflet Vector layers objects like Marker, Line, PolyLine, Polygon, etc...An Element object SHOULD NOT contains something else than Vector Layers<b>Leaflet Vector Layers objects</b> are defined <a href="http://leafletjs.com/reference.html#path">here</a>
+				Prototype for designing Elements. Elements are object that can be added to a layer, and which can be displayed on the map.Elements object are containers for leaflet layers objects like Marker, Line, PolyLine, Polygon, etc...An Element object should only contains leaflet vector layers and leaflet Markers. Other layers are not supported and are not considered as Element.<b>Leaflet Vector Layers objects</b> are defined <a href="http://leafletjs.com/reference.html#path">here</a><b>Marker leaflet object</b> is defined <a href="http://leafletjs.com/reference.html#marker">here</a>
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/E__Workspace_Historical-map-enhanced-authoring-tool_leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
 				
 			</p>
 
@@ -247,6 +249,34 @@ ul.inheritsList
 
 <!-- ============================== properties summary ===================== -->
 			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the fields documented in the class Element.">
+					<caption>Field Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Field Attributes</th>
+							<th scope="col">Field Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								Element.<b><a href="../symbols/Element.html#.geometry">geometry</a></b>
+								</div>
+								<div class="description"></div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+			
 
 <!-- ============================== methods summary ======================== -->
 			
@@ -261,6 +291,60 @@ ul.inheritsList
 						</tr>
 					</thead>
 					<tbody>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createLine">createLine</a></b>(name, desc, latslngs, leaflet_line_options)
+								</div>
+								<div class="description">Create a new Line Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiLine">createMultiLine</a></b>(name, desc, latslngs, leaflet_line_options)
+								</div>
+								<div class="description">Create a new MultiLine Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPoint">createMultiPoint</a></b>(name, desc, latslngs, leaflet_marker_options)
+								</div>
+								<div class="description">Create a new MultiPoint Element with a name, a description and some options at the specified location (lat long)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPolygon">createMultiPolygon</a></b>(name, desc, latlng, leaflet_polygon_options)
+								</div>
+								<div class="description">Create a new MultiPolygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPoint">createPoint</a></b>(name, desc, latlng, leaflet_marker_options)
+								</div>
+								<div class="description">Create a new Point Element with a name, a description and some options at the specified location (lat long)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPolygon">createPolygon</a></b>(name, desc, latlng, leaflet_polygon_options)
+								</div>
+								<div class="description">Create a new Polygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)if there is only two latslngs coordinates in the array in parameter, a rectangle will be created</div>
+							</td>
+						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
@@ -286,6 +370,24 @@ ul.inheritsList
 								<div class="fixedFont"><b><a href="../symbols/Element.html#getName">getName</a></b>()
 								</div>
 								<div class="description">Return the name of this Element</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Element.html#getType">getType</a></b>()
+								</div>
+								<div class="description">Returns the geometry type of this Element</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Element.html#saveAsGeoJSON">saveAsGeoJSON</a></b>()
+								</div>
+								<div class="description">Return this Element in geoJSON format</div>
 							</td>
 						</tr>
 					
@@ -348,12 +450,391 @@ ul.inheritsList
 
 <!-- ============================== field details ========================== -->		
 			
+				<div class="sectionTitle">
+					Field Detail
+				</div>
+				
+					<a name=".geometry"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">Element.</span><b>geometry</b>
+					
+					</div>
+					<div class="description">
+						
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					
+				
+			
 
 <!-- ============================== method details ========================= -->		
 			
 				<div class="sectionTitle">
 					Method Detail
 				</div>
+				
+					<a name=".createLine"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createLine</b>(name, desc, latslngs, leaflet_line_options)
+					
+					</div>
+					<div class="description">
+						Create a new Line Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latslngs</b>
+									
+								</dt>
+								<dd>Positions of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>}</span> <b>leaflet_line_options</b>
+									
+								</dt>
+								<dd>Options for Line Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A Line Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".createMultiLine"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createMultiLine</b>(name, desc, latslngs, leaflet_line_options)
+					
+					</div>
+					<div class="description">
+						Create a new MultiLine Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>}</span> <b>latslngs</b>
+									
+								</dt>
+								<dd>Positions of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>}</span> <b>leaflet_line_options</b>
+									
+								</dt>
+								<dd>Options for Line Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A MultiLine Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".createMultiPoint"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createMultiPoint</b>(name, desc, latslngs, leaflet_marker_options)
+					
+					</div>
+					<div class="description">
+						Create a new MultiPoint Element with a name, a description and some options at the specified location (lat long)
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latslngs</b>
+									
+								</dt>
+								<dd>Position of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options</a>}</span> <b>leaflet_marker_options</b>
+									
+								</dt>
+								<dd>Options for Point Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A MultiPoint Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".createMultiPolygon"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">Element.</span><b>createMultiPolygon</b>(name, desc, latlng, leaflet_polygon_options)
+					
+					</div>
+					<div class="description">
+						Create a new MultiPolygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>}</span> <b>latlng</b>
+									
+								</dt>
+								<dd>Positions of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>}</span> <b>leaflet_polygon_options</b>
+									
+								</dt>
+								<dd>Options for Polygon Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name=".createPoint"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createPoint</b>(name, desc, latlng, leaflet_marker_options)
+					
+					</div>
+					<div class="description">
+						Create a new Point Element with a name, a description and some options at the specified location (lat long)
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng</a>}</span> <b>latlng</b>
+									
+								</dt>
+								<dd>Position of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options</a>}</span> <b>leaflet_marker_options</b>
+									
+								</dt>
+								<dd>Options for Point Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A Point Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".createPolygon"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">Element.</span><b>createPolygon</b>(name, desc, latlng, leaflet_polygon_options)
+					
+					</div>
+					<div class="description">
+						Create a new Polygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)if there is only two latslngs coordinates in the array in parameter, a rectangle will be created
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latlng</b>
+									
+								</dt>
+								<dd>Positions of the Element on the map (latitude - longitude)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>}</span> <b>leaflet_polygon_options</b>
+									
+								</dt>
+								<dd>Options for Polygon Element</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
 				
 					<a name="getDescription"> </a>
 					<div class="fixedFont">
@@ -390,7 +871,7 @@ ul.inheritsList
 					<a name="getLeafletElement"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{<a href="http://leafletjs.com/reference.html#path">L.Path</a>}</span>
+					<span class="light">{<a href="http://leafletjs.com/reference.html#ilayer">ILayer</a>}</span>
 					<b>getLeafletElement</b>()
 					
 					</div>
@@ -410,7 +891,7 @@ ul.inheritsList
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#path">L.Path</a>}</span> the leaflet Vector layer associated</dd>
+								<dd><span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#ilayer">ILayer</a>}</span> the leaflet layer associated</dd>
 							
 							</dl>
 						
@@ -450,6 +931,70 @@ ul.inheritsList
 							<dt class="heading">Returns:</dt>
 							
 								<dd><span class="light fixedFont">{String}</span> the name of this Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getType"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/Element.html#.geometry">Element.geometry</a>}</span>
+					<b>getType</b>()
+					
+					</div>
+					<div class="description">
+						Returns the geometry type of this Element
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html#.geometry">Element.geometry</a>}</span> The geometry type of this Element</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="saveAsGeoJSON"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{geoJSON}</span>
+					<b>saveAsGeoJSON</b>()
+					
+					</div>
+					<div class="description">
+						Return this Element in geoJSON format
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{geoJSON}</span> this Element in a geoJSON format</dd>
 							
 							</dl>
 						
@@ -542,7 +1087,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Dec 04 2012 00:00:04 GMT+0100 (CET)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 06 2012 17:14:18 GMT+0100 (CET)
 		</div>
 	</body>
 </html>

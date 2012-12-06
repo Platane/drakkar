@@ -197,6 +197,8 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Map.html">Map</a></li>
 	
+	<li><a href="../symbols/Util.html">Util</a></li>
+	
 </ul>
 <hr />
 			<!-- end publish.classesIndex -->
@@ -217,7 +219,7 @@ ul.inheritsList
 				Prototype for designing the Map
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/E__Workspace_Historical-map-enhanced-authoring-tool_leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
 				
 			</p>
 
@@ -290,6 +292,15 @@ ul.inheritsList
 						</tr>
 					
 						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">Map.<b><a href="../symbols/Map.html#.createMapFromGeoJSON">createMapFromGeoJSON</a></b>(name, desc, div_id, leaflet_map_options, geoJSON_objects)
+								</div>
+								<div class="description">Create a map using a geoJSON objectthe geoJSON object must be an Array of geoJSON object</div>
+							</td>
+						</tr>
+					
+						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/Map.html#getDescription">getDescription</a></b>()
@@ -358,6 +369,15 @@ ul.inheritsList
 								<div class="fixedFont"><b><a href="../symbols/Map.html#removeLayerByIndex">removeLayerByIndex</a></b>(layer_index)
 								</div>
 								<div class="description">Remove a layer from this map using his index number</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Map.html#saveAsGeoJSON">saveAsGeoJSON</a></b>()
+								</div>
+								<div class="description">Return this map in geoJSON formatActually, a map is an Array of GeoJSON objects.</div>
 							</td>
 						</tr>
 					
@@ -589,6 +609,73 @@ ul.inheritsList
 
 					<hr />
 				
+					<a name=".createMapFromGeoJSON"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					<span class="light">{<a href="../symbols/Map.html">Map</a>}</span>
+					<span class="light">Map.</span><b>createMapFromGeoJSON</b>(name, desc, div_id, leaflet_map_options, geoJSON_objects)
+					
+					</div>
+					<div class="description">
+						Create a map using a geoJSON objectthe geoJSON object must be an Array of geoJSON object
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>The name of the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>A description of the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>div_id</b>
+									
+								</dt>
+								<dd>The div id of the html element where to put this map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>}</span> <b>leaflet_map_options</b>
+									
+								</dt>
+								<dd>Options for the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="http://geojson.org/geojson-spec.html">GeoJSON[]</a>}</span> <b>geoJSON_objects</b>
+									
+								</dt>
+								<dd>An array of geoJSON objects</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Map.html">Map</a>}</span> A map with a name, a description and some options (when this function is 	called the map will be automatically drawn on the specified html element)</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="getDescription"> </a>
 					<div class="fixedFont">
 					
@@ -641,7 +728,7 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{int}</span> <b>layer_index</b>
+									<span class="light fixedFont">{Number}</span> <b>layer_index</b>
 									
 								</dt>
 								<dd>The index of the layer to get</dd>
@@ -848,7 +935,7 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{int}</span> <b>layer_index</b>
+									<span class="light fixedFont">{Number}</span> <b>layer_index</b>
 									
 								</dt>
 								<dd>Index of the layer</dd>
@@ -863,6 +950,38 @@ ul.inheritsList
 							<dt class="heading">Returns:</dt>
 							
 								<dd><span class="light fixedFont">{<a href="../symbols/Layer.html">Layer</a>}</span> the layer removed</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="saveAsGeoJSON"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{geoJSON}</span>
+					<b>saveAsGeoJSON</b>()
+					
+					</div>
+					<div class="description">
+						Return this map in geoJSON formatActually, a map is an Array of GeoJSON objects.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{geoJSON}</span> this map in a geoJSON format</dd>
 							
 							</dl>
 						
@@ -991,7 +1110,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Dec 04 2012 00:00:04 GMT+0100 (CET)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 06 2012 17:14:18 GMT+0100 (CET)
 		</div>
 	</body>
 </html>
