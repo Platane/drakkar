@@ -95,6 +95,20 @@ map.fitWorld();
 //for each "feature" of the geoJSON object, the function "onEachFeature" will be called
 L.geoJson(den, {onEachFeature: onEachFeature}).addTo(map);
 
+var prop = null;
+var obj = {
+	"prop" : "test",
+	"prop2" : "test2"
+};
+
+obj["prop3"] = "yodawg";
+delete obj["prop5"];
+/*alert(obj["prop3"]);
+/*for(elt in obj){
+	alert(elt+" : "+obj[elt]);
+}*/
+//alert(obj.prop);*/
+
 
 
 

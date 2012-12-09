@@ -13,10 +13,12 @@ Map.prototype = {
 	//name of the map
 	_name : null,
 	//description
-	_desc : null, 
+	_desc : null,
+	//properties of this map
+	_properties : null,
 	//list of layers on this map
 	_layers : new Array(),
-	mp : null,
+	
 	
 	/** Create a layer, add it to the map and return it
 	 *@param {String} name The name of the layer
@@ -139,6 +141,7 @@ Map.prototype = {
 		this._desc = desc;
 	},
 	
+	
 	/**
 	 *Return this map in geoJSON format
 	 *Actually, a map is an Array of GeoJSON objects.
@@ -184,7 +187,8 @@ Map.createMap = function( name, desc, div_id, leaflet_map_options ){
  * @param {<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>} leaflet_map_options Options for the map
  * @param {<a href="http://geojson.org/geojson-spec.html">GeoJSON[]</a>} geoJSON_objects An array of geoJSON objects
  * @returns {Map} A map with a name, a description and some options (when this function is 
- * 	called the map will be automatically drawn on the specified html element) 
+ * 	called the map will be automatically drawn on the specified html element)
+ * @throws {InvalidGeoJSONObject} if the geoJSON object is not an Array it can't be read to be converted as a Map
  */
 Map.createMapFromGeoJSON = function(name, desc, div_id, leaflet_map_options, geoJSON_objects){
 	
@@ -195,6 +199,7 @@ Map.createMapFromGeoJSON = function(name, desc, div_id, leaflet_map_options, geo
 			map.addLayer(layer);
 		}
 	}
+	else throw 'invalid geoJSON object. Should be an Array';
 };
 
 /**@class Prototype for designing layers. Layers are objects that allows to regroup several Elements.
@@ -204,10 +209,10 @@ var Layer = function(){};
 Layer._i = 0;
 Layer.prototype = {
 
-	//name of the layer
-	_name : null,
-	//description of the layer (his content)
-	_desc : null,
+	//properties of this layer. Its an object containing each property as an attribute
+	_properties : null,
+	//Style properties of this layer. Its an object containg each style property as an attribute
+	_style : null,
 	//type of layer (dots or paths)
 	//_type : null,
 	//The leaflet LayerGroup associated
@@ -296,35 +301,54 @@ Layer.prototype = {
 	},
 	
 	/**
-	 *Return the name of this Layer
-	 * @returns {String} The name of this Layer 
+	 *Add a property to this layer
+	 *If the property already exists his value is overwrited with the new one
+	 *@param {String} name the name of the property to add
+	 *@param {Object} value the value of the property to add
 	 */
-	getName : function(){
-		return this._name;
+	addProperty : function( name, value ){
+		this._properties[name] = value;	
 	},
 	
 	/**
-	 *Return the description of this Layer
-	 * @returns {String} The description of this Layer 
+	 *Return the value of the specified property on this layer
+	 *If the property doesn't exist, 'undefined' is returned
+	 *@param {String} name the name of the property to get
+	 *@returns {Object} the value of the specified property on this layer or null if it doesn't exist
 	 */
-	getDescription : function(){
-		return this._desc;
+	getProperty : function ( name ){
+		return this._properties[name];
 	},
 	
 	/**
-	 *Change the name of this Layer
-	 * @param {String} name New name 
+	 *Delete the specified property on this layer.
+	 *@param {String} name the name of the property to delete
+	 *@returns {Boolean} true if the specified property has been removed. False if the property doesn't exist
 	 */
-	setName : function( name ){
-		this._name = name;
+	removeProperty : function( name ){
+		if(typeof(this._properties[name]) != 'undefined'){
+			delete this._properties[name];
+			return true;
+		}
+		else return false;
 	},
 	
 	/**
-	 *Change the description of this Layer
-	 * @param {String} desc New Description 
+	 *Return the properties existing on this layer. These properties are contained in an object as its attributes
+	 *i.e : var properties = layer.getProperties();
+	 *	for(prop in properties)alert(prop+" : "+properties[prop]);
+	 *@returns {Object} an object containing properties.
 	 */
-	setDescription : function( desc ){
-		this._desc = desc;
+	getProperties : function(){
+		return this._properties;
+	},
+	
+	/**
+	 *Set the properties of this layer with the specified properties object
+	 *@param {Object} properties the new properties
+	 */
+	setProperties : function( properties ){
+		this._properties = properties;
 	},
 	
 	/**
@@ -340,10 +364,7 @@ Layer.prototype = {
 		
 		geojson.type = "FeatureCollection";
 		
-		geojson.properties = {
-			name : this.getName(),
-			description : this.getDescription()
-		}
+		geojson.properties = this.getProperties();
 		geojson.features = features;
 		
 		return geojson;
@@ -359,44 +380,48 @@ Layer.prototype = {
  */
 Layer.createLayer = function( name, desc ){
 	var l = new Layer();
-	if(name == null)l.setName("Layer#"+Layer._i++);
-	else l._name = name;
-	if(desc == null)l.setDescription("");
-	else l.setDescription(desc);
+	if(name && name != null && name != 'undefined' && Util.trim(name) != "")l.addProperty("name", name);
+	else l.addProperty("name", "Layer#"+Layer._i++);
+	if(des && desc != null && desc != 'undefined' && Util.trim(desc) != "")l.addProperty("description", desc);
 	l._llayer = L.LayerGroup();
 	return l;
 }
 
 /**
- *Create a new Layer from a valid GeoJSON Object
- * @param {<a href="http://geojson.org/geojson-spec.html">GeoJSON</a>} geoJSON_object The GeoJSON object to read
+ *Create a new Layer from a valid GeoJSON Object.
+ *A valid geoJSON Object for a layer must contains a "features" attribute
+ * @param {<a href="http://geojson.org/geojson-spec.html">GeoJSON</a>} geoJSON_object The GeoJSON object to read. It must contain
+ * a property "type" with the value "FeatureCollection" and the property "features"
  * @returns {Layer} The layer created
+ * @throws {InvalidGeoJSONObject} When the geoJSON object is invalid. 
  */
 Layer.createLayerFromGeoJSON = function(geoJSON_object){
 	
-	var layer = Layer.createLayer(null, null);
+	var layer = Layer.createLayer();
 	
-	//if geojson object is a collection of features (=> if the geojson object is a layer) and if properties is defined
-	if(geoJSON_object.features && geoJSON_object.properties){
-		if(geoJSON_object.properties.name)layer.setName(geoJSON_object.properties.name);
-		if(geoJSON_object.properties.description)layer.setDescription(geoJSON_object.properties.description);
-	}
-	
-	var llayer = L.geoJSON(geoJSON_object, {onEachFeature : function(feature, layer){
-		
-			var type;
-			if(feature.geometry == 'Point'){type = Element.geometry.POINT;}	
-			if(feature.geometry == 'MultiPoint'){type = Element.geometry.MULTIPOINT;}
-			if(feature.geometry == 'LineString'){type = Element.geometry.LINE;}
-			if(feature.geometry == 'MultiLineString'){type = Element.geometry.MULTILINE;}
-			if(feature.geometry == 'Polygon'){type = Element.geometry.POLYGON;}
-			if(feature.geometry == 'MultiPolygon'){type = Element.geometry.MULTIPOLYGON;}
-			
-			var element = Element.createElementFromLeafletLayer(feature.properties.name ? feature.properties.name : null, feature.properties.description ? feature.properties.description : null, type, layer);
-			layer.addElement(element);
+	//if geojson object is a collection of features (=> if the geojson object is a layer) 
+	if(geoJSON_object.type == "FeatureCollection" && geoJSON_object.features){
+		//if properties is defined
+		if(geoJSON_object.properties){
+			layer.setProperties(geoJSON_object.properties);
 		}
-	});
-	
+		
+		var llayer = L.geoJSON(geoJSON_object, {onEachFeature : function(feature, layer){
+			
+				var type;
+				if(feature.geometry == 'Point'){type = Element.geometry.POINT;}	
+				if(feature.geometry == 'MultiPoint'){type = Element.geometry.MULTIPOINT;}
+				if(feature.geometry == 'LineString'){type = Element.geometry.LINE;}
+				if(feature.geometry == 'MultiLineString'){type = Element.geometry.MULTILINE;}
+				if(feature.geometry == 'Polygon'){type = Element.geometry.POLYGON;}
+				if(feature.geometry == 'MultiPolygon'){type = Element.geometry.MULTIPOLYGON;}
+				
+				var element = Element.createElementFromLeafletLayer(feature.properties.name, feature.properties.description, type, layer);
+				layer.addElement(element);
+			}
+		});
+	}
+	else throw 'Invalid GeoJSON object. Should contains "features" property and "type" property with "FeatureCollection" value';
 	//TODO : test what happens if the geojson object is invalid or unrecognized
 	return layer;
 	
@@ -414,13 +439,10 @@ var Element = function(){};
 Element._i = 0;
 Element.prototype = {
 	
-
-	//name of the element
-	_name : null,
-	//description of the element
-	_desc : null,
 	//properties of the element (json like e.g : _properties.color = 'red')
 	_properties : null,
+	//style properties of this element
+	_style : null,
 	//the type of the element (point, line, polylin, polygon, ...)
 	_type : null,
 	//the leaflet layer associated (e.g : Marker, Polyline, Polygon, ...)
@@ -434,46 +456,7 @@ Element.prototype = {
 		return this._type;
 	},
 	
-	/**
-	 *Return the name of this Element
-	 * @returns {String} the name of this Element 
-	 */
-	getName : function(){
-		return this._name;
-	},
-	
-	/**
-	 *Return the description of this Element
-	 * @returns {String} the description of this Element 
-	 */
-	getDescription : function(){
-		return this._desc;
-	},
-	
-	/**
-	 *Change the name of this Element
-	 * @param {String} name New name 
-	 */
-	setName : function( name ){
-		this._name = name;
-	},
-	
-	/**
-	 *Change the description of this Element
-	 * @param {String} desc New Description 
-	 */
-	setDescription : function( desc ){
-		this._desc = desc;
-	},
-	
-	/**
-	 *@ignore 
-	 * return the properties of this element (json like e.g : _properties.color = 'red')
-	 */
-	getProperties : function(){
-		return this._properties;
-	},
-	
+		
 	/**
 	 *Return the leaflet ILayer associated to this Element
 	 * @see <a href="http://leafletjs.com/reference.html#path">Leaflet Vector layers</a>
@@ -481,6 +464,57 @@ Element.prototype = {
 	 */
 	getLeafletElement : function(){
 		return this._lelement;
+	},
+	
+	/**
+	 *Add a property to this Element
+	 *If the property already exists his value is overwrited with the new one
+	 *@param {String} name the name of the property to add
+	 *@param {Object} value the value of the property to add
+	 */
+	addProperty : function( name, value ){
+		this._properties[name] = value;	
+	},
+	
+	/**
+	 *Return the value of the specified property on this Element
+	 *If the property doesn't exist, 'undefined' is returned
+	 *@param {String} name the name of the property to get
+	 *@returns {Object} the value of the specified property on this layer or null if it doesn't exist
+	 */
+	getProperty : function ( name ){
+		return this._properties[name];
+	},
+	
+	/**
+	 *Delete the specified property on this Element.
+	 *@param {String} name the name of the property to delete
+	 *@returns {Boolean} true if the specified property has been removed. False if the property doesn't exist
+	 */
+	removeProperty : function( name ){
+		if(typeof(this._properties[name]) != 'undefined'){
+			delete this._properties[name];
+			return true;
+		}
+		else return false;
+	},
+	
+	/**
+	 *Return the properties existing on this Element. These properties are contained in an object as its attributes
+	 *i.e : var properties = layer.getProperties();
+	 *	for(prop in properties)alert(prop+" : "+properties[prop]);
+	 *@returns {Object} an object containing properties.
+	 */
+	getProperties : function(){
+		return this._properties;
+	},
+	
+	/**
+	 *Set the properties of this Element with the specified properties object
+	 *@param {Object} properties the new properties
+	 */
+	setproperties : function( properties ){
+		this._properties = properties;
 	},
 	
 	/**
@@ -563,9 +597,9 @@ Element.prototype = {
  */
 Element._createAbstractElement = function( name, desc ){
 	var elem = new Element();
-	if(name == null)element.setName("Element#"+Element._i++);
+	if(name && name != null && name != 'undefined' && Util.trim(name) != "")element.setName("Element#"+Element._i++);
 	else elem.setName(name);
-	if(desc == null)elem.setDescription("");
+	if(desc && desc != null && desc != 'undefined' && Util.trim(desc) != "")elem.setDescription("");
 	else elem.setDescription(desc);
 	return elem;
 }
@@ -682,9 +716,6 @@ Element.createMultiPolygon = function(name, desc, latslngs, leaflet_polygon_opti
 	return elem;
 }
 
-
-
-
 /**
  * @enum Regroup the different possible type of geometry for Elements
  */
@@ -697,6 +728,9 @@ Element.geometry= {
 		MULTIPOLYGON : "MultiPolygon"
 	};
 
+
+var Style = function(){};
+Style.prototype
 /**
  *@namespace Namespace for utility functions
  */
@@ -712,4 +746,16 @@ Util.latLngToArray = function(latLng){
 	array.push(latLng.lat);
 	array.push(latLng.lng);
 	return array;
+}
+
+/**
+ *Remove the leading and trailing whitespaces (tabulations or backspaces) of the specified String
+ *@param {String} word the String to trim
+ *@returns {String} a new String without leading and trailing whitespaces
+ */
+Util.trim = function( word ){
+	var nword = word.replace(/^\s+|\s+$/g, "");
+	nword = word.replace(/^\t+|\t+$/g, "");
+	nword = word.replace(/^\n+|\n+$/g, "");
+	return nword;
 }
