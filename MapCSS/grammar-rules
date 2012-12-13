@@ -1,0 +1,67 @@
+/*
+ * MapCSS grammar
+ */
+
+start
+  = declaration*
+
+
+declaration
+  = i s : selector i "{"  i p: ( i property i ";" i )* "}" i { var props = []; for(var i=0;i<p.length;i++)props.push(p[i][1]);return{selector:s,props:props};}
+
+
+selector
+  = "#" id:string n:( selector )? { if(!n)return[{id:id}];n.unshift({id:id});return n; }
+  / "." id:string n:( selector )? { if(!n)return[{class:id}];n.unshift({class:id});return n; }
+  /     id:string n:( selector )? { if(!n)return[{tag:id}];n.unshift({tag:id});return n; }
+  / "[" a: attributeQuery "]" n:( selector )? { if(!n)return[{attributeQuery:a}];n.unshift({attributeQuery:a});return n; }
+  / " " n:selector { return [{child:n}]; }
+  
+
+attributeQuery
+  = s1:string "=" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)==this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
+  / s1:string ">" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)>this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
+  / s1:string ">=" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)>=this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
+  / s1:string "<" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)<this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
+  / s1:string "<=" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)<=this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
+  / s1:string "=" s2:string { return { attribute : s1 , testFunction : function( a ){ return a == this._rightHand; } , _rightHand : s2  } }
+  / s1:string { return { attribute : s1 , testFunction: function( a ){ return a != null && a != undefined } } }
+
+property
+  = name:string i ":" i r:righthands { return { name : name , value : r }; }
+
+righthands
+  = r1:righthand rt:( i "," i righthands )* { if(!rt)return r1; var t=[r1];for(var i=0;i<rt.length;i++)t.push(rt[i][3][0]); return t;}
+
+righthand
+  = v:float m:mesure n:( separator righthand )? { if(!n)return[{value:v,mesure:m}];n[1].unshift({value:v,mesure:m});return n[1];}
+  / c:color n:( separator righthand )? { if(!n)return[c];n[1].unshift(c);return n[1];}
+  / id:string n:( separator righthand )? { if(!n)return[id];n[1].unshift(id);return n[1];}
+
+color 
+  = "#" [0-9abcdefABCDEF]+ 
+  / "rgb" i "(" i r:float i "," i v:float i "," i b:float i ")" { return { r:r , v:v , b:b }; }
+  / "rgba" i "(" i r:float i "," i v:float i "," i b:float i "," i a:float i ")" { return { r:r , v:v , b:b , a:a }; }
+
+
+mesure
+  = "px"
+  / "%"
+  /  {return "none" }
+
+float
+  = digits:[0-9.]+ { return parseFloat(digits.join(""), 10); }
+
+string
+  = digits:[0-9a-zA-Z-]+ { return digits.join(""); }
+
+
+separator
+  = " "  i
+  / "\n" i
+
+i /* ignore */
+  = " "   i
+  / "\n"  i
+  / "\t"  i
+  /
