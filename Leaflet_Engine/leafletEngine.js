@@ -60,8 +60,8 @@ Map.prototype = {
 	//function to remove all the layers of this map
 	removeAllLayers : function(){
 		
-		for(var layer : this._layers){
-				this._lmap.removeLayer( layer );
+		for( var layer in this._layers ){
+			this._lmap.removeLayer( layer );
 		}
 		this._layers = new Array();
 		

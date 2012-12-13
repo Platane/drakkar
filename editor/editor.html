@@ -1,9 +1,12 @@
 <html>
 	<head>
 		
-		<link rel="stylesheet" href="style.css" />
-		<!-- <link rel="stylesheet" href="../external/bootstrap/css/bootstrap.css" /> -->
 		
+		<!-- <link rel="stylesheet" href="../external/bootstrap/css/bootstrap.css" /> -->
+		<link rel="stylesheet" href="../external/KNACSS-master/css/knacss-garni.css" />
+		<link rel="stylesheet" href="../external/KNACSS-master/css/knacss.css" />
+		<link rel="stylesheet" href="style.css" />
+	
 		<script type="text/javascript" src="../external/jquery.min.js"></script>
 		<script type="text/javascript" src="../external/bootstrap/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="../MapObjects/MapObjects.js"></script>
@@ -15,30 +18,24 @@
 			window.onload = function(){
 				init();
 			}
-			
-			
-			var map = Map.createMap( "myMap" , " its a desciption" );
-			
-			map.addLayer(  Layer.createLayer( "top", "" , "dots" ) );
-			map.addLayer(  Layer.createLayer( "mid", "" , "paths" ) );
-			map.addLayer(  Layer.createLayer( "bot", "" , "dots" ) );
+				
 			
 		</script>
 	</head>
 	
 	<body>
-	
+		
+		<header class = "line mod" >
 		<nav>
 			<div class="menu" >
 				<ul>
 					<li id="drawbleBn" data-frame="drawable" >Edite Raw Data</li>
-					<li id="blankBn"   data-frame="blank">ipsum</li>
-					<li>dolor</li>
+					<li id="searchBn"   data-frame="search">Search</li>
 				</ul>
 			</div>
 			
 		</nav>
-		
+		</header>
 		
 		</div>
 		<div id="main">
@@ -50,27 +47,56 @@
 	</body>
 	
 	<div id="framePool" style="display:none" >
-	
-	
+		
+		<!-- edite raw data  -->
 		<div id="drawable" class="frame" >
+		
+		<div class="line gut">
+			<aside class="block mod right w50px">
+				<div id="tracePathBn" class="btn icon-btn" >#</div>
+						<div id="editPathBn" class="btn icon-btn" >@</div>
+						<div class="btn icon-btn" >8</div>
+						<div class="btn icon-btn" >*</div>
+			</aside>
 			
-			<div class= "container" >
-				
+			<div class="centralPanel mod item center w60">
+				<p>Lorem Elsass ipsum réchime amet non Choucroute knack  tchao bissame hopla. Wotch a kofee avec ton BibalaekaesSalat et ta wurscht ?</p>
+				<p>Yeuh non che suis au réchime, je ne mange plus que des Grumbeere light et che fais de la chym avec Chulien. Tiens, un Picon sur le comptoir.</p>
+				<p>Allez tchao bissame !</p>
+			</div>
+			<div id = "block-param" class="block mod w20" style = "display:none;" >
+			</div>
+		</div>
 			
+			
+		<div id = "block-property" class="subPanel  block mod" ></div>
+		
+		</div>
+		
+		
+		
+		<!-- search -->
+		<div id="search" class="frame" >
+			
+			
+			<div class="centralPanel mod item center w60">
+				<div id="tm-container">
+				</div>
+			</div>
+			<div id = "block-param" class="block mod w20" style = "display:none;" >
 			</div>
 			
-			<div id = "block-editableToolBox" class="block toolBox" >
-					<div id="tracePathBn" class="btn icon-btn" >#</div>
-					<div id="editPathBn" class="btn icon-btn" >@</div>
-					<div class="btn icon-btn" >8</div>
-					<div class="btn icon-btn" >*</div>
-			</div> 
-			
-			<div id = "block-param" class="block toolBox" style = "display:none;" >
+			<div id = "block-result" class="subPanel  block line" >
+				<div class="mod left w100p">
+					<div class="btn" >GO</div>
+				</div>
+				<div class="mod" style="overflow-y:hidden; overflow-x:scroll; white-space: nowrap;">
+					<div style="width:10%; height:inherit; display:inline-block;" >
+					<p> res </p>
+					</div>
+				</div>
 			</div>
 			
-			<div id = "block-property" class="block" >
-			</div>
 		</div>
 		
 		<div id="blank" class="frame" ></div>

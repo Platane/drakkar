@@ -1,0 +1,66 @@
+<!doctype html>
+<!--[if lte IE 6]> <html class="no-js ie6 ie67 ie678" lang="fr"> <![endif]-->
+<!--[if lte IE 7]> <html class="no-js ie7 ie67 ie678" lang="fr"> <![endif]-->
+<!--[if IE 8]> <html class="no-js ie8 ie678" lang="fr"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="fr"> <!--<![endif]-->
+<head>
+	<meta charset="UTF-8">
+	<title>Responsive KNACSS</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=10">
+	<meta name="viewport" content="initial-scale=1.0">
+	<!--[if lt IE 9]><script src="../js/html5shiv.js"></script><![endif]-->
+	<link rel="stylesheet" href="../css/knacss.css" media="all">
+	<link rel="stylesheet" href="../css/knacss-garni.css" media="all">
+	<style>
+		body     { color: #fff; }
+		header   { background: tomato; }
+		aside    { background: brown; }
+		aside ~ aside    { background: hotpink; }
+		.col,
+		.content { background: maroon; }
+		footer   { background: orange; }
+		.gut     { background: beige; }
+		/* box-sizing for IE6/IE7 */
+		/* https://github.com/Schepp/box-sizing-polyfill*/
+		.ie7 * {
+			behavior: url(../js/boxsizing.htc);
+		}
+	</style>
+</head>
+<body class="mw960p center">
+	<header class="line mod">
+		<p>header</p>
+	</header>
+	<div class="line">
+		<aside class="mod left w20 m33 t100">
+			<p>Ce bloc doit occuper :</p>
+			<ul>
+				<li>20% de la largeur sur écran large (.w20)</li>
+				<li>33% de la largeur sur écran moyen (.m33)</li>
+				<li>100% de la largeur sur petit écran (.t100)</li>
+			</ul>
+		</aside>
+		
+		<div class="mod item left content w60 m33 t100">
+			<p>Ce bloc doit occuper :</p>
+			<ul>
+				<li>60% de la largeur sur écran large (.w60)</li>
+				<li>33% de la largeur sur écran moyen (.m33)</li>
+				<li>100% de la largeur sur petit écran (.t100)</li>
+			</ul>
+		</div>
+
+		<aside class="mod item left w20 m33 t100">
+			<p>Ce bloc doit occuper :</p>
+			<ul>
+				<li>20% de la largeur sur écran largeur (.w20)</li>
+				<li>33% de la largeur sur écran moyen (.m33)</li>
+				<li>100% de la largeur sur petit écran (.t100)</li>
+			</ul>
+		</aside>
+	</div>
+	<footer class="line mod">
+		<p>footer</p>
+	</footer>
+</body>
+</html>

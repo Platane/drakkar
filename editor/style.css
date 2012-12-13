@@ -1,46 +1,42 @@
 
-body{
-margin : 0;
-font-family : Calibri;
-
+/* ----------------------------- */
+/* ==header */
+/* ----------------------------- */
+header {
+	min-height : 10%;
+	background-color : #486ab5;
 }
-
 .menu {
-	height : 100px;
-	
+	min-height : 30px;
 }
-
 .menu ul {
-
 	list-style: none;
-	
-	
 }
 
 .menu li {
-
 	float: left;
 	position: relative;
 	padding : 10px;
 }
 
-#main {
-	display : block;
+
+/* ----------------------------- */
+/* ==main */
+/* ----------------------------- */
+
+.subPanel {
+	height : 10%;
 }
 
-.container {
-	
+.centralPanel {
 	max-width : 1000px;
-	margin-left : auto;
-	margin-right : auto;
 	background-color : rgba( 234 , 234 , 234 , 0.8 );
+	height : 80%;
 }
 .block {
 
 	box-shadow : 0 0 4px 3px rgba( 124 , 124 , 124 , 0.8 );
-	margin : 20px;
 	border-radius : 5px;
-	padding : 5px;
 	background-color : rgba( 224 , 224 , 224 , 0.8 );
 }
 
@@ -49,6 +45,24 @@ font-family : Calibri;
 	min-width : 20 px;
 	min-height : 20 px;
 
+}
+
+/* ----------------------------- */
+/* ==timeline */
+/* ----------------------------- */
+.timeLine{
+	
+	
+}
+.timeLine .dot{
+	background-color : #55AA33;
+	width : 20px;
+	height : 20px;
+}
+.timeLine .hint{
+	background-color : #55AA33;
+	-webkit-transform : rotate( -45deg );
+	top : 20px;
 }
 
 .btn {
@@ -151,7 +165,7 @@ font-family : Calibri;
           box-shadow: none;
 }
 
-
+/*
 #block-map{
 
 	min-height : 300px; 
@@ -188,17 +202,14 @@ font-family : Calibri;
 	right:0;
 	
 }
+*/
 
 li.selected{
-	
 	background-color : rgba( 180 , 224 , 224 , 0.8 );
-	
 }
 
 .popUp {
-	
 	box-shadow : 0 0 5px 10px rgba( 124 , 124 , 124 , 0.8 );
 	background-color : rgba( 224 , 224 , 224 , 0.8 );
 	border-radius : 5px;
-	
 }

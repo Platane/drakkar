@@ -221,8 +221,19 @@ var popUp = {};
 	
 })( popUp );
 
-
-
+function AbstractComponent(){};
+AbstractComponent.prototype = {
+	els : null,
+	init : function( id ){
+		
+	},
+	getElement : function(){
+		return this.el;
+	},
+	resize : function(){
+		// reajuste la taille du composant en fonction de la taille de son parent
+	},
+}
 function Map(){};
 Map.prototype = {
 	el : null,
@@ -513,7 +524,7 @@ LayerMgr.prototype = {
 		liste.children("li").remove();
 		
 		// 
-		var layers = map.getLayers();
+		var layers = this.map.getLayers();
 		
 		var self = this;
 		
@@ -688,9 +699,220 @@ LayerMgr.create = function( map , id ){
 }
 
 
+
+
+function TimeLine(){};
+extend( TimeLine , AbstractComponent.prototype );
+extend( TimeLine , {
+	el : null,
+	dateStart : null,
+	dateEnd : null,
+	bandStart : null,
+	bandEnd : null,
+	zoom : 2, 	// on pixel per year
+	init : function( id ){
+		
+		
+		this.dateEnd = this._Date2FloatYear( new Date() );
+		this.dateStart = this.dateEnd - 50;
+		this.bandStart = this.dateEnd - 100;
+		this.bandEnd = this.dateEnd;
+		
+		var w = 500, h = 150;
+		
+		var el = $("<div>").addClass( "block" ).addClass("timeLine").attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } );
+		
+		if( id )
+			el.attr( "id" , id );
+			
+		// le fond de la barre
+		var fond = $("<div>").attr( "id" , "fond" ).attr( "width" , w ).attr( "height" , h * 0.5 ).css( { "position" : "absolute" , "vertical-align" : "middle" , "width": w , "height": h * 0.5 } ).appendTo( el );
+		
+		var layer = $("<div>").css( { "position" : "absolute" } ).appendTo( el );
+		
+		var window = $("<div>").attr( "id" , "window" ).css( { "position" : "absolute" , "vertical-align" : "middle" , "height": h * 0.9 , "box-shadow" : "0 0 0 3px  #333" } ).appendTo( layer );
+		
+		var dotStart = $("<div>").attr( "id" , "dotStart" ).addClass("dot").css( { "position" : "absolute" , "vertical-align" : "middle"  } ).appendTo( layer );
+		var dotEnd   = $("<div>").attr( "id" , "dotEnd" ).addClass("dot").css( { "position" : "absolute" , "vertical-align" : "middle" } ).appendTo( layer );
+		
+		var hintStart   = $("<div>").attr( "id" , "hintStart" ).addClass("hint").css( { "position" : "absolute" } ).appendTo( layer );
+		var hintEnd   = $("<div>").attr( "id" , "hintEnd" ).addClass("hint").css( { "position" : "absolute"  } ).appendTo( layer );
+		
+		$("<p>").appendTo( hintStart );
+		$("<p>").appendTo( hintEnd );
+		
+		this.el = el;
+		
+		this.initInteraction();
+		
+		this.update();
+	},
+	
+	initInteraction : function(){
+		
+		//editable
+		(function( scope , update ){
+			
+			
+			var updateExt;
+			var dragS = false;
+			var dragE = false;
+			
+			var startS = function(){
+				dragS = true;
+			}
+			var moveS = function( e ){
+				if( !dragS )
+					return;
+				
+				var lban_p = scope.el.width(),
+					sban_d = scope.bandStart ,
+					lban_d = scope.bandEnd  - sban_d; 
+				
+				var x = e.pageX - scope.el.position().left;
+				
+				scope.dateStart = sban_d + x / lban_p * lban_d;
+				
+				if( scope.dateStart > scope.dateEnd )
+					scope.dateStart = scope.dateEnd;
+				
+				if( scope.dateStart < scope.bandStart )
+					scope.dateStart = scope.bandStart;
+				
+				scope.update();
+				if( updateExt )
+					updateExt.f.call( updateExt.o );
+			}
+			var endS = function( e ){
+				if( !dragS )
+					return;
+				dragS = false;
+			}
+			
+			
+			
+			var startE = function(){
+				dragE = true;
+			}
+			var moveE = function( e ){
+				if( !dragE )
+					return;
+				
+				var lban_p = scope.el.width(),
+					sban_d = scope.bandStart ,
+					lban_d = scope.bandEnd  - sban_d; 
+				
+				var x = e.pageX - scope.el.position().left;
+				
+				scope.dateEnd = sban_d + x / lban_p * lban_d;
+				
+				if( scope.dateEnd < scope.dateStart )
+					scope.dateEnd = scope.dateStart;
+				
+				if( scope.dateEnd > scope.bandEnd )
+					scope.dateEnd = scope.bandEnd;
+				
+				scope.update();
+				if( updateExt )
+					updateExt.f.call( updateExt.o );
+			}
+			var endE = function( e ){
+				if( !dragE )
+					return;
+				dragE = false;
+			}
+			
+			
+			var makeMeEditable = function( enable , updateExt_ ){
+				
+				updateExt = updateExt_;
+				
+				if( enable ){
+					var dotStart = scope.el.find("#dotStart"),
+						dotEnd = scope.el.find("#dotEnd");
+					
+					dotStart.unbind( "mousedown" , startS ).bind( "mousedown" , startS );
+					$("body").unbind( "mousemove" , moveS ).bind( "mousemove" , moveS );
+					$("body").unbind( "mouseup" , moveS ).bind( "mouseup" , endS );
+					
+					dotEnd.unbind( "mousedown" , startE ).bind( "mousedown" , startE );
+					$("body").unbind( "mousemove" , moveE ).bind( "mousemove" , moveE );
+					$("body").unbind( "mouseup" , moveE ).bind( "mouseup" , endE );
+				}else{
+					var dotStart = scope.el.find("#dotStart"),
+						dotEnd = scope.el.find("#dotEnd");
+					
+					dotStart.unbind( "mousedown" , startS );
+					$("body").unbind( "mousemove" , moveS );
+					$("body").unbind( "mouseup" , moveS );
+					
+					dotEnd.unbind( "mousedown" , startE );
+					$("body").unbind( "mousemove" , moveE );
+					$("body").unbind( "mouseup" , moveE );
+				}
+				return scope;
+			}
+			
+			scope.editable = makeMeEditable;
+			
+		})( this );
+		
+		
+	},
+	_Date2FloatYear : function( d ){
+		
+		//let s say a year is 365 hour
+		
+		var y = d.getFullYear();
+		
+		y += d.getMonth() * 30.5 / 365; 
+		y += d.getDate() / 365;
+		
+		return y;
+	},
+	_FloatYear2Date : function( f ){
+		return new Date( Math.floor( f ) , Math.floor( ( f%1 ) * 365 / 30.5 ) , Math.floor( ( ( f%1 ) * 365 ) % 30.5 ) , 0 , 0 , 0 , 0 );
+	},
+	update : function(){
+		var window = this.el.find("#window");
+		var dotStart = this.el.find("#dotStart");
+		var dotEnd = this.el.find("#dotEnd");
+		var hintStart = this.el.find("#hintStart");
+		var hintEnd = this.el.find("#hintEnd");
+		
+		var lban_p = this.el.width(),
+			sban_d = this.bandStart,
+			lban_d = this.bandEnd - sban_d; 
+		
+		var swin_p = ( this.dateStart - sban_d ) / lban_d * lban_p,
+			ewin_p = ( this.dateEnd   - sban_d ) / lban_d * lban_p;
+			
+		dotStart.css({ "left" : (swin_p - dotStart.width() /2)+"px" });
+		dotEnd.css({ "left" :   (ewin_p - dotStart.width() /2)+"px" });
+		
+		window.css({ "left" : swin_p+"px" , "width" : ( ewin_p - swin_p )+"px" });
+		
+		hintStart.css({ "left" : (swin_p - hintStart.width() /2)+"px" });
+		hintEnd.css({ "left" : (ewin_p - hintEnd.width() /2)+"px" });
+		
+		hintStart.find("p")[0].innerText = this._FloatYear2Date( this.dateStart ).getFullYear();
+		hintEnd.find("p")[0].innerText = this._FloatYear2Date( this.dateEnd ).getFullYear();
+		
+	},
+	
+	editable : function( unable , update ){},
+} );
+TimeLine.create = function(  id ){
+	var lm = new TimeLine();
+	lm.init(  id );
+	return lm;
+}
+
+
 scope.popUp = popUp;
 scope.LayerMgr = LayerMgr;
 scope.MapPanel = Map;
+scope.TimeLine = TimeLine;
 
 })( this );
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--[if lte IE 7]> <html class="no-js ie7 oldie" lang="fr"> <![endif]-->
+<!--[if IE 8]> <html class="no-js ie8 oldie" lang="fr"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="fr"> <!--<![endif]-->
+<head>
+	<meta charset="UTF-8">
+	<title>Forms with KNACSS</title>
+	<meta name="viewport" content="width=device-width">
+	<!--[if lt IE 9]><script src="../js/html5shiv.js"></script><![endif]-->
+	<link rel="stylesheet" href="../css/knacss.css" media="all">
+	<link rel="stylesheet" href="../css/knacss-garni.css" media="all">
+	<style>
+		/* box-sizing for IE6/IE7 */
+		/* https://github.com/Schepp/box-sizing-polyfill*/
+		.ie7 * {
+			behavior: url(../js/boxsizing.htc);
+		}
+		form { max-width: 100%; }
+		form label { float: left; }
+	</style>
+</head>
+<body>
+	<form action="#">
+		<p>
+			<label for="name">Name</label>
+			<input type="text" id="name" class="form-text">
+		</p>
+		<p class="form-help">This is help text under the form field.</p>
+	
+		<p>
+			<label for="email">Email</label>
+			<input type="email" id="email" class="form-text">
+		</p>
+	
+		<p>
+			<label for="gender">Gender</label>
+			<select id="gender">
+				<option>Male</option>
+				<option>Female</option>
+				<option>Cylon</option>
+			</select>
+		</p>
+
+		<p><label for="notifications">Notifications</label></p>
+		<ul class="item">
+			<li><label><input type="radio" name="notifications"> Send me email</label></li>
+			<li><label><input type="radio" name="notifications"> Don't send me email</label></li>
+			<li><label><input type="radio" name="notifications"> Send me flowers</label></li>
+		</ul>
+
+		<p>
+			<label for="url">URL</label>
+			<input type="url" id="url" class="form-text" placeholder="http://yourdomain.com">
+		</p>
+
+		<p>
+			<label for="bio">Bio</label>
+		</p>
+		<textarea id="bio"></textarea>
+
+		<p class="line">
+			<label><input type="checkbox"> I accept the terms of service and lorem ipsum.</label>
+		</p>
+		<p class="txtright">
+			<input type="submit" value="Submit">
+		</p>
+	</form>
+</body>
+</html>
