@@ -1,0 +1,46 @@
+<html>
+    <head>
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+	<script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+        <script src="../leafletEngine.js"></script>
+        <script src="../examples/denmark.js"></script>
+        <script src="LLEngineTests.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1>Tests for library Leaflet Engine</h1>
+        <ul>
+            <li>
+                <div id="map">
+                    <h2>Tests for Map Class</h2>
+                </div>
+            </li>
+            <li>
+                <div id="layer">
+                    <h2>Tests for Layer Class</h2>
+                </div>
+            </li>
+            <li>
+                <div id="element">
+                    <h2>Tests for Element Class</h2>
+		    
+                </div>
+            </li>
+            <li>           
+                <div id="util">
+                    <h2>Tests for Util Class</h2>
+		    
+                </div>
+            </li>
+            <div id="leaflet" style="width: 600;height: 400;">
+        
+            </div>
+        </ul>
+    </body>
+    <script>
+	var engine = new EngineTest();
+	engine.runTests();
+	
+	
+    </script>
+</html>

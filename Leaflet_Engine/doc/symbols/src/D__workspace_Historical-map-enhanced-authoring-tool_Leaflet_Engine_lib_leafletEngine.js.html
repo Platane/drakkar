@@ -1,0 +1,775 @@
+<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"> <style>
+	.KEYW {color: #933;}
+	.COMM {color: #bbb; font-style: italic;}
+	.NUMB {color: #393;}
+	.STRN {color: #393;}
+	.REGX {color: #339;}
+	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
+	</style></head><body><pre><span class='line'>  1</span> <span class="WHIT">
+<span class='line'>  2</span> </span><span class="COMM">//just ignore the line above</span><span class="WHIT">
+<span class='line'>  3</span> </span><span class="COMM">//java -jar jsrun.jar app\run.js -a -t=templates\jsdoc D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\lib\leafletEngine.js -d=D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\doc</span><span class="WHIT">
+<span class='line'>  4</span> 
+<span class='line'>  5</span> </span><span class="COMM">/**  @class Prototype for designing the Map
+<span class='line'>  6</span>  *
+<span class='line'>  7</span>  */</span><span class="WHIT">
+<span class='line'>  8</span> </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Map</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>  9</span> </span><span class="NAME">Map.prototype</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 10</span> 
+<span class='line'> 11</span> </span><span class="WHIT">	</span><span class="COMM">//the leaflet map</span><span class="WHIT">
+<span class='line'> 12</span> </span><span class="WHIT">	</span><span class="NAME">_lmap</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 13</span> </span><span class="WHIT">	</span><span class="COMM">//name of the map</span><span class="WHIT">
+<span class='line'> 14</span> </span><span class="WHIT">	</span><span class="NAME">_name</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 15</span> </span><span class="WHIT">	</span><span class="COMM">//description</span><span class="WHIT">
+<span class='line'> 16</span> </span><span class="WHIT">	</span><span class="NAME">_desc</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 17</span> </span><span class="WHIT">	</span><span class="COMM">//properties of this map</span><span class="WHIT">
+<span class='line'> 18</span> </span><span class="WHIT">	</span><span class="NAME">_properties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 19</span> </span><span class="WHIT">	</span><span class="COMM">//list of layers on this map</span><span class="WHIT">
+<span class='line'> 20</span> </span><span class="WHIT">	</span><span class="NAME">_layers</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 21</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 22</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 23</span> </span><span class="WHIT">	</span><span class="COMM">/** Create a layer, add it to the map and return it
+<span class='line'> 24</span> 	 *@param {String} name The name of the layer
+<span class='line'> 25</span> 	 *@param {String} desc A description of the layer
+<span class='line'> 26</span> 	 *@returns {Layer} The layer created and added to the map
+<span class='line'> 27</span> 	 */</span><span class="WHIT">
+<span class='line'> 28</span> </span><span class="WHIT">	</span><span class="NAME">createLayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Layer.createLayer</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 30</span> </span><span class="WHIT">		</span><span class="NAME">this.addLayer</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 31</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 33</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 34</span> </span><span class="WHIT">	</span><span class="COMM">/** Add a layer to this map
+<span class='line'> 35</span> 	 *@param {Layer} layer the layer to add 
+<span class='line'> 36</span> 	 */</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">	</span><span class="NAME">addLayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">		</span><span class="NAME">this._layers.push</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">		</span><span class="NAME">layer._llayer.addTo</span><span class="PUNC">(</span><span class="NAME">this._lmap</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 41</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 42</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 43</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 44</span> 	 *Remove a layer from this map
+<span class='line'> 45</span> 	 * @param {Layer} layer the layer to remove 
+<span class='line'> 46</span> 	 */</span><span class="WHIT">
+<span class='line'> 47</span> </span><span class="WHIT">	</span><span class="NAME">removeLayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 48</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 49</span> </span><span class="WHIT">		</span><span class="NAME">arrayUnset</span><span class="PUNC">(</span><span class="NAME">this._layers</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 50</span> </span><span class="WHIT">		</span><span class="NAME">this._lmap.removeLayer</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer._llayer</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 51</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 52</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 53</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 54</span> 	 *Remove a layer from this map using his index number
+<span class='line'> 55</span> 	 * @param {Number} layer_index Index of the layer
+<span class='line'> 56</span> 	 * @returns {Layer} the layer removed
+<span class='line'> 57</span> 	 */</span><span class="WHIT">
+<span class='line'> 58</span> </span><span class="WHIT">	</span><span class="NAME">removeLayerByIndex</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer_index</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 59</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 60</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this._layers</span><span class="PUNC">[</span><span class="NAME">layer_index</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 61</span> </span><span class="WHIT">		</span><span class="NAME">this.removeLayer</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 62</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 63</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 64</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 65</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 66</span> 	 *Remove all the layers from this map 
+<span class='line'> 67</span> 	 */</span><span class="WHIT">
+<span class='line'> 68</span> </span><span class="WHIT">	</span><span class="NAME">removeAllLayers</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 69</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 70</span> </span><span class="WHIT">		</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="WHIT"> </span><span class="NAME">this._layers.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 71</span> </span><span class="WHIT">			</span><span class="NAME">this._lmap.removeLayer</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 72</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 73</span> </span><span class="WHIT">		</span><span class="NAME">this._layers</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 74</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 75</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 76</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 77</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 78</span> 	 *Return the layer at the specified index
+<span class='line'> 79</span> 	 * @param {Number} layer_index The index of the layer to get
+<span class='line'> 80</span> 	 * @returns {Layer} The layer at the specified index
+<span class='line'> 81</span> 	 */</span><span class="WHIT">
+<span class='line'> 82</span> </span><span class="WHIT">	</span><span class="NAME">getLayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layer_index</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 83</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'> 84</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._layers</span><span class="PUNC">[</span><span class="NAME">layer_index</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 85</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 86</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 87</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 88</span> 	 *Returns all the layers on this map
+<span class='line'> 89</span> 	 * @returns {Layer[]} all the layers on this map
+<span class='line'> 90</span> 	 */</span><span class="WHIT">
+<span class='line'> 91</span> </span><span class="WHIT">	</span><span class="NAME">getLayers</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 92</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._layers</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 93</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 94</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'> 95</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'> 96</span> 	 * Set the Layers of this map with the specified array of Layers
+<span class='line'> 97</span> 	 * @param {Layer[]} layers The array of Layers
+<span class='line'> 98</span> 	 */</span><span class="WHIT">
+<span class='line'> 99</span> </span><span class="WHIT">	</span><span class="NAME">setLayers</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">layers</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>100</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>101</span> </span><span class="WHIT">		</span><span class="NAME">this._layers</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">layers</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>102</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>103</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>104</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>105</span> 	 *Return the leaflet map object associated to this Map
+<span class='line'>106</span> 	 * @see &lt;a href="http://leafletjs.com/reference.html#map-constructor">Leaflet Map Object&lt;/a>
+<span class='line'>107</span> 	 * @returns {&lt;a href="http://leafletjs.com/reference.html#map-constructor">L.Map&lt;/a>} The leaflet map object associated 
+<span class='line'>108</span> 	 */</span><span class="WHIT">
+<span class='line'>109</span> </span><span class="WHIT">	</span><span class="NAME">getLeafletMap</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>110</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._lmap</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>111</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>112</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>113</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>114</span> 	 *Return the name of this map
+<span class='line'>115</span> 	 * @returns {String} the name of this map 
+<span class='line'>116</span> 	 */</span><span class="WHIT">
+<span class='line'>117</span> </span><span class="WHIT">	</span><span class="NAME">getName</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>118</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._name</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>119</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>120</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>121</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>122</span> 	 *Change the name of this map
+<span class='line'>123</span> 	 * @param {String} name New name 
+<span class='line'>124</span> 	 */</span><span class="WHIT">
+<span class='line'>125</span> </span><span class="WHIT">	</span><span class="NAME">setName</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>126</span> </span><span class="WHIT">		</span><span class="NAME">this._name</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>127</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>128</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>129</span> 	 *Return the description of the map
+<span class='line'>130</span> 	 * @returns {String} the description of the map 
+<span class='line'>131</span> 	 */</span><span class="WHIT">
+<span class='line'>132</span> </span><span class="WHIT">	</span><span class="NAME">getDescription</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>133</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._desc</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>134</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>135</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>136</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>137</span> 	 *Change the description of this map
+<span class='line'>138</span> 	 * @param {String} desc New Description 
+<span class='line'>139</span> 	 */</span><span class="WHIT">
+<span class='line'>140</span> </span><span class="WHIT">	</span><span class="NAME">setDescription</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>141</span> </span><span class="WHIT">		</span><span class="NAME">this._desc</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>142</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>143</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>144</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>145</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>146</span> 	 *Return this map in geoJSON format
+<span class='line'>147</span> 	 *Actually, a map is an Array of GeoJSON objects.
+<span class='line'>148</span> 	 *@returns {geoJSON} this map in a geoJSON format
+<span class='line'>149</span> 	 */</span><span class="WHIT">
+<span class='line'>150</span> </span><span class="WHIT">	</span><span class="NAME">saveAsGeoJSON</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>151</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>152</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>153</span> </span><span class="WHIT">		</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">this.getLayers</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>154</span> </span><span class="WHIT">			</span><span class="NAME">geojson.push</span><span class="PUNC">(</span><span class="NAME">this.getLayer</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">saveAsGeoJSON</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>155</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>156</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>157</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>158</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>159</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>160</span> 
+<span class='line'>161</span> </span><span class="COMM">/**
+<span class='line'>162</span>  *Create a map with a name, a description, the div id where to put it and some options
+<span class='line'>163</span>  * @see &lt;a href="http://leafletjs.com/reference.html#map-options">leaflet map options&lt;/a>
+<span class='line'>164</span>  * @param {String} div_id The div id of the html element where to put this map
+<span class='line'>165</span>  * @param {&lt;a href="http://leafletjs.com/reference.html#map-options">Map_Options&lt;/a>} leaflet_map_options Options for the map
+<span class='line'>166</span>  * @param {String} name The name of the map
+<span class='line'>167</span>  * @param {String} desc A description of the map
+<span class='line'>168</span>  * @returns {Map} A map with a name, a description and some options (when this function is 
+<span class='line'>169</span>  * 	called the map will be automatically drawn on the specified html element) 
+<span class='line'>170</span>  */</span><span class="WHIT">
+<span class='line'>171</span> </span><span class="NAME">Map.createMap</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">div_id</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_map_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT">  </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>172</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">m</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Map</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>173</span> </span><span class="WHIT">	</span><span class="NAME">m._lmap</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Map</span><span class="PUNC">(</span><span class="NAME">div_id</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_map_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>174</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">||</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">)</span><span class="NAME">m.setName</span><span class="PUNC">(</span><span class="STRN">"Map"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>175</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="NAME">m.setName</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>176</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">||</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">)</span><span class="NAME">m.setDescription</span><span class="PUNC">(</span><span class="STRN">""</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>177</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="NAME">m.setDescription</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>178</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">m</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>179</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>180</span> 
+<span class='line'>181</span> </span><span class="COMM">/**
+<span class='line'>182</span>  *Create a map using a geoJSON object
+<span class='line'>183</span>  *the geoJSON object must be an Array of geoJSON object
+<span class='line'>184</span>  * @param {String} div_id The div id of the html element where to put this map
+<span class='line'>185</span>  * @param {&lt;a href="http://leafletjs.com/reference.html#map-options">Map_Options&lt;/a>} leaflet_map_options Options for the map
+<span class='line'>186</span>  * @param {&lt;a href="http://geojson.org/geojson-spec.html">GeoJSON[]&lt;/a>} geoJSON_objects An array of geoJSON objects
+<span class='line'>187</span>  * @param {String} name The name of the map
+<span class='line'>188</span>  * @param {String} desc A description of the map
+<span class='line'>189</span>  * @returns {Map} A map with a name, a description and some options (when this function is 
+<span class='line'>190</span>  * 	called the map will be automatically drawn on the specified html element)
+<span class='line'>191</span>  * @throws {InvalidGeoJSONObject} if the geoJSON object is not an Array it can't be read to be converted as a Map
+<span class='line'>192</span>  */</span><span class="WHIT">
+<span class='line'>193</span> </span><span class="NAME">Map.createMapFromGeoJSON</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">div_id</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_map_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">geoJSON_objects</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>194</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>195</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">map</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Map.createMap</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">div_id</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_map_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>196</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">geoJSON_objects</span><span class="WHIT"> </span><span class="KEYW">instanceof</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>197</span> </span><span class="WHIT">		</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">geoJSON_objects.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>198</span> </span><span class="WHIT">			</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Layer.createLayerFromGeoJSON</span><span class="PUNC">(</span><span class="NAME">geoJSON_objects</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>199</span> </span><span class="WHIT">			</span><span class="NAME">map.addLayer</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>200</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>201</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>202</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="KEYW">throw</span><span class="WHIT"> </span><span class="STRN">'invalid geoJSON object. Should be an Array'</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>203</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>204</span> 
+<span class='line'>205</span> </span><span class="COMM">/**@class Prototype for designing layers. Layers are objects that allows to regroup several Elements.
+<span class='line'>206</span>  **Layers should not contains another layers.
+<span class='line'>207</span>  */</span><span class="WHIT">
+<span class='line'>208</span> </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Layer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>209</span> </span><span class="NAME">Layer._i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>210</span> </span><span class="NAME">Layer.prototype</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>211</span> 
+<span class='line'>212</span> </span><span class="WHIT">	</span><span class="COMM">//properties of this layer. Its an object containing each property as an attribute</span><span class="WHIT">
+<span class='line'>213</span> </span><span class="WHIT">	</span><span class="NAME">_properties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Object</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>214</span> </span><span class="WHIT">	</span><span class="COMM">//Style properties of this layer. Its an object containg each style property as an attribute</span><span class="WHIT">
+<span class='line'>215</span> </span><span class="WHIT">	</span><span class="NAME">_style</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>216</span> </span><span class="WHIT">	</span><span class="COMM">//type of layer (dots or paths)</span><span class="WHIT">
+<span class='line'>217</span> </span><span class="WHIT">	</span><span class="COMM">//_type : null,</span><span class="WHIT">
+<span class='line'>218</span> </span><span class="WHIT">	</span><span class="COMM">//The leaflet LayerGroup associated</span><span class="WHIT">
+<span class='line'>219</span> </span><span class="WHIT">	</span><span class="NAME">_llayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>220</span> </span><span class="WHIT">	</span><span class="COMM">//list of elements presents in this layer</span><span class="WHIT">
+<span class='line'>221</span> </span><span class="WHIT">	</span><span class="NAME">_elements</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>222</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>223</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>224</span> 	 *Add an element to this Layer
+<span class='line'>225</span> 	 * @param {Element} elem The element to add.  
+<span class='line'>226</span> 	 */</span><span class="WHIT">
+<span class='line'>227</span> </span><span class="WHIT">	</span><span class="NAME">addElement</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>228</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>229</span> </span><span class="WHIT">		</span><span class="NAME">this._elements.push</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>230</span> </span><span class="WHIT">		</span><span class="NAME">this._llayer.addLayer</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>231</span> </span><span class="WHIT">		</span><span class="COMM">//TODO : Add the listeners</span><span class="WHIT">
+<span class='line'>232</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>233</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>234</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>235</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>236</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>237</span> 	 *Remove an element from this Layer
+<span class='line'>238</span> 	 * @param {Element} elem The element to remove 
+<span class='line'>239</span> 	 */</span><span class="WHIT">
+<span class='line'>240</span> </span><span class="WHIT">	</span><span class="NAME">removeElement</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>241</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>242</span> </span><span class="WHIT">		</span><span class="NAME">arrayUnset</span><span class="PUNC">(</span><span class="NAME">this._elements</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>243</span> </span><span class="WHIT">		</span><span class="NAME">this._llayer.removeLayer</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>244</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>245</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>246</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>247</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>248</span> 	 *Remove an element at the specified index from this layer
+<span class='line'>249</span> 	 * @param {Number} elem_index The index of the Element to remove
+<span class='line'>250</span> 	 * @returns {Element} The Element removed 
+<span class='line'>251</span> 	 */</span><span class="WHIT">
+<span class='line'>252</span> </span><span class="WHIT">	</span><span class="NAME">removeElementByIndex</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem_index</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>253</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>254</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">element</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this._elements</span><span class="PUNC">[</span><span class="NAME">elem_index</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>255</span> </span><span class="WHIT">		</span><span class="NAME">this.removeElement</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">element</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>256</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">element</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>257</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>258</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>259</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>260</span> 	 *Remove all Elements from this Layer 
+<span class='line'>261</span> 	 */</span><span class="WHIT">
+<span class='line'>262</span> </span><span class="WHIT">	</span><span class="NAME">removeAllElements</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>263</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>264</span> </span><span class="WHIT">		</span><span class="NAME">this._elements</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Array</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>265</span> </span><span class="WHIT">		</span><span class="NAME">this._llayer.clearLayers</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>266</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>267</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>268</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>269</span> 	 *Return the Element at the specified index
+<span class='line'>270</span> 	 * @param {Number} elem_index The index of the Element to get
+<span class='line'>271</span> 	 * @returns {Element} The element at the specified index of this Layer 
+<span class='line'>272</span> 	 */</span><span class="WHIT">
+<span class='line'>273</span> </span><span class="WHIT">	</span><span class="NAME">getElement</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elem_index</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>274</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>275</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._elements</span><span class="PUNC">[</span><span class="NAME">elem_index</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>276</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>277</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>278</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>279</span> 	 *Return all the Elements of this Layer
+<span class='line'>280</span> 	 * @returns {Element[]} Elements of this layer 
+<span class='line'>281</span> 	 */</span><span class="WHIT">
+<span class='line'>282</span> </span><span class="WHIT">	</span><span class="NAME">getElements</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>283</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._elements</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>284</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>285</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>286</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>287</span> 	 *Set all the Elements of this Layer with the specified array of Elements
+<span class='line'>288</span> 	 * @param {Element[]} elems The array of Elements 
+<span class='line'>289</span> 	 */</span><span class="WHIT">
+<span class='line'>290</span> </span><span class="WHIT">	</span><span class="NAME">setElements</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">elems</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>291</span> </span><span class="WHIT">		</span><span class="NAME">this._elements</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">elems</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>292</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>293</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>294</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>295</span> 	 *Return the leaflet Layer Group object associated to this Layer
+<span class='line'>296</span> 	 * @see &lt;a href="http://leafletjs.com/reference.html#layergroup">Leaflet layer group object&lt;/a>
+<span class='line'>297</span> 	 * @returns {&lt;a href="http://leafletjs.com/reference.html#layergroup">L.LayerGroup&lt;/a>} The leaflet ILayer object associated
+<span class='line'>298</span> 	 */</span><span class="WHIT">
+<span class='line'>299</span> </span><span class="WHIT">	</span><span class="NAME">getLeafletLayer</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>300</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._llayer</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>301</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>302</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>303</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>304</span> 	 *Add a property to this layer
+<span class='line'>305</span> 	 *If the property already exists his value is overwrited with the new one
+<span class='line'>306</span> 	 *@param {String} name the name of the property to add
+<span class='line'>307</span> 	 *@param {Object} value the value of the property to add
+<span class='line'>308</span> 	 */</span><span class="WHIT">
+<span class='line'>309</span> </span><span class="WHIT">	</span><span class="NAME">addProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">value</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>310</span> </span><span class="WHIT">		</span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">value</span><span class="PUNC">;</span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>311</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>312</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>313</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>314</span> 	 *Return the value of the specified property on this layer
+<span class='line'>315</span> 	 *If the property doesn't exist, 'undefined' is returned
+<span class='line'>316</span> 	 *@param {String} name the name of the property to get
+<span class='line'>317</span> 	 *@returns {Object} the value of the specified property on this layer or null if it doesn't exist
+<span class='line'>318</span> 	 */</span><span class="WHIT">
+<span class='line'>319</span> </span><span class="WHIT">	</span><span class="NAME">getProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>320</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>321</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>322</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>323</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>324</span> 	 *Delete the specified property on this layer.
+<span class='line'>325</span> 	 *@param {String} name the name of the property to delete
+<span class='line'>326</span> 	 *@returns {Boolean} true if the specified property has been removed. False if the property doesn't exist
+<span class='line'>327</span> 	 */</span><span class="WHIT">
+<span class='line'>328</span> </span><span class="WHIT">	</span><span class="NAME">removeProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>329</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>330</span> </span><span class="WHIT">			</span><span class="KEYW">delete</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>331</span> </span><span class="WHIT">			</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>332</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>333</span> </span><span class="WHIT">		</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>334</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>335</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>336</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>337</span> 	 *Return the properties existing on this layer. These properties are contained in an object as its attributes
+<span class='line'>338</span> 	 *i.e : var properties = layer.getProperties();
+<span class='line'>339</span> 	 *	for(prop in properties)alert(prop+" : "+properties[prop]);
+<span class='line'>340</span> 	 *@returns {Object} an object containing properties.
+<span class='line'>341</span> 	 */</span><span class="WHIT">
+<span class='line'>342</span> </span><span class="WHIT">	</span><span class="NAME">getProperties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>343</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>344</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>345</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>346</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>347</span> 	 *Set the properties of this layer with the specified properties object
+<span class='line'>348</span> 	 *@param {Object} properties the new properties
+<span class='line'>349</span> 	 */</span><span class="WHIT">
+<span class='line'>350</span> </span><span class="WHIT">	</span><span class="NAME">setProperties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">properties</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>351</span> </span><span class="WHIT">		</span><span class="NAME">this._properties</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">properties</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>352</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>353</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>354</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>355</span> 	 *Return this layer in geoJSON format
+<span class='line'>356</span> 	 *@returns {geoJSON} this layer in a geoJSON format
+<span class='line'>357</span> 	 */</span><span class="WHIT">
+<span class='line'>358</span> </span><span class="WHIT">	</span><span class="NAME">saveAsGeoJSON</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>359</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>360</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">features</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>361</span> </span><span class="WHIT">		</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">this.getElements.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>362</span> </span><span class="WHIT">			</span><span class="NAME">features.push</span><span class="PUNC">(</span><span class="NAME">this.getElement</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>363</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>364</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>365</span> </span><span class="WHIT">		</span><span class="NAME">geojson.type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"FeatureCollection"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>366</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>367</span> </span><span class="WHIT">		</span><span class="NAME">geojson.properties</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.getProperties</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>368</span> </span><span class="WHIT">		</span><span class="NAME">geojson.features</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">features</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>369</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>370</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>371</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>372</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>373</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>374</span> 
+<span class='line'>375</span> </span><span class="COMM">/**
+<span class='line'>376</span>  *Create a new Layer
+<span class='line'>377</span>  * @param {String} name The name of the Layer
+<span class='line'>378</span>  * @param {String} desc a description of the Layer 
+<span class='line'>379</span>  * @returns {Layer} The Layer created 
+<span class='line'>380</span>  */</span><span class="WHIT">
+<span class='line'>381</span> </span><span class="NAME">Layer.createLayer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>382</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">l</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Layer</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>383</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">Util.trim</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="NAME">l.addProperty</span><span class="PUNC">(</span><span class="STRN">"name"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>384</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="NAME">l.addProperty</span><span class="PUNC">(</span><span class="STRN">"name"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"Layer#"</span><span class="PUNC">+</span><span class="NAME">Layer._i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>385</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">des</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">Util.trim</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="NAME">l.addProperty</span><span class="PUNC">(</span><span class="STRN">"description"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>386</span> </span><span class="WHIT">	</span><span class="NAME">l._llayer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">L.LayerGroup</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>387</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">l</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>388</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>389</span> 
+<span class='line'>390</span> </span><span class="COMM">/**
+<span class='line'>391</span>  *Create a new Layer from a valid GeoJSON Object.
+<span class='line'>392</span>  *A valid geoJSON Object for a layer must contains a "features" attribute
+<span class='line'>393</span>  * @param {&lt;a href="http://geojson.org/geojson-spec.html">GeoJSON&lt;/a>} geoJSON_object The GeoJSON object to read. It must contain
+<span class='line'>394</span>  * a property "type" with the value "FeatureCollection" and the property "features"
+<span class='line'>395</span>  * @returns {Layer} The layer created
+<span class='line'>396</span>  * @throws {InvalidGeoJSONObject} When the geoJSON object is invalid. 
+<span class='line'>397</span>  */</span><span class="WHIT">
+<span class='line'>398</span> </span><span class="NAME">Layer.createLayerFromGeoJSON</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">geoJSON_object</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>399</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>400</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Layer.createLayer</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>401</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>402</span> </span><span class="WHIT">	</span><span class="COMM">//if geojson object is a collection of features (=> if the geojson object is a layer) </span><span class="WHIT">
+<span class='line'>403</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">geoJSON_object.type</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">"FeatureCollection"</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">geoJSON_object.features</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>404</span> </span><span class="WHIT">		</span><span class="COMM">//if properties is defined</span><span class="WHIT">
+<span class='line'>405</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">geoJSON_object.properties</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>406</span> </span><span class="WHIT">			</span><span class="NAME">layer.setProperties</span><span class="PUNC">(</span><span class="NAME">geoJSON_object.properties</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>407</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>408</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>409</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">llayer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">L.geoJSON</span><span class="PUNC">(</span><span class="NAME">geoJSON_object</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">onEachFeature</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">feature</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>410</span> </span><span class="WHIT">			</span><span class="WHIT">
+<span class='line'>411</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">type</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>412</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'Point'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POINT</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>413</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'MultiPoint'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOINT</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>414</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'LineString'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.LINE</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>415</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'MultiLineString'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTILINE</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>416</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'Polygon'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POLYGON</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>417</span> </span><span class="WHIT">				</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">feature.geometry</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="STRN">'MultiPolygon'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="NAME">type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOLYGON</span><span class="PUNC">;</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>418</span> </span><span class="WHIT">				</span><span class="WHIT">
+<span class='line'>419</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">element</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.createElementFromLeafletLayer</span><span class="PUNC">(</span><span class="NAME">feature.properties.name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">feature.properties.description</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">type</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>420</span> </span><span class="WHIT">				</span><span class="NAME">layer.addElement</span><span class="PUNC">(</span><span class="NAME">element</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>421</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>422</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>423</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>424</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="KEYW">throw</span><span class="WHIT"> </span><span class="STRN">'Invalid GeoJSON object. Should contains "features" property and "type" property with "FeatureCollection" value'</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>425</span> </span><span class="WHIT">	</span><span class="COMM">//TODO : test what happens if the geojson object is invalid or unrecognized</span><span class="WHIT">
+<span class='line'>426</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">layer</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>427</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>428</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>429</span> 
+<span class='line'>430</span> </span><span class="COMM">/**
+<span class='line'>431</span>  *@class Prototype for designing Elements. Elements are object that can be added to a layer, and which can be displayed on the map.
+<span class='line'>432</span>  * Elements object are containers for leaflet layers objects like Marker, Line, PolyLine, Polygon, etc...
+<span class='line'>433</span>  * An Element object should only contains leaflet vector layers and leaflet Markers. Other layers are not supported and are not considered as Element.
+<span class='line'>434</span>  * &lt;b>Leaflet Vector Layers objects&lt;/b> are defined &lt;a href="http://leafletjs.com/reference.html#path">here&lt;/a>
+<span class='line'>435</span>  * &lt;b>Marker leaflet object&lt;/b> is defined &lt;a href="http://leafletjs.com/reference.html#marker">here&lt;/a>
+<span class='line'>436</span>  * 
+<span class='line'>437</span>  */</span><span class="WHIT">
+<span class='line'>438</span> </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Element</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>439</span> </span><span class="NAME">Element._i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>440</span> </span><span class="NAME">Element.prototype</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>441</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>442</span> </span><span class="WHIT">	</span><span class="COMM">//properties of the element (json like e.g : _properties.color = 'red')</span><span class="WHIT">
+<span class='line'>443</span> </span><span class="WHIT">	</span><span class="NAME">_properties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>444</span> </span><span class="WHIT">	</span><span class="COMM">//style properties of this element</span><span class="WHIT">
+<span class='line'>445</span> </span><span class="WHIT">	</span><span class="NAME">_style</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>446</span> </span><span class="WHIT">	</span><span class="COMM">//the type of the element (point, line, polylin, polygon, ...)</span><span class="WHIT">
+<span class='line'>447</span> </span><span class="WHIT">	</span><span class="NAME">_type</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>448</span> </span><span class="WHIT">	</span><span class="COMM">//the leaflet layer associated (e.g : Marker, Polyline, Polygon, ...)</span><span class="WHIT">
+<span class='line'>449</span> </span><span class="WHIT">	</span><span class="NAME">_lelement</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>450</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>451</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>452</span> 	 *Returns the geometry type of this Element
+<span class='line'>453</span> 	 *@returns {Element.geometry} The geometry type of this Element
+<span class='line'>454</span> 	 */</span><span class="WHIT">
+<span class='line'>455</span> </span><span class="WHIT">	</span><span class="NAME">getType</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>456</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._type</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>457</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>458</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>459</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>460</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>461</span> 	 *Return the leaflet ILayer associated to this Element
+<span class='line'>462</span> 	 * @see &lt;a href="http://leafletjs.com/reference.html#path">Leaflet Vector layers&lt;/a>
+<span class='line'>463</span> 	 * @returns {&lt;a href="http://leafletjs.com/reference.html#ilayer">ILayer&lt;/a>} the leaflet layer associated 
+<span class='line'>464</span> 	 */</span><span class="WHIT">
+<span class='line'>465</span> </span><span class="WHIT">	</span><span class="NAME">getLeafletElement</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>466</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._lelement</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>467</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>468</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>469</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>470</span> 	 *Add a property to this Element
+<span class='line'>471</span> 	 *If the property already exists his value is overwrited with the new one
+<span class='line'>472</span> 	 *@param {String} name the name of the property to add
+<span class='line'>473</span> 	 *@param {Object} value the value of the property to add
+<span class='line'>474</span> 	 */</span><span class="WHIT">
+<span class='line'>475</span> </span><span class="WHIT">	</span><span class="NAME">addProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">value</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>476</span> </span><span class="WHIT">		</span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">value</span><span class="PUNC">;</span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>477</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>478</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>479</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>480</span> 	 *Return the value of the specified property on this Element
+<span class='line'>481</span> 	 *If the property doesn't exist, 'undefined' is returned
+<span class='line'>482</span> 	 *@param {String} name the name of the property to get
+<span class='line'>483</span> 	 *@returns {Object} the value of the specified property on this layer or null if it doesn't exist
+<span class='line'>484</span> 	 */</span><span class="WHIT">
+<span class='line'>485</span> </span><span class="WHIT">	</span><span class="NAME">getProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>486</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>487</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>488</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>489</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>490</span> 	 *Delete the specified property on this Element.
+<span class='line'>491</span> 	 *@param {String} name the name of the property to delete
+<span class='line'>492</span> 	 *@returns {Boolean} true if the specified property has been removed. False if the property doesn't exist
+<span class='line'>493</span> 	 */</span><span class="WHIT">
+<span class='line'>494</span> </span><span class="WHIT">	</span><span class="NAME">removeProperty</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>495</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>496</span> </span><span class="WHIT">			</span><span class="KEYW">delete</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>497</span> </span><span class="WHIT">			</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>498</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>499</span> </span><span class="WHIT">		</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>500</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>501</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>502</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>503</span> 	 *Return the properties existing on this Element. These properties are contained in an object as its attributes
+<span class='line'>504</span> 	 *i.e : var properties = layer.getProperties();
+<span class='line'>505</span> 	 *	for(prop in properties)alert(prop+" : "+properties[prop]);
+<span class='line'>506</span> 	 *@returns {Object} an object containing properties.
+<span class='line'>507</span> 	 */</span><span class="WHIT">
+<span class='line'>508</span> </span><span class="WHIT">	</span><span class="NAME">getProperties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>509</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this._properties</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>510</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>511</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>512</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>513</span> 	 *Set the properties of this Element with the specified properties object
+<span class='line'>514</span> 	 *@param {Object} properties the new properties
+<span class='line'>515</span> 	 */</span><span class="WHIT">
+<span class='line'>516</span> </span><span class="WHIT">	</span><span class="NAME">setProperties</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">properties</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>517</span> </span><span class="WHIT">		</span><span class="NAME">this._properties</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">properties</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>518</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>519</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>520</span> </span><span class="WHIT">	</span><span class="COMM">/**
+<span class='line'>521</span> 	 *Return this Element in geoJSON format
+<span class='line'>522</span> 	 *@returns {geoJSON} this Element in a geoJSON format
+<span class='line'>523</span> 	 */</span><span class="WHIT">
+<span class='line'>524</span> </span><span class="WHIT">	</span><span class="NAME">saveAsGeoJSON</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>525</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>526</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Object</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>527</span> </span><span class="WHIT">		</span><span class="NAME">geojson.type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"Feature"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>528</span> </span><span class="WHIT">		</span><span class="NAME">geojson.properties</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.getProperties</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>529</span> </span><span class="WHIT">		</span><span class="NAME">geojson.geometry</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Object</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>530</span> </span><span class="WHIT">		</span><span class="NAME">geojson.geometry.type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>531</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>532</span> </span><span class="WHIT">		</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">coordinates</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>533</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>534</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POINT</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>535</span> </span><span class="WHIT">			</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">this._lelement.getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">lat</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>536</span> </span><span class="WHIT">			</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">this._lelement.getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">.</span><span class="NAME">lng</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>537</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>538</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOINT</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>539</span> </span><span class="WHIT">			</span><span class="NAME">this._lelement.forEachLayer</span><span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>540</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">point</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Util.latLngToArray</span><span class="PUNC">(</span><span class="NAME">layer.getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>541</span> </span><span class="WHIT">				</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">point</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>542</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>543</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>544</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.LINE</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>545</span> </span><span class="WHIT">			</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">coords</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this._lelement.getLatLngs</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>546</span> </span><span class="WHIT">			</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">=</span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">coords.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>547</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">point</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Util.latLngToArray</span><span class="PUNC">(</span><span class="NAME">coords</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">.</span><span class="NAME">getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>548</span> </span><span class="WHIT">				</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">point</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>549</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>550</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>551</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTILINE</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>552</span> </span><span class="WHIT">			</span><span class="NAME">this._lelement.forEachLayer</span><span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>553</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">linecoords</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>554</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">line</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">layer.getLatLngs</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>555</span> </span><span class="WHIT">				</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">line.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>556</span> </span><span class="WHIT">					</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">point</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Util.latLngToArray</span><span class="PUNC">(</span><span class="NAME">line</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">.</span><span class="NAME">getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>557</span> </span><span class="WHIT">					</span><span class="NAME">linecoords.push</span><span class="PUNC">(</span><span class="NAME">point</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>558</span> </span><span class="WHIT">				</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>559</span> </span><span class="WHIT">				</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">linecoords</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>560</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>561</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>562</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POLYGON</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>563</span> </span><span class="WHIT">			</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">coords</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this._lelement.getLatLngs</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>564</span> </span><span class="WHIT">			</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">temp</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>565</span> </span><span class="WHIT">			</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">=</span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">coords.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>566</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">point</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Util.latLngToArray</span><span class="PUNC">(</span><span class="NAME">coords</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">.</span><span class="NAME">getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>567</span> </span><span class="WHIT">				</span><span class="NAME">temp.push</span><span class="PUNC">(</span><span class="NAME">point</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>568</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>569</span> </span><span class="WHIT">			</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">temp</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>570</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>571</span> </span><span class="WHIT">		</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">this.getType</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOLYGON</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>572</span> </span><span class="WHIT">			</span><span class="NAME">this._lelement.forEachLayer</span><span class="PUNC">(</span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">layer</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>573</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">polycoords</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>574</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">temp</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>575</span> </span><span class="WHIT">				</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">poly</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">layer.getLatLngs</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>576</span> </span><span class="WHIT">				</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">poly.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>577</span> </span><span class="WHIT">					</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">point</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Util.latLngToArray</span><span class="PUNC">(</span><span class="NAME">line</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">.</span><span class="NAME">getLatLng</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>578</span> </span><span class="WHIT">					</span><span class="NAME">temp.push</span><span class="PUNC">(</span><span class="NAME">point</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>579</span> </span><span class="WHIT">				</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>580</span> </span><span class="WHIT">				</span><span class="NAME">polycoords.push</span><span class="PUNC">(</span><span class="NAME">temp</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>581</span> </span><span class="WHIT">				</span><span class="NAME">coordinates.push</span><span class="PUNC">(</span><span class="NAME">polycoords</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>582</span> </span><span class="WHIT">			</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>583</span> </span><span class="WHIT">		</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>584</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>585</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>586</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>587</span> </span><span class="WHIT">		</span><span class="NAME">geojson.geometry.coordinates</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">coordinates</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>588</span> </span><span class="WHIT">		</span><span class="WHIT">
+<span class='line'>589</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">geojson</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>590</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>591</span> 
+<span class='line'>592</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>593</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>594</span> 
+<span class='line'>595</span> </span><span class="COMM">/**
+<span class='line'>596</span>  *Create an abstract Element with just a name and a description
+<span class='line'>597</span>  *This Constructor should never be used directly
+<span class='line'>598</span>  */</span><span class="WHIT">
+<span class='line'>599</span> </span><span class="NAME">Element._createAbstractElement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>600</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Element</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>601</span> </span><span class="WHIT">	</span><span class="NAME">elem.setProperties</span><span class="PUNC">(</span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Object</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>602</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">Util.trim</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="NAME">elem.addProperty</span><span class="PUNC">(</span><span class="STRN">"name"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>603</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="WHIT"> </span><span class="NAME">elem.addProperty</span><span class="PUNC">(</span><span class="STRN">"name"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"Element#"</span><span class="PUNC">+</span><span class="NAME">Element._i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>604</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="KEYW">typeof</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">'undefined'</span><span class="WHIT"> </span><span class="PUNC">&&</span><span class="WHIT"> </span><span class="NAME">Util.trim</span><span class="PUNC">(</span><span class="NAME">desc</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">!=</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="NAME">elem.addProperty</span><span class="PUNC">(</span><span class="STRN">"desc"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>605</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>606</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>607</span> 
+<span class='line'>608</span> </span><span class="COMM">/**
+<span class='line'>609</span>  * Create an Element from an existing leaflet Layer
+<span class='line'>610</span>  * @param {String} name the name of this Element
+<span class='line'>611</span>  * @param {String} desc description of this Element
+<span class='line'>612</span>  * @param {Element.geometry} type the type of this Element
+<span class='line'>613</span>  * @param {http://leafletjs.com/reference.html#ilayer>ILayer&lt;/a>} the leaflet layer associated 
+<span class='line'>614</span>  */</span><span class="WHIT">
+<span class='line'>615</span> </span><span class="NAME">Element._createElementFromLeafletLayer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">type</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">llayer</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>616</span> </span><span class="WHIT">	</span><span class="WHIT">
+<span class='line'>617</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>618</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">type</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>619</span> </span><span class="WHIT">	</span><span class="NAME">this._llayer</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">llayer</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>620</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>621</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>622</span> </span><span class="COMM">/**
+<span class='line'>623</span>  *Create a new Point Element with a name, a description and some options at the specified location (lat long)
+<span class='line'>624</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng&lt;/a>} latlng Position of the Element on the map (latitude - longitude)
+<span class='line'>625</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options&lt;/a>} leaflet_marker_options Options for Point Element
+<span class='line'>626</span>  *@param {String} name name of the Element
+<span class='line'>627</span>  *@param {String} desc description of the Element
+<span class='line'>628</span>  
+<span class='line'>629</span>  *@returns {Element} A Point Element
+<span class='line'>630</span>  */</span><span class="WHIT">
+<span class='line'>631</span> </span><span class="NAME">Element.createPoint</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">latlng</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_marker_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>632</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>633</span> </span><span class="WHIT">	</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Marker</span><span class="PUNC">(</span><span class="NAME">latlng</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_marker_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>634</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POINT</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>635</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>636</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>637</span> 
+<span class='line'>638</span> </span><span class="COMM">/**
+<span class='line'>639</span>  *Create a new MultiPoint Element with a name, a description and some options at the specified location (lat long)
+<span class='line'>640</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]&lt;/a>} latslngs Position of the Element on the map (latitude - longitude)
+<span class='line'>641</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options&lt;/a>} leaflet_marker_options Options for Point Element
+<span class='line'>642</span>  *@param {String} name name of the Element
+<span class='line'>643</span>  *@param {String} desc description of the Element
+<span class='line'>644</span>  *@returns {Element} A MultiPoint Element
+<span class='line'>645</span>  */</span><span class="WHIT">
+<span class='line'>646</span> </span><span class="NAME">Element.createMultiPoint</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_marker_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>647</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>648</span> </span><span class="WHIT">	</span><span class="NAME">elements</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>649</span> </span><span class="WHIT">	</span><span class="KEYW">for</span><span class="PUNC">(</span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">&lt;</span><span class="NAME">latslngs.length</span><span class="PUNC">;</span><span class="NAME">i</span><span class="PUNC">++</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>650</span> </span><span class="WHIT">		</span><span class="NAME">elements.push</span><span class="PUNC">(</span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Marker</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_marker_options</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>651</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>652</span> </span><span class="WHIT">	</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.FeatureGroup</span><span class="PUNC">(</span><span class="NAME">elements</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>653</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOINT</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>654</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>655</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>656</span> 
+<span class='line'>657</span> </span><span class="COMM">/**
+<span class='line'>658</span>  *Create a new Line Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+<span class='line'>659</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]&lt;/a>} latslngs Positions of the Element on the map (latitude - longitude)
+<span class='line'>660</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options&lt;/a>} leaflet_line_options Options for Line Element
+<span class='line'>661</span>  *@param {String} name the name of the Element
+<span class='line'>662</span>  *@param {String} desc description of the Element
+<span class='line'>663</span>  *@returns {Element} A Line Element
+<span class='line'>664</span>  */</span><span class="WHIT">
+<span class='line'>665</span> </span><span class="NAME">Element.createLine</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_line_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>666</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>667</span> </span><span class="WHIT">	</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Polyline</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_line_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>668</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.LINE</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>669</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>670</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>671</span> 
+<span class='line'>672</span> </span><span class="COMM">/**
+<span class='line'>673</span>  *Create a new MultiLine Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+<span class='line'>674</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]&lt;/a>} latslngs Positions of the Element on the map (latitude - longitude)
+<span class='line'>675</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options&lt;/a>} leaflet_line_options Options for Line Element
+<span class='line'>676</span> *@param {String} name the name of the Element
+<span class='line'>677</span>  *@param {String} desc description of the Element
+<span class='line'>678</span>  *@returns {Element} A MultiLine Element
+<span class='line'>679</span>  */</span><span class="WHIT">
+<span class='line'>680</span> </span><span class="NAME">Element.createMultiLine</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_line_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>681</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>682</span> </span><span class="WHIT">	</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.MultiPolyline</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_line_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>683</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTILINE</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>684</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>685</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>686</span> 
+<span class='line'>687</span> </span><span class="COMM">/**
+<span class='line'>688</span>  *Create a new Polygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+<span class='line'>689</span>  *if there is only two latslngs coordinates in the array in parameter, a rectangle will be created
+<span class='line'>690</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]&lt;/a>} latlng Positions of the Element on the map (latitude - longitude)
+<span class='line'>691</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options&lt;/a>} leaflet_polygon_options Options for Polygon Element
+<span class='line'>692</span>  *@param {String} name the name of the Element
+<span class='line'>693</span>  *@param {String} desc description of the Element
+<span class='line'>694</span>  *@returns {Element} A Polygon Element
+<span class='line'>695</span>  */</span><span class="WHIT">
+<span class='line'>696</span> </span><span class="NAME">Element.createPolygon</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_polygon_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>697</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>698</span> </span><span class="WHIT">	</span><span class="KEYW">if</span><span class="PUNC">(</span><span class="NAME">latslngs.length</span><span class="WHIT"> </span><span class="PUNC">==</span><span class="WHIT"> </span><span class="NUMB">2</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>699</span> </span><span class="WHIT">		</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Rectangle</span><span class="PUNC">(</span><span class="NAME">L.LatLngBounds</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_polygon_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>700</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>701</span> </span><span class="WHIT">	</span><span class="KEYW">else</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>702</span> </span><span class="WHIT">		</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.Polygon</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_polygon_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>703</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>704</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.POLYGON</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>705</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>706</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>707</span> 
+<span class='line'>708</span> </span><span class="COMM">/**
+<span class='line'>709</span>  *Create a new MultiPolygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)
+<span class='line'>710</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]&lt;/a>} latlng Positions of the Element on the map (latitude - longitude)
+<span class='line'>711</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options&lt;/a>} leaflet_polygon_options Options for Polygon Element
+<span class='line'>712</span>  *@param {String} name the name of the Element
+<span class='line'>713</span>  *@param {String} desc description of the Element
+<span class='line'>714</span>  *@returns {Element} A Polygon Element
+<span class='line'>715</span>  */</span><span class="WHIT">
+<span class='line'>716</span> 
+<span class='line'>717</span> </span><span class="NAME">Element.createMultiPolygon</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_polygon_options</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>718</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element._createAbstractElement</span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">desc</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>719</span> </span><span class="WHIT">	</span><span class="NAME">elem._lelement</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">L.MultiPolygon</span><span class="PUNC">(</span><span class="NAME">latslngs</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">leaflet_polygon_options</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>720</span> </span><span class="WHIT">	</span><span class="NAME">elem._type</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Element.geometry.MULTIPOLYGON</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>721</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">elem</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>722</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>723</span> 
+<span class='line'>724</span> </span><span class="COMM">/**
+<span class='line'>725</span>  * @enum Regroup the different possible type of geometry for Elements
+<span class='line'>726</span>  */</span><span class="WHIT">
+<span class='line'>727</span> </span><span class="NAME">Element.geometry</span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>728</span> </span><span class="WHIT">		</span><span class="NAME">POINT</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"Point"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>729</span> </span><span class="WHIT">		</span><span class="NAME">MULTIPOINT</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"MultiPoint"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>730</span> </span><span class="WHIT">		</span><span class="NAME">LINE</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"LineString"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>731</span> </span><span class="WHIT">		</span><span class="NAME">MULTILINE</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"MultiLineString"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>732</span> </span><span class="WHIT">		</span><span class="NAME">POLYGON</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"Polygon"</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>733</span> </span><span class="WHIT">		</span><span class="NAME">MULTIPOLYGON</span><span class="WHIT"> </span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"MultiPolygon"</span><span class="WHIT">
+<span class='line'>734</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>735</span> 
+<span class='line'>736</span> 
+<span class='line'>737</span> </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Style</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>738</span> </span><span class="NAME">Style.prototype</span><span class="WHIT">
+<span class='line'>739</span> 
+<span class='line'>740</span> </span><span class="COMM">/**
+<span class='line'>741</span>  *@namespace Namespace for utility functions
+<span class='line'>742</span>  */</span><span class="WHIT">
+<span class='line'>743</span> </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">Util</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>744</span> 
+<span class='line'>745</span> </span><span class="COMM">/**
+<span class='line'>746</span>  *Get an Array containing latitude and longitude of a latLng leaflet object
+<span class='line'>747</span>  *@param {&lt;a href="http://leafletjs.com/reference.html#latlng">L.LatLng&lt;/a>} latLng the LatLng leaflet object
+<span class='line'>748</span>  *@returns {Number[]} an Array containing latitude and longitude of the leaflet object
+<span class='line'>749</span>  */</span><span class="WHIT">
+<span class='line'>750</span> </span><span class="NAME">Util.latLngToArray</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">latLng</span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>751</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">array</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>752</span> </span><span class="WHIT">	</span><span class="NAME">array.push</span><span class="PUNC">(</span><span class="NAME">latLng.lat</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>753</span> </span><span class="WHIT">	</span><span class="NAME">array.push</span><span class="PUNC">(</span><span class="NAME">latLng.lng</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>754</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>755</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>756</span> 
+<span class='line'>757</span> </span><span class="COMM">/**
+<span class='line'>758</span>  *Remove the leading and trailing whitespaces (tabulations or backspaces) of the specified String
+<span class='line'>759</span>  *@param {String} word the String to trim
+<span class='line'>760</span>  *@returns {String} a new String without leading and trailing whitespaces
+<span class='line'>761</span>  */</span><span class="WHIT">
+<span class='line'>762</span> </span><span class="NAME">Util.trim</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="WHIT"> </span><span class="NAME">word</span><span class="WHIT"> </span><span class="PUNC">)</span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>763</span> </span><span class="WHIT">	</span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">nword</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">word.replace</span><span class="PUNC">(</span><span class="REGX">/^\s+|\s+$/g</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>764</span> </span><span class="WHIT">	</span><span class="NAME">nword</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">word.replace</span><span class="PUNC">(</span><span class="REGX">/^\t+|\t+$/g</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>765</span> </span><span class="WHIT">	</span><span class="NAME">nword</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">word.replace</span><span class="PUNC">(</span><span class="REGX">/^\n+|\n+$/g</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">""</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>766</span> </span><span class="WHIT">	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">nword</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>767</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>768</span> </span></pre></body></html>
