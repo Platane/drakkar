@@ -1,6 +1,6 @@
 
 //just ignore the line above
-//java -jar jsrun.jar app\run.js -a -t=templates\jsdoc D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\leafletEngine.js -d=D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\doc
+//java -jar jsrun.jar app\run.js -a -t=templates\jsdoc D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\lib\leafletEngine.js -d=D:\workspace\Historical-map-enhanced-authoring-tool\Leaflet_Engine\doc
 
 /**  @class Prototype for designing the Map
  *
@@ -161,19 +161,19 @@ Map.prototype = {
 /**
  *Create a map with a name, a description, the div id where to put it and some options
  * @see <a href="http://leafletjs.com/reference.html#map-options">leaflet map options</a>
- * @param {String} name The name of the map
- * @param {String} desc A description of the map
  * @param {String} div_id The div id of the html element where to put this map
  * @param {<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>} leaflet_map_options Options for the map
+ * @param {String} name The name of the map
+ * @param {String} desc A description of the map
  * @returns {Map} A map with a name, a description and some options (when this function is 
  * 	called the map will be automatically drawn on the specified html element) 
  */
-Map.createMap = function( name, desc, div_id, leaflet_map_options ){
+Map.createMap = function( div_id, leaflet_map_options, name, desc  ){
 	var m = new Map();
 	m._lmap = new L.Map(div_id, leaflet_map_options);
-	if(name == null)m.setName("Map");
+	if(typeof(name) == 'undefined' || name == null)m.setName("Map");
 	else m.setName(name);
-	if(desc == null)m.setDescription("");
+	if(typeof(desc) == 'undefined' || desc == null)m.setDescription("");
 	else m.setDescription(desc);
 	return m;
 }
@@ -181,16 +181,16 @@ Map.createMap = function( name, desc, div_id, leaflet_map_options ){
 /**
  *Create a map using a geoJSON object
  *the geoJSON object must be an Array of geoJSON object
- * @param {String} name The name of the map
- * @param {String} desc A description of the map
  * @param {String} div_id The div id of the html element where to put this map
  * @param {<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>} leaflet_map_options Options for the map
  * @param {<a href="http://geojson.org/geojson-spec.html">GeoJSON[]</a>} geoJSON_objects An array of geoJSON objects
+ * @param {String} name The name of the map
+ * @param {String} desc A description of the map
  * @returns {Map} A map with a name, a description and some options (when this function is 
  * 	called the map will be automatically drawn on the specified html element)
  * @throws {InvalidGeoJSONObject} if the geoJSON object is not an Array it can't be read to be converted as a Map
  */
-Map.createMapFromGeoJSON = function(name, desc, div_id, leaflet_map_options, geoJSON_objects){
+Map.createMapFromGeoJSON = function(div_id, leaflet_map_options, geoJSON_objects, name, desc ){
 	
 	var map = Map.createMap(name, desc, div_id, leaflet_map_options);
 	if(geoJSON_objects instanceof Array){
@@ -210,7 +210,7 @@ Layer._i = 0;
 Layer.prototype = {
 
 	//properties of this layer. Its an object containing each property as an attribute
-	_properties : null,
+	_properties : new Object(),
 	//Style properties of this layer. Its an object containg each style property as an attribute
 	_style : null,
 	//type of layer (dots or paths)
@@ -513,7 +513,7 @@ Element.prototype = {
 	 *Set the properties of this Element with the specified properties object
 	 *@param {Object} properties the new properties
 	 */
-	setproperties : function( properties ){
+	setProperties : function( properties ){
 		this._properties = properties;
 	},
 	
@@ -523,31 +523,32 @@ Element.prototype = {
 	 */
 	saveAsGeoJSON : function(){
 		
-		var geojson;
+		var geojson = new Object();
 		geojson.type = "Feature";
 		geojson.properties = this.getProperties();
+		geojson.geometry = new Object();
 		geojson.geometry.type = this.getType();
 		
 		var coordinates = [];
 		
-		if(this.getType == Element.geometry.POINT){
+		if(this.getType() == Element.geometry.POINT){
 			coordinates.push(this._lelement.getLatLng().lat);
 			coordinates.push(this._lelement.getLatLng().lng);
 		}
-		if(this.getType == Element.geometry.MULTIPOINT){
+		if(this.getType() == Element.geometry.MULTIPOINT){
 			this._lelement.forEachLayer(function(layer){
 				var point = Util.latLngToArray(layer.getLatLng());
 				coordinates.push(point);
 			});
 		}
-		if(this.getType == Element.geometry.LINE){
+		if(this.getType() == Element.geometry.LINE){
 			var coords = this._lelement.getLatLngs();
 			for(i=0;i<coords.length;i++){
 				var point = Util.latLngToArray(coords[i].getLatLng());
 				coordinates.push(point);
 			}
 		}
-		if(this.getType == Element.geometry.MULTILINE){
+		if(this.getType() == Element.geometry.MULTILINE){
 			this._lelement.forEachLayer(function(layer){
 				var linecoords = [];
 				var line = layer.getLatLngs();
@@ -558,7 +559,7 @@ Element.prototype = {
 				coordinates.push(linecoords);
 			});
 		}
-		if(this.getType == Element.geometry.POLYGON){
+		if(this.getType() == Element.geometry.POLYGON){
 			var coords = this._lelement.getLatLngs();
 			var temp = [];
 			for(i=0;i<coords.length;i++){
@@ -567,7 +568,7 @@ Element.prototype = {
 			}
 			coordinates.push(temp);
 		}
-		if(this.getType == Element.geometry.MULTIPOLYGON){
+		if(this.getType() == Element.geometry.MULTIPOLYGON){
 			this._lelement.forEachLayer(function(layer){
 				var polycoords = [];
 				var temp = [];
@@ -597,10 +598,10 @@ Element.prototype = {
  */
 Element._createAbstractElement = function( name, desc ){
 	var elem = new Element();
-	if(name && name != null && name != 'undefined' && Util.trim(name) != "")element.setName("Element#"+Element._i++);
-	else elem.setName(name);
-	if(desc && desc != null && desc != 'undefined' && Util.trim(desc) != "")elem.setDescription("");
-	else elem.setDescription(desc);
+	elem.setProperties(new Object());
+	if(name && name != null && typeof(name) != 'undefined' && Util.trim(name) != "")elem.addProperty("name", name);
+	else elem.addProperty("name", "Element#"+Element._i++);
+	if(desc && desc != null && typeof(desc) != 'undefined' && Util.trim(desc) != "")elem.addProperty("desc", desc);
 	return elem;
 }
 
@@ -620,83 +621,85 @@ Element._createElementFromLeafletLayer = function(name, desc, type, llayer){
 }
 /**
  *Create a new Point Element with a name, a description and some options at the specified location (lat long)
- *@param {String} name name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng</a>} latlng Position of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options</a>} leaflet_marker_options Options for Point Element
+ *@param {String} name name of the Element
+ *@param {String} desc description of the Element
+ 
  *@returns {Element} A Point Element
  */
-Element.createPoint = function( name, desc, latlng, leaflet_marker_options ){
+Element.createPoint = function(latlng, leaflet_marker_options, name, desc ){
 	var elem = Element._createAbstractElement(name, desc);
-	elem._lelement = L.Marker(latlng, leaflet_marker_options);
+	elem._lelement = new L.Marker(latlng, leaflet_marker_options);
 	elem._type = Element.geometry.POINT;
 	return elem;
 };
 
 /**
  *Create a new MultiPoint Element with a name, a description and some options at the specified location (lat long)
- *@param {String} name name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>} latslngs Position of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#marker-options">L.Marker_options</a>} leaflet_marker_options Options for Point Element
+ *@param {String} name name of the Element
+ *@param {String} desc description of the Element
  *@returns {Element} A MultiPoint Element
  */
-Element.createMultiPoint = function( name, desc, latslngs, leaflet_marker_options ){
+Element.createMultiPoint = function(latslngs, leaflet_marker_options, name, desc ){
 	var elem = Element._createAbstractElement(name, desc);
 	elements = [];
 	for(i = 0;i<latslngs.length;i++){
 		elements.push(new L.Marker(latslngs[i], leaflet_marker_options));
 	}
-	elem._lelement = L.FeatureGroup(elements);
+	elem._lelement = new L.FeatureGroup(elements);
 	elem._type = Element.geometry.MULTIPOINT;
 	return elem;
 };
 
 /**
  *Create a new Line Element with a name, a description and some options with the specified coordinates (lat long coordinates)
- *@param {String} name the name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>} latslngs Positions of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>} leaflet_line_options Options for Line Element
- @returns {Element} A Line Element
+ *@param {String} name the name of the Element
+ *@param {String} desc description of the Element
+ *@returns {Element} A Line Element
  */
-Element.createLine = function(name, desc, latslngs, leaflet_line_options){
+Element.createLine = function( latslngs, leaflet_line_options, name, desc){
 	var elem = Element._createAbstractElement(name, desc);
-	elem._lelement = L.Polyline(latslngs, leaflet_line_options);
+	elem._lelement = new L.Polyline(latslngs, leaflet_line_options);
 	elem._type = Element.geometry.LINE;
 	return elem;
 };
 
 /**
  *Create a new MultiLine Element with a name, a description and some options with the specified coordinates (lat long coordinates)
- *@param {String} name the name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>} latslngs Positions of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>} leaflet_line_options Options for Line Element
+*@param {String} name the name of the Element
+ *@param {String} desc description of the Element
  *@returns {Element} A MultiLine Element
  */
-Element.createMultiLine = function(name, desc, latslngs, leaflet_line_options){
+Element.createMultiLine = function(latslngs, leaflet_line_options, name, desc ){
 	var elem = Element._createAbstractElement(name, desc);
-	elem._lelement = L.MultiPolyline(latslngs, leaflet_line_options);
-	elem._type = Element.geometry.LINE;
+	elem._lelement = new L.MultiPolyline(latslngs, leaflet_line_options);
+	elem._type = Element.geometry.MULTILINE;
 	return elem;
 };
 
 /**
  *Create a new Polygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)
  *if there is only two latslngs coordinates in the array in parameter, a rectangle will be created
- *@param {String} name the name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>} latlng Positions of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>} leaflet_polygon_options Options for Polygon Element
+ *@param {String} name the name of the Element
+ *@param {String} desc description of the Element
+ *@returns {Element} A Polygon Element
  */
-Element.createPolygon = function(name, desc, latslngs, leaflet_polygon_options){
+Element.createPolygon = function( latslngs, leaflet_polygon_options, name, desc ){
 	var elem = Element._createAbstractElement(name, desc);
 	if(latslngs.length == 2){
-		elem._lelement = L.Rectangle(L.LatLngBounds(latslngs), leaflet_polygon_options);
+		elem._lelement = new L.Rectangle(L.LatLngBounds(latslngs), leaflet_polygon_options);
 	}
 	else{
-		elem._lelement = L.Polygon(latslngs, leaflet_polygon_options);
+		elem._lelement = new L.Polygon(latslngs, leaflet_polygon_options);
 	}
 	elem._type = Element.geometry.POLYGON;
 	return elem;
@@ -704,14 +707,16 @@ Element.createPolygon = function(name, desc, latslngs, leaflet_polygon_options){
 
 /**
  *Create a new MultiPolygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)
- *@param {String} name the name of the Element
- *@param {String} desc description of the Element
  *@param {<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>} latlng Positions of the Element on the map (latitude - longitude)
  *@param {<a href="http://leafletjs.com/reference.html#polyline-options">L.Polyline_options</a>} leaflet_polygon_options Options for Polygon Element
+ *@param {String} name the name of the Element
+ *@param {String} desc description of the Element
+ *@returns {Element} A Polygon Element
  */
-Element.createMultiPolygon = function(name, desc, latslngs, leaflet_polygon_options){
+
+Element.createMultiPolygon = function(latslngs, leaflet_polygon_options, name, desc){
 	var elem = Element._createAbstractElement(name, desc);
-	elem._lelement = L.MultiPolygon(latslngs, leaflet_polygon_options);
+	elem._lelement = new L.MultiPolygon(latslngs, leaflet_polygon_options);
 	elem._type = Element.geometry.MULTIPOLYGON;
 	return elem;
 }
@@ -731,6 +736,7 @@ Element.geometry= {
 
 var Style = function(){};
 Style.prototype
+
 /**
  *@namespace Namespace for utility functions
  */

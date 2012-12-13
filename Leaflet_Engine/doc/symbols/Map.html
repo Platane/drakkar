@@ -219,7 +219,7 @@ ul.inheritsList
 				Prototype for designing the Map
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_lib_leafletEngine.js.html">leafletEngine.js</a>.
 				
 			</p>
 
@@ -285,7 +285,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Map.<b><a href="../symbols/Map.html#.createMap">createMap</a></b>(name, desc, div_id, leaflet_map_options)
+								<div class="fixedFont">Map.<b><a href="../symbols/Map.html#.createMap">createMap</a></b>(div_id, leaflet_map_options, name, desc)
 								</div>
 								<div class="description">Create a map with a name, a description, the div id where to put it and some options</div>
 							</td>
@@ -294,7 +294,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Map.<b><a href="../symbols/Map.html#.createMapFromGeoJSON">createMapFromGeoJSON</a></b>(name, desc, div_id, leaflet_map_options, geoJSON_objects)
+								<div class="fixedFont">Map.<b><a href="../symbols/Map.html#.createMapFromGeoJSON">createMapFromGeoJSON</a></b>(div_id, leaflet_map_options, geoJSON_objects, name, desc)
 								</div>
 								<div class="description">Create a map using a geoJSON objectthe geoJSON object must be an Array of geoJSON object</div>
 							</td>
@@ -545,7 +545,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Map.html">Map</a>}</span>
-					<span class="light">Map.</span><b>createMap</b>(name, desc, div_id, leaflet_map_options)
+					<span class="light">Map.</span><b>createMap</b>(div_id, leaflet_map_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -561,18 +561,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>The name of the map</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>A description of the map</dd>
-							
-								<dt>
 									<span class="light fixedFont">{String}</span> <b>div_id</b>
 									
 								</dt>
@@ -583,6 +571,18 @@ ul.inheritsList
 									
 								</dt>
 								<dd>Options for the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>The name of the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>A description of the map</dd>
 							
 							</dl>
 						
@@ -613,7 +613,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Map.html">Map</a>}</span>
-					<span class="light">Map.</span><b>createMapFromGeoJSON</b>(name, desc, div_id, leaflet_map_options, geoJSON_objects)
+					<span class="light">Map.</span><b>createMapFromGeoJSON</b>(div_id, leaflet_map_options, geoJSON_objects, name, desc)
 					
 					</div>
 					<div class="description">
@@ -627,18 +627,6 @@ ul.inheritsList
 						
 							<dl class="detailList">
 							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>The name of the map</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>A description of the map</dd>
 							
 								<dt>
 									<span class="light fixedFont">{String}</span> <b>div_id</b>
@@ -658,10 +646,32 @@ ul.inheritsList
 								</dt>
 								<dd>An array of geoJSON objects</dd>
 							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>The name of the map</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>A description of the map</dd>
+							
 							</dl>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Throws:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{InvalidGeoJSONObject}</span>  <b></b>
+								</dt>
+								<dd>if the geoJSON object is not an Array it can't be read to be converted as a Map</dd>
+							
+							</dl>
 						
 						
 							<dl class="detailList">
@@ -1110,7 +1120,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 06 2012 17:14:18 GMT+0100 (CET)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 13 2012 14:22:20 GMT+0100 (CET)
 		</div>
 	</body>
 </html>

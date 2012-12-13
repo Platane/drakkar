@@ -219,7 +219,7 @@ ul.inheritsList
 				Prototype for designing layers. Layers are objects that allows to regroup several Elements.*Layers should not contains another layers.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_lib_leafletEngine.js.html">leafletEngine.js</a>.
 				
 			</p>
 
@@ -274,6 +274,15 @@ ul.inheritsList
 						</tr>
 					
 						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#addProperty">addProperty</a></b>(name, value)
+								</div>
+								<div class="description">Add a property to this layerIf the property already exists his value is overwrited with the new one</div>
+							</td>
+						</tr>
+					
+						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">Layer.<b><a href="../symbols/Layer.html#.createLayer">createLayer</a></b>(name, desc)
@@ -287,16 +296,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont">Layer.<b><a href="../symbols/Layer.html#.createLayerFromGeoJSON">createLayerFromGeoJSON</a></b>(geoJSON_object)
 								</div>
-								<div class="description">Create a new Layer from a valid GeoJSON Object</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Layer.html#getDescription">getDescription</a></b>()
-								</div>
-								<div class="description">Return the description of this Layer</div>
+								<div class="description">Create a new Layer from a valid GeoJSON Object.</div>
 							</td>
 						</tr>
 					
@@ -330,9 +330,18 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Layer.html#getName">getName</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#getProperties">getProperties</a></b>()
 								</div>
-								<div class="description">Return the name of this Layer</div>
+								<div class="description">Return the properties existing on this layer.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#getProperty">getProperty</a></b>(name)
+								</div>
+								<div class="description">Return the value of the specified property on this layerIf the property doesn't exist, 'undefined' is returned</div>
 							</td>
 						</tr>
 					
@@ -366,18 +375,18 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Layer.html#saveAsGeoJSON">saveAsGeoJSON</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#removeProperty">removeProperty</a></b>(name)
 								</div>
-								<div class="description">Return this layer in geoJSON format</div>
+								<div class="description">Delete the specified property on this layer.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Layer.html#setDescription">setDescription</a></b>(desc)
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#saveAsGeoJSON">saveAsGeoJSON</a></b>()
 								</div>
-								<div class="description">Change the description of this Layer</div>
+								<div class="description">Return this layer in geoJSON format</div>
 							</td>
 						</tr>
 					
@@ -393,9 +402,9 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Layer.html#setName">setName</a></b>(name)
+								<div class="fixedFont"><b><a href="../symbols/Layer.html#setProperties">setProperties</a></b>(properties)
 								</div>
-								<div class="description">Change the name of this Layer</div>
+								<div class="description">Set the properties of this layer with the specified properties object</div>
 							</td>
 						</tr>
 					
@@ -483,6 +492,48 @@ ul.inheritsList
 
 					<hr />
 				
+					<a name="addProperty"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addProperty</b>(name, value)
+					
+					</div>
+					<div class="description">
+						Add a property to this layerIf the property already exists his value is overwrited with the new one
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to add</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Object}</span> <b>value</b>
+									
+								</dt>
+								<dd>the value of the property to add</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name=".createLayer"> </a>
 					<div class="fixedFont">&lt;static&gt; 
 					
@@ -540,7 +591,7 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						Create a new Layer from a valid GeoJSON Object
+						Create a new Layer from a valid GeoJSON Object.A valid geoJSON Object for a layer must contains a "features" attribute
 						
 						
 					</div>
@@ -555,50 +606,28 @@ ul.inheritsList
 									<span class="light fixedFont">{<a href="http://geojson.org/geojson-spec.html">GeoJSON</a>}</span> <b>geoJSON_object</b>
 									
 								</dt>
-								<dd>The GeoJSON object to read</dd>
+								<dd>The GeoJSON object to read. It must containa property "type" with the value "FeatureCollection" and the property "features"</dd>
 							
 							</dl>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Throws:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{InvalidGeoJSONObject}</span>  <b></b>
+								</dt>
+								<dd>When the geoJSON object is invalid.</dd>
+							
+							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
 								<dd><span class="light fixedFont">{<a href="../symbols/Layer.html">Layer</a>}</span> The layer created</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="getDescription"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{String}</span>
-					<b>getDescription</b>()
-					
-					</div>
-					<div class="description">
-						Return the description of this Layer
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{String}</span> The description of this Layer</dd>
 							
 							</dl>
 						
@@ -721,15 +750,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="getName"> </a>
+					<a name="getProperties"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{String}</span>
-					<b>getName</b>()
+					<span class="light">{Object}</span>
+					<b>getProperties</b>()
 					
 					</div>
 					<div class="description">
-						Return the name of this Layer
+						Return the properties existing on this layer. These properties are contained in an object as its attributesi.e : var properties = layer.getProperties();	for(prop in properties)alert(prop+" : "+properties[prop]);
 						
 						
 					</div>
@@ -744,7 +773,50 @@ ul.inheritsList
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{String}</span> The name of this Layer</dd>
+								<dd><span class="light fixedFont">{Object}</span> an object containing properties.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getProperty"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Object}</span>
+					<b>getProperty</b>(name)
+					
+					</div>
+					<div class="description">
+						Return the value of the specified property on this layerIf the property doesn't exist, 'undefined' is returned
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to get</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Object}</span> the value of the specified property on this layer or null if it doesn't exist</dd>
 							
 							</dl>
 						
@@ -857,6 +929,49 @@ ul.inheritsList
 
 					<hr />
 				
+					<a name="removeProperty"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Boolean}</span>
+					<b>removeProperty</b>(name)
+					
+					</div>
+					<div class="description">
+						Delete the specified property on this layer.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to delete</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Boolean}</span> true if the specified property has been removed. False if the property doesn't exist</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="saveAsGeoJSON"> </a>
 					<div class="fixedFont">
 					
@@ -883,42 +998,6 @@ ul.inheritsList
 								<dd><span class="light fixedFont">{geoJSON}</span> this layer in a geoJSON format</dd>
 							
 							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="setDescription"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>setDescription</b>(desc)
-					
-					</div>
-					<div class="description">
-						Change the description of this Layer
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>New Description</dd>
-							
-							</dl>
-						
-						
-						
-						
 						
 						
 						
@@ -961,15 +1040,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="setName"> </a>
+					<a name="setProperties"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>setName</b>(name)
+					<b>setProperties</b>(properties)
 					
 					</div>
 					<div class="description">
-						Change the name of this Layer
+						Set the properties of this layer with the specified properties object
 						
 						
 					</div>
@@ -981,10 +1060,10 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
+									<span class="light fixedFont">{Object}</span> <b>properties</b>
 									
 								</dt>
-								<dd>New name</dd>
+								<dd>the new properties</dd>
 							
 							</dl>
 						
@@ -1009,7 +1088,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 06 2012 17:14:18 GMT+0100 (CET)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 13 2012 14:22:20 GMT+0100 (CET)
 		</div>
 	</body>
 </html>

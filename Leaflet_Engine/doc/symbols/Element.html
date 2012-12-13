@@ -219,7 +219,7 @@ ul.inheritsList
 				Prototype for designing Elements. Elements are object that can be added to a layer, and which can be displayed on the map.Elements object are containers for leaflet layers objects like Marker, Line, PolyLine, Polygon, etc...An Element object should only contains leaflet vector layers and leaflet Markers. Other layers are not supported and are not considered as Element.<b>Leaflet Vector Layers objects</b> are defined <a href="http://leafletjs.com/reference.html#path">here</a><b>Marker leaflet object</b> is defined <a href="http://leafletjs.com/reference.html#marker">here</a>
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_leafletEngine.js.html">leafletEngine.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/D__workspace_Historical-map-enhanced-authoring-tool_Leaflet_Engine_lib_leafletEngine.js.html">leafletEngine.js</a>.
 				
 			</p>
 
@@ -293,9 +293,18 @@ ul.inheritsList
 					<tbody>
 					
 						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Element.html#addProperty">addProperty</a></b>(name, value)
+								</div>
+								<div class="description">Add a property to this ElementIf the property already exists his value is overwrited with the new one</div>
+							</td>
+						</tr>
+					
+						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createLine">createLine</a></b>(name, desc, latslngs, leaflet_line_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createLine">createLine</a></b>(latslngs, leaflet_line_options, name, desc)
 								</div>
 								<div class="description">Create a new Line Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
 							</td>
@@ -304,7 +313,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiLine">createMultiLine</a></b>(name, desc, latslngs, leaflet_line_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiLine">createMultiLine</a></b>(latslngs, leaflet_line_options, name, desc)
 								</div>
 								<div class="description">Create a new MultiLine Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
 							</td>
@@ -313,7 +322,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPoint">createMultiPoint</a></b>(name, desc, latslngs, leaflet_marker_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPoint">createMultiPoint</a></b>(latslngs, leaflet_marker_options, name, desc)
 								</div>
 								<div class="description">Create a new MultiPoint Element with a name, a description and some options at the specified location (lat long)</div>
 							</td>
@@ -322,7 +331,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPolygon">createMultiPolygon</a></b>(name, desc, latlng, leaflet_polygon_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createMultiPolygon">createMultiPolygon</a></b>(latlng, leaflet_polygon_options, name, desc)
 								</div>
 								<div class="description">Create a new MultiPolygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)</div>
 							</td>
@@ -331,7 +340,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPoint">createPoint</a></b>(name, desc, latlng, leaflet_marker_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPoint">createPoint</a></b>(latlng, leaflet_marker_options, name, desc)
 								</div>
 								<div class="description">Create a new Point Element with a name, a description and some options at the specified location (lat long)</div>
 							</td>
@@ -340,18 +349,9 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPolygon">createPolygon</a></b>(name, desc, latlng, leaflet_polygon_options)
+								<div class="fixedFont">Element.<b><a href="../symbols/Element.html#.createPolygon">createPolygon</a></b>(latlng, leaflet_polygon_options, name, desc)
 								</div>
 								<div class="description">Create a new Polygon Element with a name, a description and some options with the specified coordinates (lat long coordinates)if there is only two latslngs coordinates in the array in parameter, a rectangle will be created</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Element.html#getDescription">getDescription</a></b>()
-								</div>
-								<div class="description">Return the description of this Element</div>
 							</td>
 						</tr>
 					
@@ -367,9 +367,18 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Element.html#getName">getName</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/Element.html#getProperties">getProperties</a></b>()
 								</div>
-								<div class="description">Return the name of this Element</div>
+								<div class="description">Return the properties existing on this Element.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Element.html#getProperty">getProperty</a></b>(name)
+								</div>
+								<div class="description">Return the value of the specified property on this ElementIf the property doesn't exist, 'undefined' is returned</div>
 							</td>
 						</tr>
 					
@@ -385,6 +394,15 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Element.html#removeProperty">removeProperty</a></b>(name)
+								</div>
+								<div class="description">Delete the specified property on this Element.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/Element.html#saveAsGeoJSON">saveAsGeoJSON</a></b>()
 								</div>
 								<div class="description">Return this Element in geoJSON format</div>
@@ -394,18 +412,9 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Element.html#setDescription">setDescription</a></b>(desc)
+								<div class="fixedFont"><b><a href="../symbols/Element.html#setProperties">setProperties</a></b>(properties)
 								</div>
-								<div class="description">Change the description of this Element</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Element.html#setName">setName</a></b>(name)
-								</div>
-								<div class="description">Change the name of this Element</div>
+								<div class="description">Set the properties of this Element with the specified properties object</div>
 							</td>
 						</tr>
 					
@@ -484,11 +493,53 @@ ul.inheritsList
 					Method Detail
 				</div>
 				
+					<a name="addProperty"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addProperty</b>(name, value)
+					
+					</div>
+					<div class="description">
+						Add a property to this ElementIf the property already exists his value is overwrited with the new one
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to add</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Object}</span> <b>value</b>
+									
+								</dt>
+								<dd>the value of the property to add</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name=".createLine"> </a>
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
-					<span class="light">Element.</span><b>createLine</b>(name, desc, latslngs, leaflet_line_options)
+					<span class="light">Element.</span><b>createLine</b>(latslngs, leaflet_line_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -504,18 +555,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>the name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latslngs</b>
 									
 								</dt>
@@ -526,6 +565,18 @@ ul.inheritsList
 									
 								</dt>
 								<dd>Options for Line Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
 							
 							</dl>
 						
@@ -549,7 +600,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
-					<span class="light">Element.</span><b>createMultiLine</b>(name, desc, latslngs, leaflet_line_options)
+					<span class="light">Element.</span><b>createMultiLine</b>(latslngs, leaflet_line_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -565,18 +616,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>the name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>}</span> <b>latslngs</b>
 									
 								</dt>
@@ -587,6 +626,18 @@ ul.inheritsList
 									
 								</dt>
 								<dd>Options for Line Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
 							
 							</dl>
 						
@@ -610,7 +661,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
-					<span class="light">Element.</span><b>createMultiPoint</b>(name, desc, latslngs, leaflet_marker_options)
+					<span class="light">Element.</span><b>createMultiPoint</b>(latslngs, leaflet_marker_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -626,18 +677,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latslngs</b>
 									
 								</dt>
@@ -648,6 +687,18 @@ ul.inheritsList
 									
 								</dt>
 								<dd>Options for Point Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
 							
 							</dl>
 						
@@ -670,8 +721,8 @@ ul.inheritsList
 					<a name=".createMultiPolygon"> </a>
 					<div class="fixedFont">&lt;static&gt; 
 					
-					
-					<span class="light">Element.</span><b>createMultiPolygon</b>(name, desc, latlng, leaflet_polygon_options)
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createMultiPolygon</b>(latlng, leaflet_polygon_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -687,18 +738,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>the name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[][]</a>}</span> <b>latlng</b>
 									
 								</dt>
@@ -710,11 +749,30 @@ ul.inheritsList
 								</dt>
 								<dd>Options for Polygon Element</dd>
 							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
 							</dl>
 						
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A Polygon Element</dd>
+							
+							</dl>
 						
 						
 						
@@ -725,7 +783,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;static&gt; 
 					
 					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
-					<span class="light">Element.</span><b>createPoint</b>(name, desc, latlng, leaflet_marker_options)
+					<span class="light">Element.</span><b>createPoint</b>(latlng, leaflet_marker_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -741,18 +799,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng</a>}</span> <b>latlng</b>
 									
 								</dt>
@@ -763,6 +809,18 @@ ul.inheritsList
 									
 								</dt>
 								<dd>Options for Point Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
 							
 							</dl>
 						
@@ -785,8 +843,8 @@ ul.inheritsList
 					<a name=".createPolygon"> </a>
 					<div class="fixedFont">&lt;static&gt; 
 					
-					
-					<span class="light">Element.</span><b>createPolygon</b>(name, desc, latlng, leaflet_polygon_options)
+					<span class="light">{<a href="../symbols/Element.html">Element</a>}</span>
+					<span class="light">Element.</span><b>createPolygon</b>(latlng, leaflet_polygon_options, name, desc)
 					
 					</div>
 					<div class="description">
@@ -802,18 +860,6 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>the name of the Element</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
-									
-								</dt>
-								<dd>description of the Element</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="http://leafletjs.com/reference.html#latlng">L.LatLng[]</a>}</span> <b>latlng</b>
 									
 								</dt>
@@ -825,32 +871,19 @@ ul.inheritsList
 								</dt>
 								<dd>Options for Polygon Element</dd>
 							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the Element</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>desc</b>
+									
+								</dt>
+								<dd>description of the Element</dd>
+							
 							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="getDescription"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{String}</span>
-					<b>getDescription</b>()
-					
-					</div>
-					<div class="description">
-						Return the description of this Element
-						
-						
-					</div>
-					
-					
-					
 						
 						
 						
@@ -859,7 +892,7 @@ ul.inheritsList
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{String}</span> the description of this Element</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/Element.html">Element</a>}</span> A Polygon Element</dd>
 							
 							</dl>
 						
@@ -907,15 +940,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="getName"> </a>
+					<a name="getProperties"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{String}</span>
-					<b>getName</b>()
+					<span class="light">{Object}</span>
+					<b>getProperties</b>()
 					
 					</div>
 					<div class="description">
-						Return the name of this Element
+						Return the properties existing on this Element. These properties are contained in an object as its attributesi.e : var properties = layer.getProperties();	for(prop in properties)alert(prop+" : "+properties[prop]);
 						
 						
 					</div>
@@ -930,7 +963,50 @@ ul.inheritsList
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{String}</span> the name of this Element</dd>
+								<dd><span class="light fixedFont">{Object}</span> an object containing properties.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getProperty"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Object}</span>
+					<b>getProperty</b>(name)
+					
+					</div>
+					<div class="description">
+						Return the value of the specified property on this ElementIf the property doesn't exist, 'undefined' is returned
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to get</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Object}</span> the value of the specified property on this layer or null if it doesn't exist</dd>
 							
 							</dl>
 						
@@ -971,6 +1047,49 @@ ul.inheritsList
 
 					<hr />
 				
+					<a name="removeProperty"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Boolean}</span>
+					<b>removeProperty</b>(name)
+					
+					</div>
+					<div class="description">
+						Delete the specified property on this Element.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>name</b>
+									
+								</dt>
+								<dd>the name of the property to delete</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Boolean}</span> true if the specified property has been removed. False if the property doesn't exist</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="saveAsGeoJSON"> </a>
 					<div class="fixedFont">
 					
@@ -1003,15 +1122,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="setDescription"> </a>
+					<a name="setProperties"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>setDescription</b>(desc)
+					<b>setProperties</b>(properties)
 					
 					</div>
 					<div class="description">
-						Change the description of this Element
+						Set the properties of this Element with the specified properties object
 						
 						
 					</div>
@@ -1023,46 +1142,10 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String}</span> <b>desc</b>
+									<span class="light fixedFont">{Object}</span> <b>properties</b>
 									
 								</dt>
-								<dd>New Description</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="setName"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>setName</b>(name)
-					
-					</div>
-					<div class="description">
-						Change the name of this Element
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>New name</dd>
+								<dd>the new properties</dd>
 							
 							</dl>
 						
@@ -1087,7 +1170,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 06 2012 17:14:18 GMT+0100 (CET)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Dec 13 2012 14:22:20 GMT+0100 (CET)
 		</div>
 	</body>
 </html>
