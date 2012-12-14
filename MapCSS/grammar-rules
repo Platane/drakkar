@@ -7,16 +7,40 @@ start
 
 
 declaration
-  = i s : selector i "{"  i p: ( i property i ";" i )* "}" i { var props = []; for(var i=0;i<p.length;i++)props.push(p[i][1]);return{selector:s,props:props};}
+  = i s : selectors i "{"  i p: ( i property i ";" i )* "}" i { var props = []; for(var i=0;i<p.length;i++)props.push(p[i][1]); return{selectors:s,props:props};}         
 
 
+selectors
+  = s1:selector sn:( i "," i selector )* {
+  function bubbling(s,p){
+	for(var i=0;i<s.length;i++)
+		if(s[i].child){
+			var queu=bubbling(s.splice(i,1)[0].child);
+			var last=queu;
+			while( true ){
+				var tmp = null;
+				for(var j=0;j<last.length;j++)
+					if(last[j].parent)
+						tmp = last[j].parent;
+				if( tmp )
+					last = tmp;
+				else {
+					last.push({parent:s});
+					break;
+				}
+			}
+			return queu;
+		}
+	return s;
+	};
+	var props = [ bubbling(s1) ]; for(var i=0;i<sn.length;i++)props.push(bubbling(sn[i][3])); return props; }
+  
 selector
   = "#" id:string n:( selector )? { if(!n)return[{id:id}];n.unshift({id:id});return n; }
   / "." id:string n:( selector )? { if(!n)return[{class:id}];n.unshift({class:id});return n; }
   /     id:string n:( selector )? { if(!n)return[{tag:id}];n.unshift({tag:id});return n; }
   / "[" a: attributeQuery "]" n:( selector )? { if(!n)return[{attributeQuery:a}];n.unshift({attributeQuery:a});return n; }
-  / " " n:selector { return [{child:n}]; }
-  
+  / " "+ n:selector { return [{child:n}]; }
 
 attributeQuery
   = s1:string "=" f:float { return { attribute : s1 , testFunction : function( a ){ try{var r=(parseFloat(a)==this._rightHand);return r;}catch(e){}return false; } , _rightHand : f  } }
@@ -28,10 +52,10 @@ attributeQuery
   / s1:string { return { attribute : s1 , testFunction: function( a ){ return a != null && a != undefined } } }
 
 property
-  = name:string i ":" i r:righthands { return { name : name , value : r }; }
+  = name:string i ":" i r:righthands { return{name:name,value:r}; }
 
 righthands
-  = r1:righthand rt:( i "," i righthands )* { if(!rt)return r1; var t=[r1];for(var i=0;i<rt.length;i++)t.push(rt[i][3][0]); return t;}
+  = r1:righthand rt:( i "," i righthand )* { if(!rt)return r1; var t=[r1];for(var i=0;i<rt.length;i++)t.push(rt[i][3]); return t;}
 
 righthand
   = v:float m:mesure n:( separator righthand )? { if(!n)return[{value:v,mesure:m}];n[1].unshift({value:v,mesure:m});return n[1];}
@@ -39,9 +63,9 @@ righthand
   / id:string n:( separator righthand )? { if(!n)return[id];n[1].unshift(id);return n[1];}
 
 color 
-  = "#" [0-9abcdefABCDEF]+ 
-  / "rgb" i "(" i r:float i "," i v:float i "," i b:float i ")" { return { r:r , v:v , b:b }; }
-  / "rgba" i "(" i r:float i "," i v:float i "," i b:float i "," i a:float i ")" { return { r:r , v:v , b:b , a:a }; }
+  = "#" digits:[0-9abcdefABCDEF]+ { if(digits.length==3)return{r:parseInt(digits[0],16)*17,v:parseInt(digits[1],16)*17,b:parseInt(digits[2],16)*17,a:1};if(digits.length==6)return{r:parseInt(digits[0]+digits[1],16),v:parseInt(digits[2]+digits[3],16),b:parseInt(digits[4]+digits[5],16),a:1};return{r:0,v:0,b:0,a:1};}
+  / "rgb" i "(" i r:float i "," i v:float i "," i b:float i ")" { if(r>256||r<0||v>256||v<0||b>256||b<0)return{r:0,v:0,b:0,a:1};return{r:r,v:v,b:b,a:1}; }
+  / "rgba" i "(" i r:float i "," i v:float i "," i b:float i "," i a:float i ")" { if(r>256||r<0||v>256||v<0||b>256||b<0||a<0||a>1)return{r:0,v:0,b:0,a:1};return{r:r,v:v,b:b,a:a}; }
 
 
 mesure
@@ -59,6 +83,7 @@ string
 separator
   = " "  i
   / "\n" i
+  / "\t" i
 
 i /* ignore */
   = " "   i
