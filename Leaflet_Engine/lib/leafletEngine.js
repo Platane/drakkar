@@ -210,7 +210,7 @@ Layer._i = 0;
 Layer.prototype = {
 
 	//properties of this layer. Its an object containing each property as an attribute
-	_properties : new Object(),
+	_properties : null,
 	//Style properties of this layer. Its an object containg each style property as an attribute
 	_style : null,
 	//type of layer (dots or paths)
@@ -380,10 +380,11 @@ Layer.prototype = {
  */
 Layer.createLayer = function( name, desc ){
 	var l = new Layer();
-	if(name && name != null && name != 'undefined' && Util.trim(name) != "")l.addProperty("name", name);
+	l.setProperties(new Object());
+	if(name && name != null && typeof(name) != 'undefined' && Util.trim(name) != "")l.addProperty("name", name);
 	else l.addProperty("name", "Layer#"+Layer._i++);
-	if(des && desc != null && desc != 'undefined' && Util.trim(desc) != "")l.addProperty("description", desc);
-	l._llayer = L.LayerGroup();
+	if(desc && desc != null && typeof(desc) != 'undefined' && Util.trim(desc) != "")l.addProperty("desc", desc);
+	l._llayer = new L.LayerGroup();
 	return l;
 }
 
@@ -607,16 +608,17 @@ Element._createAbstractElement = function( name, desc ){
 
 /**
  * Create an Element from an existing leaflet Layer
+ * @param {Element.geometry} type the type of this Element
+ * @param {http://leafletjs.com/reference.html#ilayer>ILayer</a>} lelement the leaflet layer associated
  * @param {String} name the name of this Element
  * @param {String} desc description of this Element
- * @param {Element.geometry} type the type of this Element
- * @param {http://leafletjs.com/reference.html#ilayer>ILayer</a>} the leaflet layer associated 
+ * @returns {Element} a new Element corresponding to the leaflet Layer in parameters
  */
-Element._createElementFromLeafletLayer = function(name, desc, type, llayer){
+Element._createElementFromLeafletLayer = function(type, lelement, name, desc ){
 	
 	var elem = Element._createAbstractElement(name, desc);
 	elem._type = type;
-	this._llayer = llayer;
+	elem._lelement = lelement;
 	return elem;
 }
 /**
@@ -696,7 +698,7 @@ Element.createMultiLine = function(latslngs, leaflet_line_options, name, desc ){
 Element.createPolygon = function( latslngs, leaflet_polygon_options, name, desc ){
 	var elem = Element._createAbstractElement(name, desc);
 	if(latslngs.length == 2){
-		elem._lelement = new L.Rectangle(L.LatLngBounds(latslngs), leaflet_polygon_options);
+		elem._lelement = new L.Rectangle(new L.LatLngBounds(latslngs), leaflet_polygon_options);
 	}
 	else{
 		elem._lelement = new L.Polygon(latslngs, leaflet_polygon_options);

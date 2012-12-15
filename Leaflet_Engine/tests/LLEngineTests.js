@@ -14,6 +14,7 @@ EngineTest.prototype = {
     util_errors : [],
     
     _addError : function( error_test_function, error_message, error_category){
+        
         var str = "Error, test : "+error_test_function+", message : "+error_message;
         if(error_category == 'map'){
             this.map_errors.push(str);
@@ -62,33 +63,52 @@ EngineTest.prototype = {
         utildiv.after(this.nb_util_errors+' errors</br>');
     },
     
-    setUp : function(){
+    _setUp : function(){
         
         
     },
     
     runTests : function(){
+        
         this.map = Map.createMap('leaflet', 'name', 'desc')
         for(elt in this){
-            if(elt.indexOf('test') == 0 && typeof(this[elt]) == 'function')this[elt]();
+            if(elt.indexOf('_test') == 0 && typeof(this[elt]) == 'function')this[elt]();
         }
         
         this.printErrors();
     },
     
-    testMap : function(){
-        this.setUp();
+    _testMap : function(){
+        this._setUp();
         /*if(this.map.getName() != 'name')this._addError('Map.createMap', 'map.getName() != \'name\'', 'map');
         if(this.map.getDescription() != 'desc')this._addError('Map.createMap', 'map.getDescription() != \'desc\'', 'map');*/
     },
     
-    testLayer : function(){
-        this.setUp();
+    _testLayer : function(){
+        this._setUp();
+        
+        //test layer creation with params
+        /*var layer = Layer.createLayer('name', 'desc');
+        if(typeof(layer.getProperty('name')) == 'undefined')this._addError('Layer.createLayer(name, desc)', 'layer.getProperty("name") is undefined', 'layer');
+        if(layer.getProperty('name') != 'name')this._addError('Layer.createLayer(name, desc)', 'layer.getProperty("name") != "name"', 'layer');
+        
+        if(typeof(layer.getProperty('desc')) == 'undefined')this._addError('Layer.createLayer(name, desc)', 'layer.getProperty("desc") is undefined', 'layer');
+        if(layer.getProperty('desc') != 'desc')this._addError('Layer.createLayer(name, desc)', 'layer.getProperty("desc") != "desc"', 'layer');
+        
+        //test layer creation with no params
+        layer = Layer.createLayer()
+        if(typeof(layer.getProperty('name')) == 'undefined')this._addError('Layer.createLayer()', 'layer.getProperty("name") is undefined', 'layer');
+        if(layer.getProperty('name') != 'Layer#0')this._addError('Layer.createLayer()', 'layer.getProperty("name") != "Layer#0"', 'layer');
+        
+        if(typeof(layer.getProperty('desc')) != 'undefined')this._addError('Layer.createLayer()', 'layer.getProperty("desc") should not exist ', 'layer');
+        
+        //test layer creation from geojson object*/
         
     },
     
-    testElement : function(){
-        this.setUp();
+    _testElement : function(){
+        
+        this._setUp();
         var elt = Element._createAbstractElement('name', 'desc');
         
         //abstract constructor with params
@@ -116,34 +136,95 @@ EngineTest.prototype = {
         if(typeof(elt.getProperty('test')) != 'undefined')this._addError('Element.removeProperty', 'element.getProperty(test) is still defined', 'element');
         
         //test point creation
-        var elt1 = Element.createPoint( new L.latLng(30.5, 30.5), {title: 'point test'});
+        var elt1 = Element.createPoint( new L.latLng(0, 0), {title: 'point test'});
         if(elt1.getType() != Element.geometry.POINT)this._addError('Element.createPoint(latlng)', 'element.getType() != Element.geometry.POINT', 'element');
         elt1.getLeafletElement().addTo(this.map.getLeafletMap());
         
         //test multipoint creation
-        var elt2 = Element.createMultiPoint( [new L.LatLng(50.5, 40.5), new L.LatLng(60.5, 40.5)], {title: 'multipoint test'});
+        var elt2 = Element.createMultiPoint( [new L.LatLng(0, 20), new L.LatLng(10, 20)], {title: 'multipoint test'});
         if(elt2.getType() != Element.geometry.MULTIPOINT)this._addError('Element.createMultiPoint(latslngs)', 'element.getType() != Element.geometry.MULTIPOINT', 'element');
         elt2.getLeafletElement().addTo(this.map.getLeafletMap());
       
         
         //test line creation
-        var elt3 = Element.createLine( [new L.LatLng(20.5, 10.5), new L.LatLng(10.5, 5.5)], {color: 'red'}  );
+        var elt3 = Element.createLine( [new L.LatLng(0, 30), new L.LatLng(0, 50)], {color: 'red'}  );
         if(elt3.getType() != Element.geometry.LINE)this._addError('Element.createLine(latslngs)', 'element.getType() != Element.geometry.LINE', 'element');
         elt3.getLeafletElement().addTo(this.map.getLeafletMap());
         
-        
         //test multiline creation
-        var elt4 = Element.createMultiLine( [[new L.LatLng(80, 80), new L.LatLng(90, 90)], [new L.LatLng(100, 100), new L.LatLng(110,110)]], {color: 'green'}  );
+        var elt4 = Element.createMultiLine( [[new L.LatLng(0, 70), new L.LatLng(0, 90)], [new L.LatLng(20, 70), new L.LatLng(20,90)]], {color: 'green'}  );
         if(elt4.getType() != Element.geometry.MULTILINE)this._addError('Element.createMultiLine(latslngs)', 'element.getType() != Element.geometry.MULTILINE', 'element');
         elt4.getLeafletElement().addTo(this.map.getLeafletMap());
-        this.map.getLeafletMap().fitWorld();
+        
+        //test polygon creation (rectangle)
+        var elt5 = Element.createPolygon( [new L.LatLng(0, 110), new L.LatLng(20, 130)], {color: 'black'}  );
+        if(elt5.getType() != Element.geometry.POLYGON)this._addError('Element.createPolygon(latslngs)', 'element.getType() != Element.geometry.POLYGON', 'element');
+        elt5.getLeafletElement().addTo(this.map.getLeafletMap());
+        
+        //test polygon creation
+        var elt5 = Element.createPolygon( [new L.LatLng(0, 140), new L.LatLng(-10, 150), new L.LatLng(0, 160), new L.LatLng(10, 160) ], {color: 'purple'}  );
+        if(elt5.getType() != Element.geometry.POLYGON)this._addError('Element.createPolygon(latslngs)', 'element.getType() != Element.geometry.POLYGON', 'element');
+        elt5.getLeafletElement().addTo(this.map.getLeafletMap());
+        
+        //test multi polygon creation
+        var elt6 = Element.createMultiPolygon( [[new L.LatLng(0, 170), new L.LatLng(-10, 175), new L.LatLng(0, 180)], [new L.LatLng(5, 170), new L.LatLng(15, 175), new L.LatLng(5, 180)]], {color: 'yellow'}  );
+        if(elt6.getType() != Element.geometry.MULTIPOLYGON)this._addError('Element.createMultiPolygon(latslngs)', 'element.getType() != Element.geometry.MULTIPOLYGON', 'element');
+        elt6.getLeafletElement().addTo(this.map.getLeafletMap());
+        
+        //test element creation from leaflet layer
+        var elt7 = Element._createElementFromLeafletLayer(Element.geometry.LINE, new L.Polyline([new L.LatLng(-10, 0), new L.LatLng(-10,10)], {color: 'grey'}));
+        elt7.getLeafletElement().addTo(this.map.getLeafletMap());
+        
+        //add property to see if geoJSON is well generated with several properties
+        elt1.addProperty('test', 'value');
+        elt2.addProperty('test', 'value');
+        elt3.addProperty('test', 'value');
+        elt4.addProperty('test', 'value');
+        elt5.addProperty('test', 'value');
+        elt6.addProperty('test', 'value');
         
         //test save as geoJSON
-        elt1.addProperty('test', 'value');
+        //for point
         var str = JSON.stringify(elt1.saveAsGeoJSON());
-        if(str != '{"type":"Feature","properties":{"name":"Element#1","test":"value"},"geometry":{"type":"Point","coordinates":[30.5,30.5]}}')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for Point Element', 'element');
-    }
+        if(str != '{"type":"Feature","properties":{"name":"Element#1","test":"value"},"geometry":{"type":"Point","coordinates":[0,0]}}')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for Point Element', 'element');
+        /*
+        //for multi point
+        var str = JSON.stringify(elt2.saveAsGeoJSON());
+        if(str != '')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for MultiPoint Element', 'element');
+        
+        //for line
+        var str = JSON.stringify(elt3.saveAsGeoJSON());
+         if(str != '')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for Line Element', 'element');
+        
+        //for multiline
+        var str = JSON.stringify(elt4.saveAsGeoJSON());
+         if(str != '')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for Multiline Element', 'element');
+        
+        //for polygon
+        var str = JSON.stringify(elt5.saveAsGeoJSON());
+         if(str != '')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for Polygon Element', 'element');
+        
+        //for multi polygon
+        var str = JSON.stringify(elt6.saveAsGeoJSON());
+         if(str != '')this._addError('Element.saveAsGeoJSON()', 'bad geoJSON generated for MultiPolygon Element', 'element');
+        */
+        this.map.getLeafletMap().fitWorld();
+    },
     
+    _testUtil : function(){
+        this._setUp();
+        
+        //test latlng to array
+        /*var latlng = new L.LatLng('50.5', '40.5');
+        var res = Util.latLngToArray(latlng);
+        if(!(res instanceof Array))this._addError('Util.latLngToArray(latlng)', 'returned value is not an Array', 'util');
+        else if(res.length != 2 || res[0] != 50.5 || res[1] != 40.5)this._addError('Util.latLngToArray(latlng)', 'returned Array contains wrong values', 'util');
+        
+        //test trim
+        var word = ' ok ok ';
+        var res = Util.trim(word);
+        if(res != 'ok ok')this._addError('Util.trim(\' ok ok \')', 'waited : "ok ok", found : "'+res, 'util');*/
+    }
     
     
 };
