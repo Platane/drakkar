@@ -336,7 +336,6 @@ describe("Analyser", function() {
 					expect( res[ 0 ].selectors[0][0].attributeQuery.testFunction( "48" ) ).toBe( true );
 				});
 			});
-			
 			describe("attribute is equal to", function() {
 				describe("with number", function() {
 					var res = null;
@@ -391,7 +390,6 @@ describe("Analyser", function() {
 					});
 				});
 			});
-			
 			describe("attribute is upper than", function() {
 				var res = null;
 				beforeEach( function(){

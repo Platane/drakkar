@@ -1,15 +1,237 @@
+/*
+ *	
+ *	strocke : 				[width:Number] [color:Color];				//compact version
+ *	strocke-color : 		[color:Color];
+ *	strocke-opacity : 		[opacity:Number];
+ *	strocke-width : 		[width:Number];
+ *	
+ *	fill : 					[color:Color];								//compact version		
+ *	fill-color : 			[color:Color];	
+ *	fill-opacity : 			[opacity:Number];
+ *	
+ */
+
+
+
+
 var mCSS = mCSS || {};
 
 (function( scope ){
+	
+	var declarations ;
+	
+	var rvb2hex = function( r , v , b ){
+		return "#"+new Number(r).toString( 16 )+new Number(v).toString( 16 )+new Number(b).toString( 16 );
+	}
 	
 	var parse = function( s ){
 		if( !scope._parser )
 			throw "missing dependancy MapCSSParser.js";
 		return scope._parser.parse( s , "start" );
+	};
+	var semanticBuild = function( rawTree ){
+		for(var i=0;i<rawTree.length;i++){
+			var props = {};
+			for(var j=0;j<rawTree[i].props.length;j++){
+				var p = rawTree[i].props[j];
+				switch(p.name){
+					case "strocke" :
+						//if( p.value[0].length!=2 || !p.value[0][0].value || p.value[0][0].value<0 || !p.value[0][1].r  ) throw "strocke invalid params"; //type check
+						props[ "strocke-width" ] = p.value[0][0].value;
+						var e = p.value[0][1];
+						props[ "strocke-color" ] = rvb2hex( e.r , e.v , e.b );
+						props[ "strocke-opacity" ] = e.a;
+					break;
+					case "strocke-width" :
+						//if( p.value[0].length!=1 || !p.value[0][0].value || !p.value[0][0].value <0 ) throw "strocke-width invalid params"; //type check
+						props[ "strocke-width" ] = p.value[0][0].value;
+					break;
+					case "strocke-opacity" :
+						//if( p.value[0].length!=1 || !p.value[0][0].value || !p.value[0][0].value <0  ) throw "strocke-opacity invalid params"; //type check
+						props[ "strocke-opacity" ] = p.value[0][0].value;
+					break;
+					case "strocke-color" :
+						//if( p.value[0].length!=1 || !p.value[0][0].r ) throw "strocke-color invalid params"; //type check
+						var e = p.value[0][0];
+						props[ "strocke-color" ] = rvb2hex( e.r , e.v , e.b );
+					break;
+					case "fill" :
+					//	if( p.value[0].length!=1 || !p.value[0][0].r ) throw "fill invalid params"; //type check
+						var e = p.value[0][0];
+						props[ "fill-color" ] = rvb2hex( e.r , e.v , e.b );
+						props[ "fill-opacity" ] = e.a;
+					break;
+					case "fill-color" :
+						//if( p.value[0].length!=1 || !p.value[0][0].r ) throw "fill-color invalid params"; //type check
+						var e = p.value[0][0];
+						props[ "fill-color" ] = rvb2hex( e.r , e.v , e.b );
+					break;
+					case "fill-opacity" :
+						//if( p.value[0].length!=1 || !p.value[0][0] ) throw "fill-opacity invalid params"; //type check
+						props[ "fill-opacity" ] = p.value[0][0].value;
+					break;
+					default : 
+						//throw ( 'unknown property "' + p.name + '" ' );
+					break;
+				}	
+			}
+			rawTree[i].props = props;
+		}
+		return rawTree;
+	};
+	var init = function( s ){
+		declarations = semanticBuild( parse( s ) );
+	};
+	
+	/** Test if the element satisfy the selector
+	 *@param {AbstractAttributeHolder} the element ( have to implement hasClass() , id , type , getParent() , getAttribute ) 
+	 *@param {Selector[]} set of selector, the element have to satisfy at least one selector. ( a selector is a array of condition )
+	 *@returns {Boolean} true if the element satisfy at least one selector of the set
+	 *//*
+	var isConcernBy = function( element , selectors ){
+		for( var i = 0 ; i < selectors.length ; i ++ ){
+			var s = selectors[ i ];
+			var accep = true;
+			for( var j = 0 ; j < s.length ; j ++ ){
+				var condition = s[j];
+				
+				// condition on class
+				if( condition.class ){
+					if( !element.hasClass( condition.class ) )
+						accep = false;
+					break;
+				}
+				
+				// condition on id
+				if( condition.id ){
+					if( !(element.id == condition.id) )
+						accep = false;
+					break;
+				}
+				
+				// condition on attribute
+				if( condition.attributeQuery ){
+					if( !condition.attributeQuery.testFunction( element.getAttribute( condition.attributeQuery.attribute ) )  )
+						accep = false;
+					break;
+				}
+				
+				// condition on ancestor
+				if( condition.parent ){
+					if( !element.getParent() || !isConcernBy( element.getParent() , [ condition.parent ] ) )
+						accep = false;
+					break;
+				}
+				
+				// condition on tag
+				if( condition.tag ){
+					if( !(element.type == condition.tag) )
+						accep = false;
+					break;
+				}
+			}
+			if( accep )
+				return true;
+		}
+		return false;
+	};*/
+	
+	
+	var isConcernBy = function( element , s , bubbling ){
+		var accept = true;
+		bubbling = bubbling || false;
+		for( var j = 0 ; j < s.length ; j ++ ){
+				var condition = s[j];
+				
+				// condition on class
+				if( condition.class ){
+					if( !element.hasClass( condition.class ) )
+						accept = false;
+					continue;
+				}
+				
+				// condition on id
+				if( condition.id ){
+					if( !(element.id == condition.id) )
+						accept = false;
+					continue;
+				}
+				
+				// condition on attribute
+				if( condition.attributeQuery ){
+					if( !condition.attributeQuery.testFunction( element.getAttribute( condition.attributeQuery.attribute ) )  )
+						accept = false;
+					continue;
+				}
+				
+				// condition on ancestor
+				if( condition.parent ){
+					if( !element.getParent() || !isConcernBy( element.getParent() , condition.parent , true ) )
+						accept = false;
+					continue;
+				}
+				
+				// condition on tag
+				if( condition.tag ){
+					if( !(element.type == condition.tag) )
+						accept = false;
+					continue;
+				}
+		}
+		if( accept )
+			return true;
+		return ( bubbling && element.getParent() && isConcernBy( element.getParent() , s , true ) );
+	};
+	
+	var priorite = function( selector ){
+		
+		var nId =0,
+			nClass =0,
+			nTag =0;
+			
+		for( var i = 0 ; i < selector.length ; i ++ ){
+			var condition = selector[i];
+			if( condition.class || condition.attributeQuery )
+				nClass++;
+			if( condition.id )
+				nId++;
+			if( condition.tag )
+				nTag++;
+			if( condition.parent ){
+				var prioP = priorite( condition.parent );
+				nTag += prioP%10;
+				nClass += Math.floor( prioP / 10 )%10;
+				nId += Math.floor( prioP / 100 );
+			}
+		}
+		return nId*100 + nClass*10 + nTag;
 	}
 	
+	/** Test if the element satisfy the selector
+	 *@param {AbstractAttributeHolder} the element ( have to implement hasClass() , id , type , getParent() , getAttribute ) 
+	 *@param {Selector[]} set of selector, the element have to satisfy at least one selector. ( a selector is a array of condition )
+	 *@returns {Boolean} true if the element satisfy at least one selector of the set
+	 */
+	var computeChain = function( element ){
+		
+		var styleChain = [];
+		
+		for( var i = 0 ; i < declarations.length ; i ++ )
+			for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
+				if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
+					styleChain.push({ selector : declarations[ i ].selectors[ j ] , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
+					break;
+				}
+		
+		styleChain = styleChain.sort( function( a , b ){ return(a.priority>b.priority)?1:-1; } );
+		return styleChain;
+	}
 	
 	scope.parse = parse;
+	scope.computeChain = computeChain;
+	scope.semanticBuild = semanticBuild;
+	scope.init = init;
+	scope.isConcernBy = isConcernBy;
 	
 })( mCSS );
 
