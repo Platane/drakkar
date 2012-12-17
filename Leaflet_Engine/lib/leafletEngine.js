@@ -161,7 +161,7 @@ Map.prototype = {
 /**
  *Create a map with a name, a description, the div id where to put it and some options
  * @see <a href="http://leafletjs.com/reference.html#map-options">leaflet map options</a>
- * @param {String} div_id The div id of the html element where to put this map
+ * @param {String|HTMLElement} div_id The div id of the html element, or the html element itself where to put this map
  * @param {<a href="http://leafletjs.com/reference.html#map-options">Map_Options</a>} leaflet_map_options Options for the map
  * @param {String} name The name of the map
  * @param {String} desc A description of the map

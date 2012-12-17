@@ -5,7 +5,27 @@ var extend = function( child , f ){
 		child.prototype.superDad = f;
 };
 
+
+
+L.icons={};
 ( function( scope ){
+	var editableSquare = L.icon({
+		iconUrl: '../ressources/yellow-squarre.png',
+		iconSize: [16, 16],
+		iconAnchor: [8, 8],
+		popupAnchor: [0,0],
+		/*
+		shadowUrl: 'my-icon-shadow.png',
+		shadowSize: [68, 95],
+		shadowAnchor: [22, 94]
+		*/
+	});
+	scope.editableSquare = editableSquare;
+})(L.icons);
+
+
+( function( scope ){
+
 
 // pop up manager
 var popUp = {};
@@ -48,7 +68,6 @@ var popUp = {};
 			this.moveable( true );
 		},
 		valid : function(){
-			
 			this.close();
 		},
 		close : function(){
@@ -146,7 +165,7 @@ var popUp = {};
 						self.main.parent().find("#popUpbnValid").unbind().bind("click",
 						function(){ 
 							self.valid();
-							cmd.mgr.execute( cmd.addLayer.create(  Layer.createLayer( name[0].value , description[0].value , type[0].value   ) , self._map , self._update )  );
+							cmd.mgr.execute( cmd.addLayer.create( DataLayer.create( name[0].value , description[0].value ) , self._map , self._update )  );
 						} );
 					else
 						self.main.parent().find("#popUpbnValid").unbind().bind("click",function(){ alert(" please fill correctly the fields" ); } );
@@ -192,9 +211,6 @@ var popUp = {};
 				}
 				
 				
-				
-				
-				
 				name.bind( "change" , function(e){
 					nameValidation( e.target.value );
 				}).appendTo( self.main );
@@ -223,40 +239,58 @@ var popUp = {};
 
 function AbstractComponent(){};
 AbstractComponent.prototype = {
-	els : null,
-	init : function( id ){
-		
-	},
+	el : null,
+	model : null,
+	init : function(  ){},
 	getElement : function(){
 		return this.el;
 	},
 	resize : function(){
 		// reajuste la taille du composant en fonction de la taille de son parent
 	},
-}
-function Map(){};
-Map.prototype = {
-	el : null,
-	lfe : null,
-	getElement : function(){
-		return this.el;
+	updatetable:function( enable ){
+		if( !this.model || !this.model.registerListener || !this.model.removeListener )
+			return;
+		this.model.removeListener( this );
+		if( enable ){
+			this.model.registerListener( this );
+		}
 	},
-	init : function( lfe , id ){
-		this.lfe = lfe;
+	update:function(){},
+}
+
+
+function UIMap(){};
+extend( UIMap , AbstractComponent.prototype );
+extend( UIMap , {
+	lfe : null,
+	init : function( model ){
 		
 		var w = 500, h = 500;
 		
-		var el = $("<div>").addClass( "block" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } )
+		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
 		
-		if( id )
-			el.attr( "id" , id );
+		var lfe = new L.Map( el[0] );
+		lfe.fitWorld();
+		lfe.addLayer( new L.Circle( new L.latLng(0,0) , 10000000 ) );
+		lfe.addLayer( new L.Circle( new L.latLng(0,0) , 20000000 ) );
+		lfe.addLayer( new L.Marker( new L.latLng(0,0) ) );
 		
-		if( lfe )
-			lfe.appendTo( el );
-			
+		el.detach();
+		
+		
+		this.lfe = lfe;
 		this.el = el;
+		this.model = model;
+		
+		window.lfe = this;
+		
+		if( model )
+			this.updatetable( true );
 		
 		this.initInteraction();
+		
+		
 	},
 	initInteraction : function(){
 		
@@ -379,85 +413,80 @@ Map.prototype = {
 				selected = 0,
 				anchorM = {x:0 , y:0},
 				anchorE = {x:0 , y:0};
-					
+			
+			var tmpLayer,
+				dataPath;
+			
 				var start = function( e ){
 					drag = true;
-					anchorM.x = e.pageX;
-					anchorM.y = e.pageY;
-					anchorE.x = parseInt( $(e.target).attr( "cx" ) );
-					anchorE.y = parseInt( $(e.target).attr( "cy" ) );
-					selected = $(e.target);
+					anchorM.x = e.originalEvent.pageX;
+					anchorM.y = e.originalEvent.pageY;
+					
+					anchorE = self.lfe.project( e.target.getLatLng() );
+					
+					selected = e.target;
+					e.originalEvent.preventDefault();
+					e.originalEvent.stopPropagation();
+
 				};
 				var move = function( e ){
 					if( !drag )
 						return;
 					
-					var x = anchorE.x + ( e.pageX - anchorM.x ),
-						y = anchorE.y + ( e.pageY - anchorM.y );
+					var x = anchorE.x + ( e.originalEvent.pageX - anchorM.x ),
+						y = anchorE.y + ( e.originalEvent.pageY - anchorM.y );
 					
-					selected.attr( "cx" , x ).attr( "cy" , y );
+					var latLng = self.lfe.unproject( new L.Point( x , y ) )
 					
-					var i = selected.attr( "data-i" );
+					selected.setLatLng( latLng );
 					
-					points[ i ].x = x;
-					points[ i ].y = y;
+					points[ selected.i ] = latLng;
 					
-					sup.find("svg").find('line[data-1='+i+']').attr( "x1" , x ).attr( "y1" , y );
-					sup.find("svg").find('line[data-2='+i+']').attr( "x2" , x ).attr( "y2" , y );
+					self.update();
+					tmpLayer.addTo(self.lfe);
 				};
 				var stop = function( e ){
 					if( !drag )
 						return;
 					drag = false;
+					self.update();
+					tmpLayer.addTo(self.lfe);
 				}			
-				var update = function(){
-					
-					sup.find("svg").find("circle").unbind( "mousedown" , start );
-					
-					sup.find("svg").children().remove();
-					
-					for( var i = 0 ; i < points.length ; i ++ ){
-						var j = ( i+1 )% points.length;
-						$('<line style="stroke:#000000;stroke-width:1px">').attr( "data-1" , i ).attr( "data-2" , j ).attr( "x1" , points[ i ].x ).attr( "x2" , points[ j ].x ).attr( "y1" , points[ i ].y ).attr( "y2" , points[ j ].y ).appendTo( sup.find("svg") );
-						$('<circle>').attr( "data-i" , i ).attr( "cx" , points[ i ].x ).attr( "cy" , points[ i ].y ).attr( "r" , 5 ).appendTo( sup.find("svg") );
-					}
-						
-					var h = sup[ 0 ].innerHTML; 
-					sup[ 0 ].innerHTML = "";
-					sup[ 0 ].innerHTML = h;
-						
-					sup.find("svg").find("circle").unbind( "mousedown" , start ).bind( "mousedown" , start );
-					
-				}
 				
-				var pathEditable = function( unable , points_ , update_ , paramPanel ){
+				var pathEditable = function( unable , dataPath_ , update_ ){
 					if( unable ){
 						
-						if( paramPanel ){
-							
-						};
+						dataPath = dataPath_;
 						
-						points = points_
+						var cloneLatLngArray = function( a ){
+							var b = new Array(a.length);
+							for(var i=0;i<b.length;i++)
+								b[i]=new L.LatLng(a[i].lat,a[i].lng);
+							return b;
+						}
 						
-						sup.css( { "display" : "block" } );
+						var pointsRec = cloneLatLngArray( dataPath._points );
+						points = dataPath._points;
 						
-						$('<svg id="supMapLayer" xmlns="http://www.w3.org/2000/svg" version="1.1">').attr( "width" , w ).attr( "height" , h ).css( { "position" : "absolute" , "width" : w+"px" , "height" : h+"px" } ).appendTo( sup );
+						tmpLayer = new L.LayerGroup();
+						for( var i=0;i<points.length;i++ ){
+							var dot = new L.Marker( points[i] , {"icon" : L.icons.editableSquare } )
+							tmpLayer.addLayer( dot );
+							dot.i = i;
+							dot.on("mousedown",start );
+						}
+						tmpLayer.addTo(self.lfe);
 						
-						update();
 						
-						sup.find("svg").unbind( "mousemove" , move ).bind( "mousemove" , move );
-						sup.find("svg").unbind( "mouseup" , stop ).bind( "mouseup" , stop );
-					
+						//self.lfe.dragging.disable(); 
+						self.lfe.off( "mousemove" , move ).on( "mousemove" , move );
+						self.lfe.off( "mouseup" , stop ).on( "mouseup" , stop );
+						
 					}else{
-						
-						sup.css( { "display" : "none" } );
-						
-						sup.find("svg").find("circle").unbind( "mousedown" , start );
-						sup.find("svg").unbind( "mousemove" , move );
-						sup.find("svg").unbind( "mouseup" , stop );
-						
-						sup.find("svg").remove();
-						
+						if( tmpLayer )
+							self.lfe.removeLayer( tmpLayer );
+						self.lfe.off( "mousemove" , move );
+						self.lfe.off( "mouseup" , stop );
 					}
 					return scope;
 				};
@@ -465,16 +494,78 @@ Map.prototype = {
 			scope.pathEditable = pathEditable;
 			
 		})( this );
+	
+		//pathNodeRemovable
+		(function( scope ){
+			
+			var points = [];
+			
+			var tmpLayer,
+				dataPath;
+			
+				var start = function( e ){
+					dataPath._points.splice(e.target.i);
+					
+					self.update();
+					tmpLayer.addTo(self.lfe);
+				};
+				
+				var pathNodeRemovable = function( unable , dataPath_ , update_  ){
+					if( unable ){
+						
+						dataPath = dataPath_;
+						
+						var cloneLatLngArray = function( a ){
+							var b = new Array(a.length);
+							for(var i=0;i<b.length;i++)
+								b[i]=new L.LatLng(a[i].lat,a[i].lng);
+							return b;
+						}
+						
+						var pointsRec = cloneLatLngArray( dataPath._points );
+						points = dataPath._points;
+						
+						tmpLayer = new L.LayerGroup();
+						for( var i=0;i<points.length;i++ ){
+							var dot = new L.Marker( points[i] , {"icon" : L.icons.editableSquare } )
+							tmpLayer.addLayer( dot );
+							dot.i = i;
+							dot.on("mousedown",start );
+						}
+						tmpLayer.addTo(self.lfe);
+						
+					}else{
+						if( tmpLayer )
+							self.lfe.removeLayer( tmpLayer );
+					}
+					return scope;
+				};
+			
+			scope.pathNodeRemovable = pathNodeRemovable;
+			
+		})( this );
+	
 	},
 	
-	pathTraceable : function( unable , update , paramPanel ){},
-	pathEditable : function( unable , points , update , paramPanel ){},
-}
-Map.create = function( leafletElement , id ){
-	var m = new Map();
+	update : function(){
+		//flush map
+		for(var i in this.lfe._layers)
+			this.lfe.removeLayer( this.lfe._layers[i] );
+		this.model.draw( this.lfe );
+	},
+	
+	pathTraceable : function( unable , update ){return this;},
+	pathEditable : function( unable , points , update ){return this;},
+	pathNodeRemovable : function( unable , points , update ){return this;},
+	pathNodeAddable : function( unable , points , update ){return this;},
+	pathSelectionnable : function( unable , update ){return this;},
+});
+UIMap.create = function( leafletElement , id ){
+	var m = new UIMap();
 	m.init( leafletElement , id );
 	return m;
 }
+
 
 
 function LayerMgr(){};
@@ -491,7 +582,7 @@ LayerMgr.prototype = {
 	_updateAddable : false,
 	_updateSelectionable : false,
 	
-	init : function( map , id ){
+	init : function( map  ){
 		
 		this.map = map;
 		
@@ -499,10 +590,6 @@ LayerMgr.prototype = {
 		// create the element
 		var el = $("<div>").addClass( "block" ) 
 		
-		if( id )
-			el.attr( "id" , id );
-			
-			
 		$("<ul>").appendTo( el );
 		$("<div>").addClass("toolBox").appendTo( el );
 		
@@ -536,7 +623,7 @@ LayerMgr.prototype = {
 				var bin;
 				
 				// the name
-				$("<span>"+layers[i].name+"</span>").appendTo( item );
+				$("<span>"+layers[i].getName()+"</span>").appendTo( item );
 				
 				//add a trash bin button
 				if( self._layerDeletable ){
@@ -544,7 +631,7 @@ LayerMgr.prototype = {
 					bin.bind( "click" , function(){
 						cmd.mgr.execute( 
 						cmd.multi.createWithTab( [ 
-							cmd.deleteLayer.create( map.getLayer( j ) , map ),
+							cmd.deleteLayer.create( j , self.map ),
 							cmd.changeCurrentLayer.create( j-1 , self )
 							],
 							{ f : function(){ 
@@ -552,7 +639,7 @@ LayerMgr.prototype = {
 								self._updateDeletable.f.call( self._updateDeletable.o );
 							if( self._updateSelectionable ) 
 								self._updateSelectionable.f.call( self._updateSelectionable.o );
-							self.update();
+							self.map.notify();
 							}, o : self } ) );	
 					});
 					bin.appendTo( item );
@@ -574,10 +661,10 @@ LayerMgr.prototype = {
 					item.bind("click" , function(){
 						liste.find("li").removeClass( "selected" );		// scope conflict
 						item.addClass( "selected" );
-						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , self ,{ f : function(){ 
+						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , self.map ,{ f : function(){ 
 							if( self._updateSelectionable ) 
 								self._updateSelectionable.f.call( self._updateSelectionable.o );
-							self.update();
+							self.map.notify();
 							}, o : self } ) );	
 							
 					});
@@ -607,16 +694,16 @@ LayerMgr.prototype = {
 				var cmds = [];
 				
 				cmds.push( cmd.changeCurrentLayer.create( self.selected  , self ) );
-				
-				for( var i = 0 ; i < map.getLayerCount() ; i ++ )
-					cmds.push( cmd.deleteLayer.create( map.getLayer( i ) , map ) );
+				var layers = self.map.getLayers();
+				for( var i = 0 ; i < layers.length ; i ++ )
+					cmds.push( cmd.deleteLayer.create( layers[ i ] , self.map ) );
 				
 				
 				
 				cmd.mgr.execute( cmd.multi.createWithTab( cmds , { f : function(){ 
 							if( self._updateDeletable ) 
 								self._updateDeletable.f.call( self._updateDeletable.o );
-							self.update();
+							self.map.notify 
 							}, o : self } ) );
 				
 			});
@@ -641,36 +728,24 @@ LayerMgr.prototype = {
 	},
 	layerAddable : function( unable , update ){
 		if( unable ){
-			
-			$( "addLayerBn" ).remove();
-			
+			$( "#addLayerBn" ).remove();
 			var self = this;
-			
 			var bn = $("<div>").attr("id" , "addLayerBn" ).addClass( "btn icon-btn" ).attr("name" , "new" ).appendTo( this.el.find(".toolBox" ) ).bind( "click" , function(){
-				
-				popUp.addLayer.create( map , { f : function(){ 
+				popUp.addLayer.create( self.map , { f : function(){ 
 							if( self._updateAddable ) 
 								self._updateAddable.f.call( self._updateAddable.o );
-							self.update();
+							self.map.notify(); 
 							}, o : self } );
 				
+				//popUp.addLayer.create( self.map , { f : self.map.notify , o : self.map } );
 			});
 			bn[ 0 ].innerHTML = "new";
 			
-			
 			this._layerAddable = true;
 			this._updateAddable = update;
-			
-			this.update();
-			
 		} else {
-			
-			$( "addLayerBn" ).remove();
-			
+			$( "#addLayerBn" ).remove();
 			this._layerAddable = false;
-			
-			this.update();
-			
 		}
 		return this;
 	},
@@ -692,13 +767,11 @@ LayerMgr.prototype = {
 	},
 
 }
-LayerMgr.create = function( map , id ){
+LayerMgr.create = function( map ){
 	var lm = new LayerMgr();
-	lm.init( map , id );
+	lm.init( map );
 	return lm;
 }
-
-
 
 
 function TimeLine(){};
@@ -709,7 +782,6 @@ extend( TimeLine , {
 	dateEnd : null,
 	bandStart : null,
 	bandEnd : null,
-	zoom : 2, 	// on pixel per year
 	init : function( id ){
 		
 		
@@ -747,7 +819,6 @@ extend( TimeLine , {
 		
 		this.update();
 	},
-	
 	initInteraction : function(){
 		
 		//editable
@@ -908,11 +979,115 @@ TimeLine.create = function(  id ){
 	return lm;
 }
 
+function EditablePathParam(){};
+extend( EditablePathParam , AbstractComponent.prototype );
+extend( EditablePathParam , {
+	mapUI:null,
+	element:null,
+	init : function( model , mapUI ){
+		
+		var el = $("<div>").addClass( "block" );
+		
+		var self = this;
+		
+		$('<div id="editPathBn" class="btn icon-btn" >edit</div>').bind("click",function(){
+			self.pathEditable(true);
+		}).appendTo( el );
+		$('<div id="removeNodePathBn" class="btn icon-btn" >rm</div>').bind("click",function(){
+			self.pathNodeRemovable(true);
+		}).appendTo( el );
+		$('<div id="addNodePathBn" class="btn icon-btn" >add</div>').bind("click",function(){
+			self.pathNodeAddable(true);
+		}).appendTo( el );
+		
+		this.el = el;
+		this.model = model;
+		this.mapUI = mapUI;
+		
+	},
+	pathNodeAddable : function( unable , update ){
+		this.el.find("#editPathBn").removeClass( "active" );
+		this.el.find("#removeNodePathBn").removeClass( "active" );
+		this.el.find("#addNodePathBn").addClass( "active" );
+		this.mapUI.pathTraceable(false).pathEditable(false).pathNodeRemovable(false).pathNodeAddable(true,element,update);
+	},
+	pathEditable : function( unable  , update ){
+		this.el.find("#editPathBn").addClass( "active" );
+		this.el.find("#removeNodePathBn").removeClass( "active" );
+		this.el.find("#addNodePathBn").removeClass( "active" );
+		this.mapUI.pathTraceable(false).pathEditable(true,element,update).pathNodeRemovable(false).pathNodeAddable(false);
+	},
+	pathNodeRemovable : function( unable , update ){
+		this.el.find("#editPathBn").removeClass( "active" );
+		this.el.find("#removeNodePathBn").addClass( "active" );
+		this.el.find("#addNodePathBn").removeClass( "active" );
+		this.mapUI.pathTraceable(false).pathEditable(false).pathNodeRemovable(true,element,update).pathNodeAddable(false);
+	},
+	
+	update:function(){
+	
+	},
+} );
+EditablePathParam.create = function( model , mapUI ){
+	var lm = new EditablePathParam();
+	lm.init(  model , mapUI );
+	return lm;
+}
 
+
+function EditionToolBar(){};
+extend( EditionToolBar , AbstractComponent.prototype );
+extend( EditionToolBar , {
+	mapUI:null,
+	element:null,
+	init : function( model , mapUI ){
+		
+		var el = $("<div>").addClass( "block" );
+		
+		var self = this;
+		
+		$('<div id="tracePathBn" class="btn icon-btn" >trace path</div>').bind("click",function(){
+			self.pathTraceable(true);
+		}).appendTo( el );
+		
+		$('<div id="selectionPathBn" class="btn icon-btn" >edit path</div>').bind("click",function(){
+			self.pathSelectionnable(true);
+		}).appendTo( el );
+		
+		this.el = el;
+		this.model = model;
+		this.mapUI = mapUI;
+		
+	},
+	pathTraceable : function( unable , update ){
+		this.el.find(".btn").removeClass( "active" );
+		this.el.find("#tracePathBn").addClass( "active" );
+		this.mapUI.pathEditable(false).pathNodeRemovable(false).pathNodeAddable(false).pathTraceable(true,{f:this.pathEditable,o:this});
+	},
+	pathSelectionnable : function( unable , update ){
+		this.el.find(".btn").removeClass( "active" );
+		this.el.find("#selectionPathBn").addClass( "active" );
+		this.mapUI.pathEditable(false).pathNodeRemovable(false).pathNodeAddable(false).pathTraceable(false).pathSelectionnable(true,{f:this.pathEditable,o:this});
+	},
+	
+	update:function(){
+	
+	},
+} );
+EditionToolBar.create = function( model , mapUI ){
+	var lm = new EditionToolBar();
+	lm.init(  model , mapUI );
+	return lm;
+}
+
+
+//exposure
 scope.popUp = popUp;
 scope.LayerMgr = LayerMgr;
-scope.MapPanel = Map;
+scope.UIMap = UIMap;
 scope.TimeLine = TimeLine;
+scope.EditablePathParam = EditablePathParam;
+scope.EditionToolBar = EditionToolBar;
 
 })( this );
 

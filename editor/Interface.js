@@ -47,15 +47,6 @@ function initMenuAction(){
 	swapFrame( "drawable" );
 };
 
-
-
-			
-			var mapO = Map.createMap( "myMap" , " its a desciption" );
-			
-			mapO.addLayer(  Layer.createLayer( "top", "" , "dots" ) );
-			mapO.addLayer(  Layer.createLayer( "mid", "" , "paths" ) );
-			mapO.addLayer(  Layer.createLayer( "bot", "" , "dots" ) );
-
 			/*
 function resize(){
 	var currentFrameLabel = $( "#main > div" ).attr( "id" );
@@ -64,26 +55,62 @@ function resize(){
 		
 	
 }	*/
-			
+
 function init(){
 	
+	//define the model
+	var dataMap = DataMap.create();
+	window.dataMap = dataMap;
 	
+	var l = DataLayer.create("layer1");
+	/*
+	l.addElement( DataDot.create(new L.latLng(0,0)) );
+	l.addElement( DataDot.create(new L.latLng(1500,0)) );
+	l.addElement( DataDot.create(new L.latLng(1500,100)) );
+	l.addElement( DataDot.create(new L.latLng(100,520)) );
+	*/
+	var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] )
+	
+	l.addElement( dataPath );
+	dataMap.addLayer(l);
+	
+	//uimap.pathEditable(true,dataPath);
+	
+	// fill the container
+	$("#framePool").find(".frame").each(function(){
+		$(this).find(".container").each( function(){
+			$(this).children().remove();
+			var componentName = $(this).attr( "data-contain-type" );
+			var component;
+			switch( componentName){
+				case "UIMap" :
+					component = window[ componentName ].create( dataMap );
+					dataMap.registerListener( component );
+				break;
+				case "LayerMgr" :
+					component = window[ componentName ].create( dataMap ).layerAddable(true).layerDeletable(true).layerSelectionable(true);
+					dataMap.registerListener( component );
+				break;
+				case "EditablePathParam" :
+					component = window[ componentName ].create( dataMap , null );
+					dataMap.registerListener( component );
+				break;
+				case "EditionToolBar" :
+					component = window[ componentName ].create( dataMap , null );
+				break;
+				default :
+					component = window[ componentName ].create( dataMap );
+			};
+			component.getElement().appendTo( $(this) );
+			$(this).data( "component" , component );
+		});
+	});
+	dataMap.notify();
+	
+	$(".container[data-contain-type=EditablePathParam]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
+	$(".container[data-contain-type=EditionToolBar]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
 	
 	initMenuAction();
-	
-	var map = MapPanel.create( null , "block-Map" )
-	map.getElement().appendTo( $(".container") );
-	
-	var lm = LayerMgr.create( mapO , "block-layerMgr" ).layerDeletable( true ).layerSelectionable( true ).layerAddable( true );
-	lm.getElement().appendTo( $(".container") );
-	
-	$("#tracePathBn").bind( "click" , function(){
-		map.pathTraceable( true );
-	});
-	$("#editPathBn").bind( "click" , function(){
-		map.pathEditable( true , [ { x : 50 , y : 50 } , { x : 50 , y : 150 } , { x : 150 , y : 50 } ] );
-	});
-	
 	
 	var tm = TimeLine.create( "timeLine" ).editable( true );
 	tm.getElement().appendTo( $("#tm-container") );

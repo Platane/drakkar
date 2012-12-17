@@ -168,28 +168,21 @@ var CmdDeleteLayer = function(){};
 extend( CmdDeleteLayer , AbstractCmd.prototype );
 extend( CmdDeleteLayer , {	
 	_layer : null,
-	_layerCopy : null,
 	_map : null,
 	_update : null,
 	init : function( layer , map , update ){
 		
-		this._layer = layer;
+		this._layer = map.getLayer( layer );
 		this._map = map;
 		this._update = update;
 		
 		this._state = STATE_READY;
 	},
-	
 	execute : function( ){
 		if( this._state != STATE_READY )
 			return false;
 		
-		// not necessary since the layer is just dereferenced with removeLayer
-		//this._layerCopy = this._layer.copy();
-		
-		
 		this._map.removeLayer( this._layer );
-		
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -216,12 +209,55 @@ CmdDeleteLayer.create = function( layer , map , update ){
 	return c;
 };
 
+var CmdDeleteElement = function(){};
+extend( CmdDeleteElement , AbstractCmd.prototype );
+extend( CmdDeleteElement , {	
+	_layer : null,
+	_element : null,
+	_update : null,
+	init : function( element , layer , update ){
+		
+		this._layer = layer;
+		this._element = layer.getElement( element );
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._layer.removeElement( this._element );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		this._layer.addElement( this._element );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdDeleteElement.create = function( layer , map , update ){
+	var c = new CmdDeleteElement();
+	c.init( layer , map , update );
+	return c;
+};
 
 var CmdAddLayer = function(){};
 extend( CmdAddLayer , AbstractCmd.prototype );
 extend( CmdAddLayer , {	
 	_layer : null,
-	_layerCopy : null,
 	_map : null,
 	_update : null,
 	init : function( layer , map , update ){
@@ -232,13 +268,11 @@ extend( CmdAddLayer , {
 		
 		this._state = STATE_READY;
 	},
-	
 	execute : function( ){
 		if( this._state != STATE_READY )
 			return false;
 		
 		this._map.addLayer( this._layer );
-		
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -267,17 +301,62 @@ CmdAddLayer.create = function( layer , map , update ){
 	return c;
 };
 
+var CmdAddElement = function(){};
+extend( CmdAddElement , AbstractCmd.prototype );
+extend( CmdAddElement , {	
+	_layer : null,
+	_element : null,
+	_update : null,
+	init : function( element , layer , update ){
+		
+		this._layer = layer;
+		this._element = element;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._layer.addElement( this._element );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		this._layer.removeElement( this._element );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdAddElement.create = function( layer , map , update ){
+	var c = new CmdAddElement();
+	c.init( layer , map , update );
+	return c;
+};
+
 var CmdChangeCurrentLayer = function(){};
 extend( CmdChangeCurrentLayer , AbstractCmd.prototype );
 extend( CmdChangeCurrentLayer , {	
 	_i : null,
 	_j : null,
-	_mgr : null,
+	_map : null,
 	_update : null,
-	init : function( i , mgr , update ){
+	init : function( i , map , update ){
 		
 		this._i = i;
-		this._mgr = mgr;
+		this._map = map;
 		this._update = update;
 		
 		this._state = STATE_READY;
@@ -288,7 +367,7 @@ extend( CmdChangeCurrentLayer , {
 			return false;
 		
 		this._j = this._mgr.selected;
-		this._mgr.selected = this._i;
+		this._map.layerSelected = this._i;
 		
 		
 		if( this._update )
@@ -302,7 +381,7 @@ extend( CmdChangeCurrentLayer , {
 			return false;
 		
 		
-		this._mgr.selected = this._j;
+		this._map.layerSelected = this._j;
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -311,9 +390,9 @@ extend( CmdChangeCurrentLayer , {
 		return true;
 	},
 } );
-CmdChangeCurrentLayer.create = function( i , mgr , update ){
+CmdChangeCurrentLayer.create = function( i , map , update ){
 	var c = new CmdChangeCurrentLayer();
-	c.init( i , mgr , update );
+	c.init( i , map , update );
 	return c;
 };
 
