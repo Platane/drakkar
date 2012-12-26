@@ -1,5 +1,3 @@
-This project consist on two components :
+This is a smart map editor. It produce a GeoJSON format that can be interpreted by leaflet.js
 
-A rendering engine for historical maps
-
-An editor
+This repository is a draft for the basic functionnality.
