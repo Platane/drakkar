@@ -351,12 +351,10 @@ extend( CmdChangeCurrentLayer , AbstractCmd.prototype );
 extend( CmdChangeCurrentLayer , {	
 	_i : null,
 	_j : null,
-	_map : null,
 	_update : null,
-	init : function( i , map , update ){
+	init : function( i , update ){
 		
 		this._i = i;
-		this._map = map;
 		this._update = update;
 		
 		this._state = STATE_READY;
@@ -366,9 +364,8 @@ extend( CmdChangeCurrentLayer , {
 		if( this._state != STATE_READY )
 			return false;
 		
-		this._j = this._mgr.selected;
-		this._map.layerSelected = this._i;
-		
+		this._j=UIState.layer;
+		UIState.setLayer(this._i);
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -381,7 +378,7 @@ extend( CmdChangeCurrentLayer , {
 			return false;
 		
 		
-		this._map.layerSelected = this._j;
+		UIState.setLayer(this._j);
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -390,13 +387,107 @@ extend( CmdChangeCurrentLayer , {
 		return true;
 	},
 } );
-CmdChangeCurrentLayer.create = function( i , map , update ){
+CmdChangeCurrentLayer.create = function( i, update ){
 	var c = new CmdChangeCurrentLayer();
-	c.init( i , map , update );
+	c.init( i , update );
+	return c;
+};
+
+var CmdChangeCurrentElement = function(){};
+extend( CmdChangeCurrentElement , AbstractCmd.prototype );
+extend( CmdChangeCurrentElement , {	
+	_i : null,
+	_j : null,
+	_update : null,
+	init : function( i , s , update ){
+		
+		this._i = i;
+		this._s = s;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._j=UIState.element;
+		UIState.setElement(this._i);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		UIState.setElement(this._j);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdChangeCurrentElement.create = function( i , update ){
+	var c = new CmdChangeCurrentElement();
+	c.init( i , update );
 	return c;
 };
 
 
+var CmdPathEdit = function(){};
+extend( CmdPathEdit , AbstractCmd.prototype );
+extend( CmdPathEdit , {	
+	_pathA : null,
+	_pathB : null,
+	_dataE : null,
+	_update : null,
+	init : function( dataE , pathA , update ){
+		
+		this._pathA = pathA;
+		this._dataE = dataE;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._pathB = this._dataE._points;
+		this._dataE._points = this._pathA;
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		this._dataE._points = this._pathB;
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdPathEdit.create = function( dataE , path , update ){
+	var c = new CmdPathEdit();
+	c.init( dataE , path , update );
+	return c;
+};
 
 
 var CmdMgr = function(){};
@@ -454,6 +545,8 @@ scope.multi = CmdMultiple;
 scope.deleteLayer = CmdDeleteLayer;
 scope.addLayer = CmdAddLayer;
 scope.changeCurrentLayer = CmdChangeCurrentLayer;
+scope.changeCurrentElement = CmdChangeCurrentElement;
+scope.pathEdit = CmdPathEdit;
 scope.mgr = CmdMgr.create();
 
 

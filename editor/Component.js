@@ -5,7 +5,12 @@ var extend = function( child , f ){
 		child.prototype.superDad = f;
 };
 
-
+L.cloneLatLngArray = function( a ){
+	var b = new Array( a.length );
+	var i = a.length;
+	while(i--) b[i]=new L.LatLng(a[i].lat,a[i].lng);
+	return b;
+};
 
 L.icons={};
 ( function( scope ){
@@ -246,7 +251,7 @@ AbstractComponent.prototype = {
 		return this.el;
 	},
 	resize : function(){
-		// reajuste la taille du composant en fonction de la taille de son parent
+		
 	},
 	updatetable:function( enable ){
 		if( !this.model || !this.model.registerListener || !this.model.removeListener )
@@ -263,27 +268,23 @@ AbstractComponent.prototype = {
 function UIMap(){};
 extend( UIMap , AbstractComponent.prototype );
 extend( UIMap , {
-	lfe : null,
+	uiDataMap : null,
 	init : function( model ){
 		
 		var w = 500, h = 500;
 		
 		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
 		
-		var lfe = new L.Map( el[0] );
-		lfe.fitWorld();
-		lfe.addLayer( new L.Circle( new L.latLng(0,0) , 10000000 ) );
-		lfe.addLayer( new L.Circle( new L.latLng(0,0) , 20000000 ) );
-		lfe.addLayer( new L.Marker( new L.latLng(0,0) ) );
-		
+		var uiDataMap = LeafletMap.create( model , el[0] );
+		uiDataMap.lfe.fitWorld();
 		el.detach();
+		uiDataMap.update();
 		
-		
-		this.lfe = lfe;
+		this.uiDataMap = uiDataMap;
 		this.el = el;
 		this.model = model;
 		
-		window.lfe = this;
+		window.uiDataMap = uiDataMap;
 		
 		if( model )
 			this.updatetable( true );
@@ -415,14 +416,17 @@ extend( UIMap , {
 				anchorE = {x:0 , y:0};
 			
 			var tmpLayer,
-				dataPath;
-			
+				update,
+				uiDataPath;
+				var remove = function( e ){
+					console.log(e);
+				};
 				var start = function( e ){
 					drag = true;
 					anchorM.x = e.originalEvent.pageX;
 					anchorM.y = e.originalEvent.pageY;
 					
-					anchorE = self.lfe.project( e.target.getLatLng() );
+					anchorE = self.uiDataMap.lfe.project( e.target.getLatLng() );
 					
 					selected = e.target;
 					e.originalEvent.preventDefault();
@@ -436,57 +440,63 @@ extend( UIMap , {
 					var x = anchorE.x + ( e.originalEvent.pageX - anchorM.x ),
 						y = anchorE.y + ( e.originalEvent.pageY - anchorM.y );
 					
-					var latLng = self.lfe.unproject( new L.Point( x , y ) )
+					var latLng = self.uiDataMap.lfe.unproject( new L.Point( x , y ) )
 					
+					// modify the position of the squarre element
 					selected.setLatLng( latLng );
 					
-					points[ selected.i ] = latLng;
-					
-					self.update();
-					tmpLayer.addTo(self.lfe);
+					// modify the position of the UIData element point
+					uiDataPath.lfe._latlngs[ selected.i ] = latLng;
+					uiDataPath.lfe.redraw();
+					//self.update();
 				};
 				var stop = function( e ){
 					if( !drag )
 						return;
 					drag = false;
-					self.update();
-					tmpLayer.addTo(self.lfe);
+					
+					var nPath = L.cloneLatLngArray( uiDataPath.lfe._latlngs );
+					
+					cmd.mgr.execute( cmd.pathEdit.create( uiDataPath.model , nPath , {o:this,f:function(){
+						self.update();
+						if( update )
+							update.f.call( update.o );
+						pathEditable( false );
+						pathEditable( true , uiDataPath.model , update );
+					}}));
 				}			
 				
-				var pathEditable = function( unable , dataPath_ , update_ ){
+				var pathEditable = function( unable , dataPath , update_ ){
 					if( unable ){
 						
-						dataPath = dataPath_;
+						update = update_;
 						
-						var cloneLatLngArray = function( a ){
-							var b = new Array(a.length);
-							for(var i=0;i<b.length;i++)
-								b[i]=new L.LatLng(a[i].lat,a[i].lng);
-							return b;
-						}
+						if( tmpLayer )
+							self.uiDataMap.lfe.removeLayer( tmpLayer );
 						
-						var pointsRec = cloneLatLngArray( dataPath._points );
-						points = dataPath._points;
-						
+						// add the controls square
 						tmpLayer = new L.LayerGroup();
-						for( var i=0;i<points.length;i++ ){
-							var dot = new L.Marker( points[i] , {"icon" : L.icons.editableSquare } )
+						for( var i=0;i<dataPath._points.length;i++ ){
+							var dot = new L.Marker( dataPath._points[i] , {"icon" : L.icons.editableSquare } )
 							tmpLayer.addLayer( dot );
 							dot.i = i;
 							dot.on("mousedown",start );
+							dot.on("dblclick",remove );
 						}
-						tmpLayer.addTo(self.lfe);
+						tmpLayer.addTo(self.uiDataMap.lfe);
 						
+						// search the UIData element corresponding to the Data element in this lfe
+						uiDataPath = uiDataMap.getElement( dataPath );
 						
 						//self.lfe.dragging.disable(); 
-						self.lfe.off( "mousemove" , move ).on( "mousemove" , move );
-						self.lfe.off( "mouseup" , stop ).on( "mouseup" , stop );
+						self.uiDataMap.on( "mousemove" , move );
+						self.uiDataMap.on( "mouseup" , stop );
 						
 					}else{
 						if( tmpLayer )
-							self.lfe.removeLayer( tmpLayer );
-						self.lfe.off( "mousemove" , move );
-						self.lfe.off( "mouseup" , stop );
+							self.uiDataMap.lfe.removeLayer( tmpLayer );
+						self.uiDataMap.off( "mousemove" , move );
+						self.uiDataMap.off( "mouseup" , stop );
 					}
 					return scope;
 				};
@@ -515,14 +525,7 @@ extend( UIMap , {
 						
 						dataPath = dataPath_;
 						
-						var cloneLatLngArray = function( a ){
-							var b = new Array(a.length);
-							for(var i=0;i<b.length;i++)
-								b[i]=new L.LatLng(a[i].lat,a[i].lng);
-							return b;
-						}
-						
-						var pointsRec = cloneLatLngArray( dataPath._points );
+						var pointsRec = L.cloneLatLngArray( dataPath._points );
 						points = dataPath._points;
 						
 						tmpLayer = new L.LayerGroup();
@@ -545,13 +548,104 @@ extend( UIMap , {
 			
 		})( this );
 	
+		//elementSelectionnable
+		(function( scope ){
+			
+			var update;
+			var acte = function(e){
+				cmd.mgr.execute( cmd.changeCurrentElement.create( e.target.data.model ) );
+			};
+			
+			var elementSelectionnable = function( unable , update_  ){
+					
+					update = update_;
+					
+					if( unable ){
+						
+						var uiDataMap=self.uiDataMap;
+						var dataMap=self.model;
+						var bindAllVisibleLayer = function(){
+							var layers=uiDataMap.layers;
+							var i=layers.length;
+							while(i--){
+								layers[i].off( "click" , acte );
+								if( !layers[i].hidden )
+									layers[i].on( "click" , acte );
+							}
+							uiDataMap.update();
+						}
+						bindAllVisibleLayer();
+						
+						// event need to be rebind ..
+						// when a new layer is added or removed
+						dataMap.registerListener( "layer-struct" , {o:this,f:bindAllVisibleLayer} );
+						//uiDataMap.registerListener( "layer-visibility" , {o:this,f:bindAllVisibleLayer} );
+						
+					}else{
+						var layers=uiDataMap.layers;
+						var i=layers.length;
+						while(i--)
+							layers[i].off( "click" , acte );
+					}
+					return scope;
+			};	
+			scope.elementSelectionnable = elementSelectionnable;
+			
+		})( this );
+		
+		// enhanceSelection
+		(function( scope ){
+			var uiDataMap=self.uiDataMap;
+			var dataMap=self.model;
+			var enhanceSelection = function( unable  ){
+					var currentSelect=null; // is a UiData
+					if( unable ){
+						var selectionEnhance = function(){
+							if( currentSelect ){
+								currentSelect.model.removeClass( "reserved-selected" );
+								currentSelect.update();
+							}
+							// UIState.element is a Data element ( probably )
+							if( UIState.element ){
+								currentSelect=uiDataMap.getElement(UIState.element);
+								currentSelect.model.addClass( "reserved-selected" );
+								currentSelect.update();
+							}
+						};
+						UIState.registerListener( "select-element" , {o:this,f:selectionEnhance} );
+						selectionEnhance();
+					}else{
+						var layers=uiDataMap.layers;
+						var i=layers.length;
+						while(i--)
+							layers[i].off( "click" , acte );
+					}
+					return scope;
+			};	
+			scope.enhanceSelection = enhanceSelection;
+			
+		})( this );
 	},
-	
+	_selection : { 
+		on : false,
+		layerName : null,
+		f : null,
+	},
 	update : function(){
+		
+		uiDataMap.update();
+		/*
 		//flush map
 		for(var i in this.lfe._layers)
 			this.lfe.removeLayer( this.lfe._layers[i] );
 		this.model.draw( this.lfe );
+		
+		if( this._selection.on )
+			// pretty dirty
+			for( var i in this.lfe._layers )
+				if( this.lfe._layers[i].model.getParent().getName() == this._selection.layerName )
+					this.lfe._layers[i].on("mousedown" , this._selection.f );
+		*/
 	},
 	
 	pathTraceable : function( unable , update ){return this;},
@@ -559,6 +653,8 @@ extend( UIMap , {
 	pathNodeRemovable : function( unable , points , update ){return this;},
 	pathNodeAddable : function( unable , points , update ){return this;},
 	pathSelectionnable : function( unable , update ){return this;},
+	elementSelectionnable : function( unable , update ){return this;},
+	enhanceSelection : function( unable ){return this;},
 });
 UIMap.create = function( leafletElement , id ){
 	var m = new UIMap();
@@ -659,9 +755,11 @@ LayerMgr.prototype = {
 				// add a click event on the item
 				if( self._layerSelectionable ){
 					item.bind("click" , function(){
+						if( state.currentLayerSelected == j)
+							return;
 						liste.find("li").removeClass( "selected" );		// scope conflict
 						item.addClass( "selected" );
-						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , self.map ,{ f : function(){ 
+						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , state , { f : function(){ 
 							if( self._updateSelectionable ) 
 								self._updateSelectionable.f.call( self._updateSelectionable.o );
 							self.map.notify();
@@ -669,7 +767,7 @@ LayerMgr.prototype = {
 							
 					});
 					
-					if( j == self.selected )
+					if( j == state.currentLayerSelected )
 						item.addClass( "selected" );
 				}
 				
@@ -979,6 +1077,7 @@ TimeLine.create = function(  id ){
 	return lm;
 }
 
+
 function EditablePathParam(){};
 extend( EditablePathParam , AbstractComponent.prototype );
 extend( EditablePathParam , {
@@ -1082,6 +1181,7 @@ EditionToolBar.create = function( model , mapUI ){
 
 
 //exposure
+scope.state = state;
 scope.popUp = popUp;
 scope.LayerMgr = LayerMgr;
 scope.UIMap = UIMap;

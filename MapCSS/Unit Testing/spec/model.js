@@ -230,45 +230,39 @@ describe("Model checking", function() {
 		});
 		describe("layer managment", function() {
 			beforeEach( function(){
-				dm.addElement( DataPath.create("l1") );
-				dm.addElement( DataPath.create("l2") );
-				dm.addElement( DataPath.create("l3") );
-				dm.addElement( DataPath.create("l4") );
-				dm.addElement( DataPath.create("l5") );
+				dm.addElement( DataPath.create([],"l1") );
+				dm.addElement( DataPath.create([],"l2") );
+				dm.addElement( DataPath.create([],"l3") );
+				dm.addElement( DataPath.create([],"l4") );
+				dm.addElement( DataPath.create([],"l5") );
 			});
 			describe("addLayer", function() {
-				it( "layers should have been added" , function(){
+				it( "elements should have been added" , function(){
 					expect( dm.getElements().length ).toBe( 5 ); 
-				});
-				it( "lastest added layers should be on beginning of layers array", function(){
-					expect( dm.getElements()[0].getName() ).toBe( "l5" ); 
-					expect( dm.getElements()[1].getName() ).toBe( "l4" ); 
-					expect( dm.getElements()[2].getName() ).toBe( "l3" ); 
-					expect( dm.getElements()[3].getName() ).toBe( "l2" ); 
-					expect( dm.getElements()[4].getName() ).toBe( "l1" ); 
 				});
 			});
 			describe("_getElementIndex", function() {
 				it( "should found the index if passing the index" , function(){
-					expect( dm._getElementIndex(0) ).toBe( 0 ); 
-					expect( dm._getElementIndex(1) ).toBe( 1 ); 
-					expect( dm._getElementIndex(2) ).toBe( 2 ); 
-					expect( dm._getElementIndex(3) ).toBe( 3 ); 
-					expect( dm._getElementIndex(4) ).toBe( 4 ); 
+					expect( dm._getElementIndex(0)  ).toBe( 0 ); 
+					expect( dm._getElementIndex(1)  ).toBe( 1 ); 
+					expect( dm._getElementIndex(2)  ).toBe( 2 ); 
+					expect( dm._getElementIndex(3)  ).toBe( 3 ); 
+					expect( dm._getElementIndex(4)  ).toBe( 4 ); 
 				});
 				it( "should found the index if passing the name" , function(){
-					expect( dm._getElementIndex("l5") ).toBe( 0 ); 
-					expect( dm._getElementIndex("l4") ).toBe( 1 ); 
-					expect( dm._getElementIndex("l3") ).toBe( 2 ); 
-					expect( dm._getElementIndex("l2") ).toBe( 3 ); 
-					expect( dm._getElementIndex("l1") ).toBe( 4 ); 
+					expect( dm.getElements()[ dm._getElementIndex("l1") ].getName() ).toBe( "l1" ); 
+					expect( dm.getElements()[ dm._getElementIndex("l2") ].getName() ).toBe( "l2" ); 
+					expect( dm.getElements()[ dm._getElementIndex("l3") ].getName() ).toBe( "l3" ); 
+					expect( dm.getElements()[ dm._getElementIndex("l4") ].getName() ).toBe( "l4" ); 
+					expect( dm.getElements()[ dm._getElementIndex("l5") ].getName() ).toBe( "l5" ); 
 				});
 				it( "should found the index if passing the object" , function(){
-					expect( dm._getElementIndex( dm.getElements()[0] ) ).toBe( 0 ); 
-					expect( dm._getElementIndex( dm.getElements()[1] ) ).toBe( 1 ); 
-					expect( dm._getElementIndex( dm.getElements()[2] ) ).toBe( 2 ); 
-					expect( dm._getElementIndex( dm.getElements()[3] ) ).toBe( 3 ); 
-					expect( dm._getElementIndex( dm.getElements()[4] ) ).toBe( 4 ); 
+					expect( dm.getElements()[ dm._getElementIndex( dm.getElements()[0].getName() ) ].getName() ).toBe( dm.getElements()[0].getName() ); 
+					expect( dm.getElements()[ dm._getElementIndex( dm.getElements()[1].getName() ) ].getName() ).toBe( dm.getElements()[1].getName() ); 
+					expect( dm.getElements()[ dm._getElementIndex( dm.getElements()[2].getName() ) ].getName() ).toBe( dm.getElements()[2].getName() ); 
+					expect( dm.getElements()[ dm._getElementIndex( dm.getElements()[3].getName() ) ].getName() ).toBe( dm.getElements()[3].getName() ); 
+					expect( dm.getElements()[ dm._getElementIndex( dm.getElements()[4].getName() ) ].getName() ).toBe( dm.getElements()[4].getName() ); 
+					
 				});
 			});
 			describe("getElement", function() {

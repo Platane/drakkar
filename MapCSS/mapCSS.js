@@ -11,7 +11,27 @@
  *	
  */
 
-
+/*
+ * declaration follow this :
+ * 
+ * dec = {
+ *		selectors : [
+ * 					selector : [
+ *								condition : { class : {string}  } || { id : {string}  }  ||  { tag : {string}  } || { parent : {condition} } || { attributeQuery : {function} , attribute : {string} }
+ *						     ]
+ *			       ]
+ *		props : [
+					prop : {
+ *							name : {string}
+ *							value : [
+ *										set of value : [
+ *														value : ...
+ *												]
+ *								]
+ *					         }
+ *			]
+ *	}
+ */
 
 
 var mCSS = mCSS || {};
@@ -87,57 +107,8 @@ var mCSS = mCSS || {};
 	 *@param {AbstractAttributeHolder} the element ( have to implement hasClass() , id , type , getParent() , getAttribute ) 
 	 *@param {Selector[]} set of selector, the element have to satisfy at least one selector. ( a selector is a array of condition )
 	 *@returns {Boolean} true if the element satisfy at least one selector of the set
-	 *//*
-	var isConcernBy = function( element , selectors ){
-		for( var i = 0 ; i < selectors.length ; i ++ ){
-			var s = selectors[ i ];
-			var accep = true;
-			for( var j = 0 ; j < s.length ; j ++ ){
-				var condition = s[j];
-				
-				// condition on class
-				if( condition.class ){
-					if( !element.hasClass( condition.class ) )
-						accep = false;
-					break;
-				}
-				
-				// condition on id
-				if( condition.id ){
-					if( !(element.id == condition.id) )
-						accep = false;
-					break;
-				}
-				
-				// condition on attribute
-				if( condition.attributeQuery ){
-					if( !condition.attributeQuery.testFunction( element.getAttribute( condition.attributeQuery.attribute ) )  )
-						accep = false;
-					break;
-				}
-				
-				// condition on ancestor
-				if( condition.parent ){
-					if( !element.getParent() || !isConcernBy( element.getParent() , [ condition.parent ] ) )
-						accep = false;
-					break;
-				}
-				
-				// condition on tag
-				if( condition.tag ){
-					if( !(element.type == condition.tag) )
-						accep = false;
-					break;
-				}
-			}
-			if( accep )
-				return true;
-		}
-		return false;
-	};*/
-	
-	
-	var isConcernBy = function( element , s , bubbling ){
+	 */
+	 var isConcernBy = function( element , s , bubbling ){
 		var accept = true;
 		bubbling = bubbling || false;
 		for( var j = 0 ; j < s.length ; j ++ ){
@@ -207,31 +178,30 @@ var mCSS = mCSS || {};
 		return nId*100 + nClass*10 + nTag;
 	}
 	
-	/** Test if the element satisfy the selector
-	 *@param {AbstractAttributeHolder} the element ( have to implement hasClass() , id , type , getParent() , getAttribute ) 
-	 *@param {Selector[]} set of selector, the element have to satisfy at least one selector. ( a selector is a array of condition )
-	 *@returns {Boolean} true if the element satisfy at least one selector of the set
+	/**
+	 * @param an alement, must implement attributeholder
+	 * @brief check all the declaration, select the ones that match, ordone them in a array
+	 * @return styleChain, an array of declaration, ordonned by priority, less prior first
 	 */
 	var computeChain = function( element ){
-		
 		var styleChain = [];
-		
-		for( var i = 0 ; i < declarations.length ; i ++ )
-			for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
-				if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
-					styleChain.push({ selector : declarations[ i ].selectors[ j ] , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
-					break;
-				}
+		if( declarations )
+			for( var i = 0 ; i < declarations.length ; i ++ )
+				for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
+					if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
+						styleChain.push({ selector : declarations[ i ].selectors[ j ] , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
+						break;
+					}
 		
 		styleChain = styleChain.sort( function( a , b ){ return(a.priority>b.priority)?1:-1; } );
 		return styleChain;
 	}
 	
-	scope.parse = parse;
-	scope.computeChain = computeChain;
-	scope.semanticBuild = semanticBuild;
+	scope.parse = parse;					// should be private
+	scope.semanticBuild = semanticBuild;	// should be private
+	scope.isConcernBy = isConcernBy;		// should be private
 	scope.init = init;
-	scope.isConcernBy = isConcernBy;
+	scope.computeChain = computeChain;	
 	
 })( mCSS );
 

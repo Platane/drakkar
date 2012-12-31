@@ -7,14 +7,12 @@ var extend = function( child , f ){
 
 ( function( scope ){
 
+/* sort of global object */
 
-var currentLayer = null;
-function changeCurrentLayer( i ){
-	currentLayer = i;
-	
-	//upadate
-};
-this.changeCurrentLayer = changeCurrentLayer;
+
+var hintDisplayer = { display : function( hint ){ console.log("hint : "+hint); } };
+
+/*  */
 
 
 function swapFrame( id ){
@@ -62,6 +60,8 @@ function init(){
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
 	
+	mCSS.init( ".reserved-selected { fill : #444444 ; }");
+	
 	var l = DataLayer.create("layer1");
 	/*
 	l.addElement( DataDot.create(new L.latLng(0,0)) );
@@ -84,7 +84,7 @@ function init(){
 			var component;
 			switch( componentName){
 				case "UIMap" :
-					component = window[ componentName ].create( dataMap );
+					component = window[ componentName ].create( dataMap ).elementSelectionnable(true).enhanceSelection(true);
 					dataMap.registerListener( component );
 				break;
 				case "LayerMgr" :
@@ -106,11 +106,47 @@ function init(){
 		});
 	});
 	dataMap.notify();
-	
+	/*
 	$(".container[data-contain-type=EditablePathParam]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
 	$(".container[data-contain-type=EditionToolBar]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
-	
+	*/
 	initMenuAction();
+	var uiMap = $(".container[data-contain-type=UIMap]").data( "component" );
+	
+	/*
+	//init editing tool bar
+	(function( dataMap , uiMap , layerMgr ){
+		var self = this;
+		
+		var el = $("#edition-toolBarclass");
+		var editionPathBn = el.find( "[data-action=path-edition]" );
+		
+		var attemptToEdit = function(){
+			if( state.currentLayerSelected == null ){
+				hintDisplayer.display( "select a layer" );
+				layerMgr.layerSelectionable(true,{f:attemptToEdit , o:this});
+				
+				state.taskMgr.stack( function(){ layerMgr.layerSelectionable(true) } , this , "select a layer for edition" );
+				
+				return;
+			}
+			if( state.currentElementSelected == null ){
+				hintDisplayer.display( "click on a element to edit it" );
+				uiMap.elementSelectionnable( true , {f:attemptToEdit , o:this} );
+				
+				state.taskMgr.stack( function(){ uiMap.elementSelectionnable(true); } , this , "select an element for edition"  );
+				
+				return;
+			}
+			uiMap.pathEditable( true , dataMap.getLayer( state.currentLayerSelected ).getElement( state.currentElementSelected ) );
+			state.taskMgr.stack( function(){ uiMap.pathEditable(false); } , this , "edit an element"  );
+		};
+		
+		editionPathBn.bind( "click" , attemptToEdit );
+		
+		el.data( "controler" , this );
+	})( dataMap , uiMap , $(".container[data-contain-type=LayerMgr]").data( "component" ) );
+	*/
 	
 	var tm = TimeLine.create( "timeLine" ).editable( true );
 	tm.getElement().appendTo( $("#tm-container") );

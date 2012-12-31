@@ -2,22 +2,22 @@
 	<head>
 		
 		
-		<!-- <link rel="stylesheet" href="../external/bootstrap/css/bootstrap.css" /> -->
 		<link rel="stylesheet" href="../external/KNACSS-master/css/knacss-garni.css" />
 		<link rel="stylesheet" href="../external/KNACSS-master/css/knacss.css" />
 		<link rel="stylesheet" href="style.css" />
-		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+		<link rel="stylesheet" href="../external/leaflet/leaflet.css" />
 	
 		<script type="text/javascript" src="../external/jquery.min.js"></script>
 		<script type="text/javascript" src="../external/bootstrap/js/bootstrap.min.js"></script>
-		<!-- <script type="text/javascript" src="../Leaflet_Engine/lib/leaflet-src.js"></script> -->
 		
 		
-		<script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+		<script type="text/javascript" src="../external/leaflet/leaflet.js"></script>
 		
 		
-		<script type="text/javascript" src="../MapCSS/abstractObject.js"></script>
-		<!-- <script type="text/javascript" src="../MapObjects/MapObjects.js"></script>-->
+		<script type="text/javascript" src="../MapCSS/MapCSSParser.js"></script>
+		<script type="text/javascript" src="../MapCSS/mapCSS.js"></script>
+		<script type="text/javascript" src="Data.js"></script>
+		<script type="text/javascript" src="UIData.js"></script>
 		<script type="text/javascript" src="Command.js"></script>
 		<script type="text/javascript" src="Component.js"></script>
 		<script type="text/javascript" src="Interface.js"></script>
@@ -61,17 +61,17 @@
 		<div id="drawable" class="frame" >
 			
 		<div class="line gut">
-			<aside class="block mod right w50px container" data-contain-type="EditionToolBar" >
-						<div  class="btn icon-btn" >#</div>
-						<div class="btn icon-btn" >@</div>
-						<div class="btn icon-btn" >8</div>
-						<div class="btn icon-btn" >*</div>
+			<aside id="edition-toolBarclass" class="block mod right w50px" data-contain-type="EditionToolBar" >
+						<div class="btn icon-btn" data-action="path-edition" >#</div>
+						<div class="btn icon-btn" data-action="path-edition2" >@</div>
+						<div class="btn icon-btn" data-action="path-edition3" >8</div>
+						<div class="btn icon-btn" data-action="path-edition4" >*</div>
 			</aside>
 			
 			<div class="centralPanel mod item center w60">
-				<div class="container" data-contain-type="UIMap"  ></div>
-				<div class="container" data-contain-type="LayerMgr"  ></div>
-				<div class="container" data-contain-type="EditablePathParam"  >
+				<div class="container" data-contain-type="UIMap" class="mod item"  ></div>
+				<div class="container" data-contain-type="LayerMgr" class="mod item" ></div>
+				<div class="" data-contain-type="EditablePathParam"  >
 					<div id="editPathBn" class="btn icon-btn active" >edit</div>
 					<div id="removeNodePathBn" class="btn icon-btn" >rm</div>
 					<div id="addNodePathBn" class="btn icon-btn" >add</div>
