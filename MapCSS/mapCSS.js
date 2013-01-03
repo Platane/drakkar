@@ -33,7 +33,12 @@
  *	}
  */
 
-
+var extend = function( child , f ){
+	for( var p in f )
+		child.prototype[ p ] = f[ p ];
+	if( !child.prototype.superDad )
+		child.prototype.superDad = f;
+};
 var mCSS = mCSS || {};
 
 (function( scope ){
@@ -158,7 +163,8 @@ var mCSS = mCSS || {};
 		
 		var nId =0,
 			nClass =0,
-			nTag =0;
+			nTag =0,
+			special=0;
 			
 		for( var i = 0 ; i < selector.length ; i ++ ){
 			var condition = selector[i];
@@ -174,8 +180,11 @@ var mCSS = mCSS || {};
 				nClass += Math.floor( prioP / 10 )%10;
 				nId += Math.floor( prioP / 100 );
 			}
+			// editor field have priority
+			if( condition.class && condition.class.slice(0,9)=="reserved-" )
+				special++;
 		}
-		return nId*100 + nClass*10 + nTag;
+		return special*1000+nId*100 + nClass*10 + nTag;
 	}
 	
 	/**
@@ -189,7 +198,7 @@ var mCSS = mCSS || {};
 			for( var i = 0 ; i < declarations.length ; i ++ )
 				for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
 					if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
-						styleChain.push({ selector : declarations[ i ].selectors[ j ] , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
+						styleChain.push({ dynCondition:null , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
 						break;
 					}
 		
@@ -204,4 +213,99 @@ var mCSS = mCSS || {};
 	scope.computeChain = computeChain;	
 	
 })( mCSS );
+
+/**  @class Element that know how to compute the style chain to apply render effect.
+ *
+ */
+var AbstractStyleHolder = function(){};
+extend( AbstractStyleHolder , {
+	_styleChain : null,			// ordoned set of property ( some of these can be dynamic )
+	_style : null,				// set of property 
+	_styleDirty : true,			// set of property style need to be update from the style Chain
+	_chainDirty : true,			// set of property style need to be update from the style Chain
+	init:function(){
+		this._styleChain=[];
+		this._style={};
+	},
+	globalAttrChanged:function(){
+		this._styleDirty=true;
+	},
+	_interpretStyle:function( mergedStyle ){
+		/* assuming there is no collision in the mergedStyle */
+		var JSONstyle = {};
+		for( var p in mergedStyle ){
+			var value = mergedStyle[ p ];
+			switch( p ){
+				case "strocke-width" :
+					/* TODO : throw error if the style is not applicable to this item */
+					JSONstyle.strocke = true;
+					JSONstyle.weight = value;
+					if( !JSONstyle.color )
+						JSONstyle.color = "#000000";
+					if( !JSONstyle.opacity )
+						JSONstyle.opacity = "1";
+				break;
+				case "strocke-opacity" :
+					JSONstyle.strocke = true;
+					JSONstyle.opacity = value;
+					if( !JSONstyle.color )
+						JSONstyle.color = "#000000";
+					if( !JSONstyle.weight )
+						JSONstyle.weight = 1;
+				break;
+				case "strocke-color" :
+					JSONstyle.strocke = true;
+					JSONstyle.color = value;
+					if( !JSONstyle.opacity )
+						JSONstyle.opacity = "1";
+					if( !JSONstyle.weight )
+						JSONstyle.weight = 1;
+				break;
+				
+				case "fill-opacity" :
+					JSONstyle.fill = true;
+					JSONstyle.fillOpacity = value;
+					if( !JSONstyle.fillColor )
+						JSONstyle.fillColor = "#000000";
+				break;
+				case "fill-color" :
+					JSONstyle.fill = true;
+					JSONstyle.fillColor = value;
+					if( !JSONstyle.fillOpacity )
+						JSONstyle.fillOpacity = 1;
+				break;
+				default : 
+					throw 'unknow property "'+p+'" ';
+			}
+		}
+		return JSONstyle;
+	},
+	_mergeStyleChain:function( globalAttr ){
+		var style = {};
+		var dec;
+		for( var i = 0 ; i < this._styleChain.length ; i ++ ){
+			dec = this._styleChain[i];
+			if( (dec.dynCondition && dec.dynCondition( globalAttr )) || !dec.dynCondition )
+				for( var j in dec.props )
+					style[ j ] = dec.props[j];
+		}
+		return style;
+	},
+	clone:function(){
+		var c = new AbstractStyleHolder();
+		var superDad = null;
+		if( superDad != null ){
+			var cP = superDad.prototype.clone.call( this );
+			for(var i in cP)
+				c[i]=cP[i];
+		}
+		if( this._styleChain ){
+			c._styleChain = new Array(this._styleChain.length);
+			for(var i=0;i<this._styleChain.length;i++)
+				c._styleChain[i] = this._styleChain[i];
+		}
+		c._styleDirty = true;
+		return c;
+	},
+});
 

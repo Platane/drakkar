@@ -59,8 +59,7 @@ function init(){
 	//define the model
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
-	
-	mCSS.init( ".reserved-selected { fill : #444444 ; }");
+	mCSS.init( " polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
 	
 	var l = DataLayer.create("layer1");
 	/*
@@ -69,9 +68,10 @@ function init(){
 	l.addElement( DataDot.create(new L.latLng(1500,100)) );
 	l.addElement( DataDot.create(new L.latLng(100,520)) );
 	*/
-	var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] )
-	
-	l.addElement( dataPath );
+	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
+	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ]  ) );
+	l.addElement( DataPath.create( [ new L.latLng(-60,30) , new L.latLng(-800,30) , new L.latLng(-900,800) , new L.latLng(-100,800) ]  ) );
+	l.addElement( DataPath.create( [ new L.latLng(0,-160) , new L.latLng(-80,-160) , new L.latLng(-90,-100) , new L.latLng(0,-100) ]  ) );
 	dataMap.addLayer(l);
 	
 	//uimap.pathEditable(true,dataPath);
@@ -113,6 +113,44 @@ function init(){
 	initMenuAction();
 	var uiMap = $(".container[data-contain-type=UIMap]").data( "component" );
 	
+	//linker
+	(function(uimap,uistate){
+		var lastTool=null;
+		var cancelLastTool=null;
+		uistate.registerListener("select-tool", {o:this,f:function(){ 
+			if( cancelLastTool ){
+				cancelLastTool.f.call( cancelLastTool.o );
+				cancelLastTool=null;
+			}
+			switch( uistate.tool ){
+				case uistate.toolList.edit :
+				/** edition tool */
+				(function(){
+					if( uistate.element )
+						uimap.pathEditable( true , uistate.element );
+					// if the element selected change, update
+					var key=uistate.registerListener("select-element" , {o:this,f:function(){
+						//the previous selected element should degrade properly
+						if( uistate.element )
+							uimap.pathEditable( true , uistate.element );
+					}});
+					cancelLastTool={o:null,f:null};
+					cancelLastTool.o=this;
+					cancelLastTool.f = function(){
+						uimap.pathEditable( false );
+						uistate.removeListener("select-element" , key );
+					};
+				})();
+				break;
+			}
+			lastTool=uistate.tool;
+		}});
+	})(	uiMap , UIState );
+	
+	//init editing tool bar
+	var el = $("#edition-toolBarclass");
+	el.find( "[data-action=path-edition]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.edit); } );
+	el.find( "[data-action=path-edition2]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.select); } );
 	/*
 	//init editing tool bar
 	(function( dataMap , uiMap , layerMgr ){

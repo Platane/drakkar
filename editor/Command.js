@@ -441,16 +441,16 @@ CmdChangeCurrentElement.create = function( i , update ){
 };
 
 
-var CmdPathEdit = function(){};
-extend( CmdPathEdit , AbstractCmd.prototype );
-extend( CmdPathEdit , {	
-	_pathA : null,
-	_pathB : null,
+var CmdSetShape = function(){};
+extend( CmdSetShape , AbstractCmd.prototype );
+extend( CmdSetShape , {	
+	_args : null,
+	_pargs : null,
 	_dataE : null,
 	_update : null,
-	init : function( dataE , pathA , update ){
+	init : function( dataE , args , update ){
 		
-		this._pathA = pathA;
+		this._args = args;
 		this._dataE = dataE;
 		this._update = update;
 		
@@ -461,8 +461,9 @@ extend( CmdPathEdit , {
 		if( this._state != STATE_READY )
 			return false;
 		
-		this._pathB = this._dataE._points;
-		this._dataE._points = this._pathA;
+		if( this._dataE instanceof DataPath )
+			this._pargs=[this._dataE._points];
+		this._dataE.setShape.apply( this._dataE , this._args );
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -474,7 +475,7 @@ extend( CmdPathEdit , {
 		if( this._state != STATE_SUCCESS )
 			return false;
 		
-		this._dataE._points = this._pathB;
+		this._dataE.setShape.apply( this._dataE , this._pargs );
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -483,9 +484,9 @@ extend( CmdPathEdit , {
 		return true;
 	},
 } );
-CmdPathEdit.create = function( dataE , path , update ){
-	var c = new CmdPathEdit();
-	c.init( dataE , path , update );
+CmdSetShape.create = function( dataE , args , update ){
+	var c = new CmdSetShape();
+	c.init( dataE , args , update );
 	return c;
 };
 
@@ -546,7 +547,7 @@ scope.deleteLayer = CmdDeleteLayer;
 scope.addLayer = CmdAddLayer;
 scope.changeCurrentLayer = CmdChangeCurrentLayer;
 scope.changeCurrentElement = CmdChangeCurrentElement;
-scope.pathEdit = CmdPathEdit;
+scope.setShape = CmdSetShape;
 scope.mgr = CmdMgr.create();
 
 

@@ -457,13 +457,7 @@ extend( UIMap , {
 					
 					var nPath = L.cloneLatLngArray( uiDataPath.lfe._latlngs );
 					
-					cmd.mgr.execute( cmd.pathEdit.create( uiDataPath.model , nPath , {o:this,f:function(){
-						self.update();
-						if( update )
-							update.f.call( update.o );
-						pathEditable( false );
-						pathEditable( true , uiDataPath.model , update );
-					}}));
+					cmd.mgr.execute( cmd.setShape.create( uiDataPath.model , [nPath] ));
 				}			
 				
 				var pathEditable = function( unable , dataPath , update_ ){
@@ -489,14 +483,28 @@ extend( UIMap , {
 						uiDataPath = uiDataMap.getElement( dataPath );
 						
 						//self.lfe.dragging.disable(); 
+						self.uiDataMap.off( "mousemove" , move );
+						self.uiDataMap.off( "mouseup" , stop );
+						
 						self.uiDataMap.on( "mousemove" , move );
 						self.uiDataMap.on( "mouseup" , stop );
+						
+						self.uiDataMap.update();
+						
+						//whenever the element shape in modify, the control squarre must be updated
+						var key=dataPath.registerListener( "set-shape" , {o:this,f:function(){
+							dataPath.removeListener( "set-shape" , key );
+							self.pathEditable( true , dataPath );
+						}});
 						
 					}else{
 						if( tmpLayer )
 							self.uiDataMap.lfe.removeLayer( tmpLayer );
 						self.uiDataMap.off( "mousemove" , move );
 						self.uiDataMap.off( "mouseup" , stop );
+						self.uiDataMap.update();
+						
+						uiDataPath.model.removeListener( "set-shape" , this );
 					}
 					return scope;
 				};
@@ -553,17 +561,20 @@ extend( UIMap , {
 			
 			var update;
 			var acte = function(e){
-				cmd.mgr.execute( cmd.changeCurrentElement.create( e.target.data.model ) );
+				var element = e.target.data.model;
+				if( element instanceof DataMap )
+					element=null;
+				cmd.mgr.execute( cmd.changeCurrentElement.create( element ) );
 			};
 			
 			var elementSelectionnable = function( unable , update_  ){
 					
+					var uiDataMap=self.uiDataMap,
+						dataMap=self.model;
+					
 					update = update_;
 					
 					if( unable ){
-						
-						var uiDataMap=self.uiDataMap;
-						var dataMap=self.model;
 						var bindAllVisibleLayer = function(){
 							var layers=uiDataMap.layers;
 							var i=layers.length;
@@ -581,11 +592,14 @@ extend( UIMap , {
 						dataMap.registerListener( "layer-struct" , {o:this,f:bindAllVisibleLayer} );
 						//uiDataMap.registerListener( "layer-visibility" , {o:this,f:bindAllVisibleLayer} );
 						
+						uiDataMap.on( "click" , acte  );
 					}else{
 						var layers=uiDataMap.layers;
 						var i=layers.length;
 						while(i--)
 							layers[i].off( "click" , acte );
+						uiDataMap.off( "click" , acte  );
+						dataMap.removeListener( "layer-struct" );
 					}
 					return scope;
 			};	
@@ -755,15 +769,11 @@ LayerMgr.prototype = {
 				// add a click event on the item
 				if( self._layerSelectionable ){
 					item.bind("click" , function(){
-						if( state.currentLayerSelected == j)
+						if( UIState.layer == j)
 							return;
 						liste.find("li").removeClass( "selected" );		// scope conflict
 						item.addClass( "selected" );
-						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , state , { f : function(){ 
-							if( self._updateSelectionable ) 
-								self._updateSelectionable.f.call( self._updateSelectionable.o );
-							self.map.notify();
-							}, o : self } ) );	
+						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , state ) );
 							
 					});
 					
