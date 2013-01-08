@@ -61,12 +61,6 @@ function init(){
 	window.dataMap = dataMap;
 	mCSS.init( " polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
 	
-	TagMng.pushClasse("country");
-	TagMng.pushClasse("forest");
-	TagMng.pushClasse("water");
-	TagMng.pushClasse("canopy");
-	TagMng.pushClasse("courtyard");
-	
 	var l = DataLayer.create("layer1");
 	/*
 	l.addElement( DataDot.create(new L.latLng(0,0)) );
@@ -161,7 +155,7 @@ function init(){
 	el.find( "[data-action=path-edition]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.edit); } );
 	el.find( "[data-action=path-edition2]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.select); } );
 	
-	
+	TagMgr.init(dataMap);
 	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
 	
 	/*

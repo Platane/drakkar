@@ -716,7 +716,7 @@ extend( AttributeMgr , {
 					var value=input[0].value;
 					dataList.children().remove();
 					if( value.length>=1 ){
-						var a =TagMng.complete("class",value,5);
+						var a =TagMgr.complete("class",value,5);
 						for(var i=0;i<a.length;i++)
 							$("<option>"+a[i]+"</option>").appendTo(dataList);
 					}

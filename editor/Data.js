@@ -312,11 +312,13 @@ extend( DataLayer , {
 		z = z || 0;
 		this._elements.splice( z , 0 , element );
 		element._parent = this;
+		this.notify("element-struct");
 	},
 	removeElement:function( element ){
 		var i = this._getElementIndex( element );
 		if( i != null )
 			this._elements.splice( i , 1 );
+		this.notify("element-struct");
 	},
 });
 DataLayer.create = function( name ){

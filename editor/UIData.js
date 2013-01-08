@@ -547,27 +547,49 @@ var UIState = {
  * knows every thing about tags
  */
  //TODO make a dichotomic search
-var TagMng={
+var TagMgr={
 	_classes:[],
 	_attributes:[],
-	search:function(datamap){
-		var extract=function(el){
+	init:function(datamap){
+		this._spy(datamap);
+	},
+	_spy:function(datamap){
+		this.search(datamap);
+		datamap.removeListener("set-attribute","layer-struct",this);
+		datamap.registerListener("set-attribute","layer-struct",{o:this,f:function(){this._spy(datamap);}});
+		
+		var i=datamap.getLayers().length;
+		while(i--){
+			var layer=datamap.getLayers()[i];
+			layer.removeListener("set-attribute","element-struct",this);
+			layer.registerListener("set-attribute","element-struct",{o:this,f:function(){this._spy(datamap);}});
+			
+			var j=layer.getElements().length;
+			while(j--){
+				var element=layer.getElements()[j];
+				element.removeListener("set-attribute",this);
+				element.registerListener("set-attribute",{o:this,f:function(){this._spy(datamap);}});
+			}
+		}
+	},
+	_extract:function(el){
 			for(var i in el._classes )
 				if(!this._contains(this._classes,i))
 					this._push(this._classes,i);
 			for(var i in el._attributes )
 				if(!this._contains(this._attributes,i))
 					this._push(this._attributes,i);
-		};
+	},
+	search:function(datamap){
 		this._classes=[];
 		this._attributes=[];
-		extract(datamap);
+		this._extract(datamap);
 		var i=datamap.getLayers().length;
 		while(i--){
-			extract(datamap.getLayers()[i]);
+			this._extract(datamap.getLayers()[i]);
 			var j=datamap.getLayers()[i].getElements().length;
 			while(j--)
-				extract(datamap.getLayers()[i].getElements()[j]);
+				this._extract(datamap.getLayers()[i].getElements()[j]);
 		}
 	},
 	_push:function(tree,a){
@@ -632,6 +654,9 @@ var TagMng={
 		return(i>=a.length);
 	}*/
 };
+
+
+
 
 // dont hold shit actually
 var MapCSSHolder = function(){};
