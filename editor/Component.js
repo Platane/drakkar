@@ -676,8 +676,121 @@ UIMap.create = function( leafletElement , id ){
 	return m;
 }
 
-
-
+function AttributeMgr(){};
+extend( AttributeMgr , {
+	el : null,
+	uistate : null,
+	init : function(uistate){
+		this.uistate=uistate;
+		
+		var el=$("<div></div>");
+		$('<div id="class"></div>').appendTo(el);
+		
+		this.el=el;
+		
+		this.initInteraction();
+		this.listen(true);
+	},
+	update:function(){
+		var el=this.uistate.element;
+		var self=this;
+		var classes=this.el.find("#class");
+		classes.children().remove();
+		
+		if( el==null )
+			return;
+		var display=false;
+		var displayDataList=function(e){
+			if( display ){
+				self.update();
+				return;
+			}
+			display=true;
+			(function(){
+				var plus = e.target.innerText=="+";
+				var exClass = e.target.innerText;
+				var target=$(e.target);
+				var dataList=$('<datalist id="class-option"></datalist>');
+				var input=null;
+				var complete=function(){
+					var value=input[0].value;
+					dataList.children().remove();
+					if( value.length>=1 ){
+						var a =TagMng.complete("class",value,5);
+						for(var i=0;i<a.length;i++)
+							$("<option>"+a[i]+"</option>").appendTo(dataList);
+					}
+				};
+				var accepte=function(){
+					var value=input[0].value;
+					if( plus )
+						if( value.length > 0 )
+							cmd.mgr.execute(cmd.addClass.create( el , value ));
+						else
+							self.update();
+					else
+						if( value.length > 0 )
+							cmd.mgr.execute(cmd.modifyClass.create( el , exClass , value ));
+						else
+							cmd.mgr.execute(cmd.removeClass.create( el , exClass ));
+				};
+				input=$('<input list="class-option" type="text" style="min-width:20px;" value="'+(plus?'':e.target.innerText)+'" ></input>').insertBefore(target).bind("change",accepte);
+				input.keyup(function(e){
+					complete();
+				});
+				dataList.insertBefore(target);
+				target.remove();
+			})();
+		};
+		
+		var classSpan=$("<span></span>").appendTo(classes).addClass("classList");
+		$('<span>class = "</span>').appendTo(classSpan);
+		for( var i in el._classes ){
+			var span = $("<span>"+i+"</span>").bind("click",displayDataList);
+			span.appendTo(classSpan);
+		}
+		$("<span>+</span>").appendTo(classSpan).bind("click",displayDataList);
+		$('<span>"</span>').appendTo(classSpan);
+	},
+	getElement : function(){
+		return this.el;
+	},
+	initInteraction : function(){
+		//updatable
+		var self=this;
+		(function(scope){
+			var uistate=self.uistate;
+			var key=null;
+			var el=null;
+			var changeElement=function(){
+				if( el != null )
+					el.removeListener( this );
+				el=self.uistate.element;
+				if( el != null )
+					el.registerListener("set-attribute",{o:self,f:self.update});
+				self.update();
+			};
+			var listen=function(enable){
+				if(enable){
+					key=uistate.registerListener( "select-element" ,{o:this,f:changeElement});
+					changeElement();
+				}else{
+					uistate.registerListener( "select-element",key);
+					if( el != null )
+						el.removeListener( this );
+				}
+				return self;
+			};
+			scope.listen=listen;
+		})(this);
+	},
+	listen:function(enable){return this;},
+});
+AttributeMgr.create=function(uistate){
+	var a = new AttributeMgr();
+	a.init(uistate);
+	return a;
+}
 function LayerMgr(){};
 LayerMgr.prototype = {
 	
@@ -1198,6 +1311,7 @@ scope.UIMap = UIMap;
 scope.TimeLine = TimeLine;
 scope.EditablePathParam = EditablePathParam;
 scope.EditionToolBar = EditionToolBar;
+scope.AttributeMgr = AttributeMgr;
 
 })( this );
 

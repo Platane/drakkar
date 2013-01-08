@@ -61,6 +61,12 @@ function init(){
 	window.dataMap = dataMap;
 	mCSS.init( " polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
 	
+	TagMng.pushClasse("country");
+	TagMng.pushClasse("forest");
+	TagMng.pushClasse("water");
+	TagMng.pushClasse("canopy");
+	TagMng.pushClasse("courtyard");
+	
 	var l = DataLayer.create("layer1");
 	/*
 	l.addElement( DataDot.create(new L.latLng(0,0)) );
@@ -113,6 +119,9 @@ function init(){
 	initMenuAction();
 	var uiMap = $(".container[data-contain-type=UIMap]").data( "component" );
 	
+	
+	
+	
 	//linker
 	(function(uimap,uistate){
 		var lastTool=null;
@@ -151,6 +160,10 @@ function init(){
 	var el = $("#edition-toolBarclass");
 	el.find( "[data-action=path-edition]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.edit); } );
 	el.find( "[data-action=path-edition2]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.select); } );
+	
+	
+	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
+	
 	/*
 	//init editing tool bar
 	(function( dataMap , uiMap , layerMgr ){

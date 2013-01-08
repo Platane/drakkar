@@ -491,6 +491,103 @@ CmdSetShape.create = function( dataE , args , update ){
 };
 
 
+var CmdAddClass = function(){};
+extend( CmdAddClass , AbstractCmd.prototype );
+extend( CmdAddClass , {	
+	_cla : null,
+	_element : null,
+	_update : null,
+	init : function( element , cla , update ){
+		
+		this._cla = cla;
+		this._element = element;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._element.addClass( this._cla );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		this._element.removeClass( this._cla );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdAddClass.create = function( element , cla , update ){
+	var c = new CmdAddClass();
+	c.init( element , cla , update );
+	return c;
+};
+
+var CmdRemoveClass = function(){};
+extend( CmdRemoveClass , AbstractCmd.prototype );
+extend( CmdRemoveClass , {	
+	_cla : null,
+	_element : null,
+	_update : null,
+	init : function( element , cla , update ){
+		
+		this._cla = cla;
+		this._element = element;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._element.removeClass( this._cla );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		this._element.addClass( this._cla );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdRemoveClass.create = function( element , cla , update ){
+	var c = new CmdRemoveClass();
+	c.init( element , cla , update );
+	return c;
+};
+CmdModifyClass={};
+CmdModifyClass.create = function( element , claEx , claNew , update ){
+	return CmdMultiple.create( 
+		CmdRemoveClass.create( element , claEx ),
+		CmdAddClass.create( element , claNew )
+		);
+}
+
 var CmdMgr = function(){};
 CmdMgr.prototype = {
 	
@@ -548,6 +645,9 @@ scope.addLayer = CmdAddLayer;
 scope.changeCurrentLayer = CmdChangeCurrentLayer;
 scope.changeCurrentElement = CmdChangeCurrentElement;
 scope.setShape = CmdSetShape;
+scope.modifyClass = CmdModifyClass;
+scope.addClass = CmdAddClass;
+scope.removeClass = CmdRemoveClass;
 scope.mgr = CmdMgr.create();
 
 

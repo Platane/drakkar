@@ -213,3 +213,11 @@ li.selected{
 	background-color : rgba( 224 , 224 , 224 , 0.8 );
 	border-radius : 5px;
 }
+
+
+.classList span {
+	margin-left:0.3em;
+	margin-right:0.3em;
+	padding-left:0.1em;
+	padding-right:0.1em;
+}

@@ -543,6 +543,95 @@ var UIState = {
 };
 */
 
+/*
+ * knows every thing about tags
+ */
+ //TODO make a dichotomic search
+var TagMng={
+	_classes:[],
+	_attributes:[],
+	search:function(datamap){
+		var extract=function(el){
+			for(var i in el._classes )
+				if(!this._contains(this._classes,i))
+					this._push(this._classes,i);
+			for(var i in el._attributes )
+				if(!this._contains(this._attributes,i))
+					this._push(this._attributes,i);
+		};
+		this._classes=[];
+		this._attributes=[];
+		extract(datamap);
+		var i=datamap.getLayers().length;
+		while(i--){
+			extract(datamap.getLayers()[i]);
+			var j=datamap.getLayers()[i].getElements().length;
+			while(j--)
+				extract(datamap.getLayers()[i].getElements()[j]);
+		}
+	},
+	_push:function(tree,a){
+		var i=tree.length;
+		while(i--)
+			if(tree[i]>a){
+				tree.splice(i+1,0,a);
+				return;
+			}
+		tree.unshift(a);
+		tree=tree.sort(function(a,b){ return (a<b)?1:-1; });	//for safety, remove when do dichotomy
+	},
+	_contains:function(tree,a){
+		var i=tree.length;
+		while(i--)
+			if(tree[i]==a)
+				return true;
+		return false;
+	},
+	pushAttribute:function(a){
+		if(!this._contains(this._attributes,a))
+			this._push(this._attributes,a);
+	},
+	pushClasse:function(a){
+		if(!this._contains(this._classes,a))
+			this._push(this._classes,a);
+	},
+	complete:function(where,s,max){
+		var max=max || 20;
+		var tree=null,
+			matches=[];
+		if(where=="class")
+			tree=this._classes;
+		else
+			return;
+			
+		var i=tree.length;
+		while(i--)
+			if(tree[i]>=s){
+				i=i+1;
+				break;
+			}
+		while(i--){
+			if(tree[i].substr(0,s.length)!=s||matches.length>=max){
+				break;
+			}
+			matches.push(tree[i]);
+		}
+		return matches;
+	},
+	/*
+	// I was gonna use research tree, but I figure thar with the number of tags, it will run smoother will simple array
+	_push:function( tree , a ){
+		
+		
+	},
+	_contains:function( tree , a ){
+		var cursor=tree;
+		for(var i=0;cursor!=null&&cursor.c&&i<a.length;i++)
+			if((cursor=cursor.c[a[i]])==null)
+				return false;
+		return(i>=a.length);
+	}*/
+};
 
 // dont hold shit actually
 var MapCSSHolder = function(){};

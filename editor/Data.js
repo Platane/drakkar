@@ -116,7 +116,7 @@ AbstractNotifier.prototype = {
 
 
 /**  @class Abstract class that can retain several properties. Element that herit from this class can be attach to a style
- *
+ *	 set-attribute
  */
 AbstractAttributeHolder = function(){};
 extend( AbstractAttributeHolder , AbstractNotifier.prototype );
@@ -152,7 +152,7 @@ extend( AbstractAttributeHolder , {
 	},
 	removeClass:function( className ){
 		this._classes[ className ]=null;
-		delete this._classes.className;
+		delete this._classes[className];
 		this.notify( "set-attribute" );
 	},
 	hasClass:function( className ){
