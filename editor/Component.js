@@ -416,8 +416,11 @@ extend( UIMap , {
 				anchorE = {x:0 , y:0};
 			
 			var tmpLayer,
-				update,
-				uiDataPath;
+				uiDataPath,
+				key1,key2;
+			
+			var uistate = UIState;
+			
 				var remove = function( e ){
 					console.log(e);
 				};
@@ -460,52 +463,65 @@ extend( UIMap , {
 					cmd.mgr.execute( cmd.setShape.create( uiDataPath.model , [nPath] ));
 				}			
 				
-				var pathEditable = function( unable , dataPath , update_ ){
-					if( unable ){
-						
-						update = update_;
-						
-						if( tmpLayer )
-							self.uiDataMap.lfe.removeLayer( tmpLayer );
-						
-						// add the controls square
-						tmpLayer = new L.LayerGroup();
-						for( var i=0;i<dataPath._points.length;i++ ){
-							var dot = new L.Marker( dataPath._points[i] , {"icon" : L.icons.editableSquare } )
-							tmpLayer.addLayer( dot );
-							dot.i = i;
-							dot.on("mousedown",start );
-							dot.on("dblclick",remove );
-						}
-						tmpLayer.addTo(self.uiDataMap.lfe);
-						
-						// search the UIData element corresponding to the Data element in this lfe
-						uiDataPath = uiDataMap.getElement( dataPath );
-						
-						//self.lfe.dragging.disable(); 
-						self.uiDataMap.off( "mousemove" , move );
-						self.uiDataMap.off( "mouseup" , stop );
-						
-						self.uiDataMap.on( "mousemove" , move );
-						self.uiDataMap.on( "mouseup" , stop );
-						
-						self.uiDataMap.update();
-						
-						//whenever the element shape in modify, the control squarre must be updated
-						var key=dataPath.registerListener( "set-shape" , {o:this,f:function(){
-							dataPath.removeListener( "set-shape" , key );
-							self.pathEditable( true , dataPath );
-						}});
-						
-					}else{
-						if( tmpLayer )
-							self.uiDataMap.lfe.removeLayer( tmpLayer );
-						self.uiDataMap.off( "mousemove" , move );
-						self.uiDataMap.off( "mouseup" , stop );
-						self.uiDataMap.update();
-						
-						uiDataPath.model.removeListener( "set-shape" , this );
+				var pathEditable = function( enable ){
+					
+					// destruct previous setup
+					// should be done even is the previous setup is already destruct
+					
+					//remove the preivous squarres if they exist
+					if( tmpLayer ){
+						self.uiDataMap.lfe.removeLayer( tmpLayer );
+						tmpLayer=null;
 					}
+					self.uiDataMap.off( "mousemove" , move );
+					self.uiDataMap.off( "mouseup" , stop );
+					if( !enable || !uistate.element ) // else it would be done latter
+						self.uiDataMap.update();
+					
+					if( key1 ){
+						uistate.removeListener( "select-element" , key1 );
+						key1=null;
+					}
+					if( uiDataPath && key2 ){
+						uiDataPath.model.removeListener( "set-shape" , key2 );
+						uiDataPath=null;
+						key2=null;
+					}
+					
+					if( enable ){
+						// if enable
+						key1=uistate.registerListener( "select-element" , {o:this,f:function(){self.pathEditable( true );}});
+						
+						var dataPath = uistate.element;
+						if( dataPath ){
+						
+							//whenever the element shape in modify, the control squarre must be updated
+							key2=dataPath.registerListener( "set-shape" , {o:this,f:function(){self.pathEditable( true );}});
+						
+							// add the controls square
+							tmpLayer = new L.LayerGroup();
+							for( var i=0;i<dataPath._points.length;i++ ){
+								var dot = new L.Marker( dataPath._points[i] , {"icon" : L.icons.editableSquare } )
+								tmpLayer.addLayer( dot );
+								dot.i = i;
+								dot.on("mousedown",start );
+								dot.on("dblclick",remove );
+							}
+							tmpLayer.addTo(self.uiDataMap.lfe);
+						
+							// search the UIData element corresponding to the Data element in this lfe
+							uiDataPath = uiDataMap.getElement( dataPath );
+						
+							//self.lfe.dragging.disable(); 
+							self.uiDataMap.on( "mousemove" , move );
+							self.uiDataMap.on( "mouseup" , stop );
+						
+							self.uiDataMap.update();
+						
+						}
+					}
+					
+					//chain
 					return scope;
 				};
 			
@@ -640,6 +656,7 @@ extend( UIMap , {
 			
 		})( this );
 	},
+	//wat
 	_selection : { 
 		on : false,
 		layerName : null,

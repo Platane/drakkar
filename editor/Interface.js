@@ -70,6 +70,7 @@ function init(){
 	*/
 	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
 	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , { "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
+	l.addElement( DataPath.create( [ new L.latLng(30,120) , new L.latLng(750,120) , new L.latLng(700,500) , new L.latLng(0,500) ] , { "country":true , "OFSE-member":true } ) );
 	l.addElement( DataPath.create( [ new L.latLng(-60,30) , new L.latLng(-800,30) , new L.latLng(-900,800) , new L.latLng(-100,800) ]  ) );
 	l.addElement( DataPath.create( [ new L.latLng(0,-160) , new L.latLng(-80,-160) , new L.latLng(-90,-100) , new L.latLng(0,-100) ]  ) );
 	dataMap.addLayer(l);
@@ -128,20 +129,28 @@ function init(){
 			switch( uistate.tool ){
 				case uistate.toolList.edit :
 				/** edition tool */
+				
 				(function(){
+					/*
 					if( uistate.element )
 						uimap.pathEditable( true , uistate.element );
 					// if the element selected change, update
 					var key=uistate.registerListener("select-element" , {o:this,f:function(){
 						//the previous selected element should degrade properly
+						
 						if( uistate.element )
-							uimap.pathEditable( true , uistate.element );
+							pathEditable( true , uistate.element );
+						else
+							pathEditable( false );
+							
 					}});
+					*/
+					uimap.pathEditable( true );
 					cancelLastTool={o:null,f:null};
 					cancelLastTool.o=this;
 					cancelLastTool.f = function(){
 						uimap.pathEditable( false );
-						uistate.removeListener("select-element" , key );
+						//uistate.removeListener("select-element" , key );
 					};
 				})();
 				break;

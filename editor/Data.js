@@ -106,7 +106,7 @@ AbstractNotifier.prototype = {
 				continue;
 			}
 			for( var j=0;j<this._listener[ arguments[i] ].length;j++)
-				if( this._listener[ arguments[i] ][j].o == update.o )
+				if( this._listener[ arguments[i] ][j].o == update.o && ( !update.f || update.f == this._listener[ arguments[i] ][j].f ) )
 					this._listener[ arguments[i] ].splice(j,1);
 		}
 		if( i==0 )
@@ -115,7 +115,7 @@ AbstractNotifier.prototype = {
 			else
 				for( var k in this._listener )
 					for( var j=0;j<this._listener[k].length;j++)
-						if( this._listener[k][j].o == update.o )
+						if( this._listener[k][j].o == update.o && ( !update.f || update.f == this._listener[k][j].f ) )
 							this._listener[k].splice(j,1);
 		return update;
 	},
