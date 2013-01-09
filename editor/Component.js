@@ -723,6 +723,7 @@ extend( AttributeMgr , {
 				};
 				var accepte=function(){
 					var value=input[0].value;
+					input.unbind("keyup",keyupHandler);
 					if( plus )
 						if( value.length > 0 )
 							cmd.mgr.execute(cmd.addClass.create( el , value ));
@@ -734,10 +735,17 @@ extend( AttributeMgr , {
 						else
 							cmd.mgr.execute(cmd.removeClass.create( el , exClass ));
 				};
-				input=$('<input list="class-option" type="text" style="min-width:20px;" value="'+(plus?'':e.target.innerText)+'" ></input>').insertBefore(target).bind("change",accepte);
-				input.keyup(function(e){
+				var keyupHandler =function(e){
+					console.log(event.which);
+					if(event.which==13){
+						event.preventDefault();
+						accepte();
+						return;
+					}
 					complete();
-				});
+				};
+				input=$('<input list="class-option" type="text" style="min-width:20px;" value="'+(plus?'':e.target.innerText)+'" ></input>').insertBefore(target).bind("change",accepte);
+				input.bind("keyup",keyupHandler);
 				dataList.insertBefore(target);
 				target.remove();
 			})();

@@ -59,7 +59,7 @@ function init(){
 	//define the model
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
-	mCSS.init( " polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
+	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; strocke : 0 #444444; } polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
 	
 	var l = DataLayer.create("layer1");
 	/*
@@ -69,7 +69,7 @@ function init(){
 	l.addElement( DataDot.create(new L.latLng(100,520)) );
 	*/
 	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
-	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ]  ) );
+	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , { "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
 	l.addElement( DataPath.create( [ new L.latLng(-60,30) , new L.latLng(-800,30) , new L.latLng(-900,800) , new L.latLng(-100,800) ]  ) );
 	l.addElement( DataPath.create( [ new L.latLng(0,-160) , new L.latLng(-80,-160) , new L.latLng(-90,-100) , new L.latLng(0,-100) ]  ) );
 	dataMap.addLayer(l);

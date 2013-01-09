@@ -14,6 +14,8 @@ var extend = function( child , f ){
 function AbstractNotifier(){};
 AbstractNotifier.prototype = {
 	_listener : null,
+	_lock:false,
+	_stack:null,
 	/**
 	 * add the element to the listener list
 	 * @param ( [ class ] | optional )* ( [ object ] , [ function ] | [ function ] , [ object ] | { o:object , f:function} | object  )
@@ -23,7 +25,7 @@ AbstractNotifier.prototype = {
 	registerListener : function(  ){
 		if( !this._listener )
 			this._listener = {};
-			
+		
 		var update=null,
 			i=0;
 			
@@ -41,6 +43,15 @@ AbstractNotifier.prototype = {
 		if( update == null )
 			throw "invalid param";
 			
+		
+		if(this._lock){
+			// if the Notifier is locked ( meaning he is current notfifying ) stack the modification on the listeners, and do it after
+			if( !this._stack )
+				this._stack=[];
+			this._stack.push({f:this.registerListener,a:arguments});
+			return update;
+		}
+		
 		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++){
 			if( !this._listener[ arguments[i] ] )
 				this._listener[ arguments[i] ] = [];
@@ -51,7 +62,6 @@ AbstractNotifier.prototype = {
 				this._listener[ "all" ] = [];
 			this._listener[ "all" ].push( update );
 		}
-		
 		return update;
 	},
 	/**
@@ -64,7 +74,7 @@ AbstractNotifier.prototype = {
 	removeListener : function( ){
 		if( !this._listener )
 			this._listener = {};
-		
+			
 		var update=null,
 			i=0;
 			
@@ -79,6 +89,14 @@ AbstractNotifier.prototype = {
 			}else{
 				update = {f:arguments[i].update , o:arguments[i]};
 			}
+		
+		if(this._lock){
+			// if the Notifier is locked ( meaning he is current notfifying ) stack the modification on the listeners, and do it after
+			if( !this._stack )
+				this._stack=[];
+			this._stack.push({f:this.removeListener,a:arguments});
+			return update;
+		}
 		
 		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++){
 			if( !this._listener[ arguments[i] ] )
@@ -99,10 +117,12 @@ AbstractNotifier.prototype = {
 					for( var j=0;j<this._listener[k].length;j++)
 						if( this._listener[k][j].o == update.o )
 							this._listener[k].splice(j,1);
+		return update;
 	},
 	notify : function( ){
 		if( !this._listener )
 			return;
+		this._lock=true;
 		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++)
 			if( this._listener[ arguments[i] ] )
 				for( var j=0;j<this._listener[ arguments[i] ].length;j++)
@@ -111,6 +131,12 @@ AbstractNotifier.prototype = {
 			for(var i in this._listener )
 				for( var j=0;j<this._listener[ i ].length;j++)
 					this._listener[ i ][j].f.call( this._listener[ i ][j].o , this , i );
+		this._lock=false;
+		if( this._stack ){
+			for(var i=0;i<this._stack.length;i++)
+				this._stack[i].f.apply( this,this._stack[i].a);
+			this._stack=null;
+		}
 	},
 }
 
