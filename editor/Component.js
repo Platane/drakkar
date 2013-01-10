@@ -475,7 +475,7 @@ extend( UIMap , {
 					}
 					self.uiDataMap.off( "mousemove" , move );
 					self.uiDataMap.off( "mouseup" , stop );
-					if( !enable || !uistate.element ) // else it would be done latter
+					if( !enable || !uistate.elements.length==0 ) // else it would be done latter
 						self.uiDataMap.update();
 					
 					if( key1 ){
@@ -492,7 +492,7 @@ extend( UIMap , {
 						// if enable
 						key1=uistate.registerListener( "select-element" , {o:this,f:function(){self.pathEditable( true );}});
 						
-						var dataPath = uistate.element;
+						var dataPath = (uistate.elements.length==1)?uistate.elements[0]:null;
 						if( dataPath ){
 						
 							//whenever the element shape in modify, the control squarre must be updated
@@ -578,9 +578,20 @@ extend( UIMap , {
 			var update;
 			var acte = function(e){
 				var element = e.target.data.model;
-				if( element instanceof DataMap )
-					element=null;
-				cmd.mgr.execute( cmd.changeCurrentElement.create( element ) );
+				if( element instanceof DataMap ){
+					cmd.mgr.execute( cmd.flushCurrentElement.create( ) );
+					return;
+				}
+				if(e.originalEvent.ctrlKey){
+					var i=UIState.elements.length;
+					while(i--)
+						if( UIState.elements[i]==element ){
+							cmd.mgr.execute( cmd.removeCurrentElement.create( element ) );
+							return;
+						}
+					cmd.mgr.execute( cmd.addCurrentElement.create( element ) );	
+				}else
+					cmd.mgr.execute( cmd.setCurrentElement.create( element ) );
 			};
 			
 			var elementSelectionnable = function( unable , update_  ){
@@ -628,18 +639,35 @@ extend( UIMap , {
 			var uiDataMap=self.uiDataMap;
 			var dataMap=self.model;
 			var enhanceSelection = function( unable  ){
-					var currentSelect=null; // is a UiData
+					var currentSelect=[]; // is a UiData
 					if( unable ){
 						var selectionEnhance = function(){
-							if( currentSelect ){
-								currentSelect.model.removeClass( "reserved-selected" );
-								currentSelect.update();
+							// remove class if no longuer selected
+							var i=currentSelect.length;
+							while(i--){
+								var stillIn=false;
+								var j=UIState.elements.length;
+								while(j--)
+									if(currentSelect[i].model==UIState.elements[j])
+										stillIn=true;
+								if(!stillIn){
+									currentSelect[i].model.removeClass( "reserved-selected" );
+									currentSelect.splice(i,1);
+								}
 							}
-							// UIState.element is a Data element ( probably )
-							if( UIState.element ){
-								currentSelect=uiDataMap.getElement(UIState.element);
-								currentSelect.model.addClass( "reserved-selected" );
-								currentSelect.update();
+							// add class
+							var j=UIState.elements.length;
+							while(j--){
+								var i=currentSelect.length;
+								var notYetIn=true;
+								while(i--)
+									if(currentSelect[i].model==UIState.elements[j])
+										notYetIn=false;
+								if(notYetIn){
+									var uielement= uiDataMap.getElement( UIState.elements[j] );
+									currentSelect.push( uielement );
+									uielement.model.addClass( "reserved-selected" );
+								}
 							}
 						};
 						UIState.registerListener( "select-element" , {o:this,f:selectionEnhance} );
@@ -709,13 +737,24 @@ extend( AttributeMgr , {
 		this.listen(true);
 	},
 	update:function(){
-		var el=this.uistate.element;
+		var els=this.uistate.elements;
 		var self=this;
-		var classes=this.el.find("#class");
-		classes.children().remove();
-		
-		if( el==null )
+		if( els.length<=0 )
 			return;
+		//compute common classes
+		commonClasses={};
+		for(var j in els[0]._classes ){
+			if( j.substr(0,9) == "reserved-" )
+				continue;
+			var accept=true;
+			for( var i=1;i<els.length;i++)
+				if(!els[i]._classes[j])
+					accept=false;
+			if(accept)
+				commonClasses[j]=true;
+		}
+					
+		
 		var display=false;
 		var displayDataList=function(e){
 			if( display ){
@@ -742,15 +781,31 @@ extend( AttributeMgr , {
 					var value=input[0].value;
 					input.unbind("keyup",keyupHandler);
 					if( plus )
-						if( value.length > 0 )
-							cmd.mgr.execute(cmd.addClass.create( el , value ));
-						else
+						if( value.length > 0 ){
+							var t=[];
+							var i=els.length;
+							while(i--)
+								t.push(cmd.addClass.create( els[i] , value ));
+							cmd.mgr.execute(cmd.multi.createWithTab( t ));
+							return;
+						}else
 							self.update();
 					else
-						if( value.length > 0 )
-							cmd.mgr.execute(cmd.modifyClass.create( el , exClass , value ));
-						else
-							cmd.mgr.execute(cmd.removeClass.create( el , exClass ));
+						if( value.length > 0 ){
+							var t=[];
+							var i=els.length;
+							while(i--)
+								t.push(cmd.modifyClass.create( els[i] , exClass , value ));
+							cmd.mgr.execute(cmd.multi.createWithTab( t ));
+							return;
+						}else{
+							var t=[];
+							var i=els.length;
+							while(i--)
+								t.push(cmd.removeClass.create( els[i] , exClass , value ));
+							cmd.mgr.execute(cmd.multi.createWithTab( t ));
+							return;
+						}
 				};
 				var keyupHandler =function(e){
 					console.log(event.which);
@@ -768,9 +823,11 @@ extend( AttributeMgr , {
 			})();
 		};
 		
+		var classes=this.el.find("#class");
+		classes.children().remove();
 		var classSpan=$("<span></span>").appendTo(classes).addClass("classList");
 		$('<span>class = "</span>').appendTo(classSpan);
-		for( var i in el._classes ){
+		for( var i in commonClasses ){
 			var span = $("<span>"+i+"</span>").bind("click",displayDataList);
 			span.appendTo(classSpan);
 		}
@@ -786,13 +843,15 @@ extend( AttributeMgr , {
 		(function(scope){
 			var uistate=self.uistate;
 			var key=null;
-			var el=null;
+			var els=null;
 			var changeElement=function(){
-				if( el != null )
-					el.removeListener( this );
-				el=self.uistate.element;
-				if( el != null )
-					el.registerListener("set-attribute",{o:self,f:self.update});
+				if( els != null )
+					for(var j=0;j<els.length;j++)
+						els[j].removeListener( this );
+				els=self.uistate.elements;
+				if( els != null && els.length>0)
+					for(var j=0;j<els.length;j++)
+						els[j].registerListener("set-attribute",{o:self,f:self.update});
 				self.update();
 			};
 			var listen=function(enable){
@@ -800,9 +859,10 @@ extend( AttributeMgr , {
 					key=uistate.registerListener( "select-element" ,{o:this,f:changeElement});
 					changeElement();
 				}else{
-					uistate.registerListener( "select-element",key);
-					if( el != null )
-						el.removeListener( this );
+					uistate.removeListener( "select-element",key);
+					if( els != null )
+					for(var j=0;j<els.length;j++)
+						els[j].removeListener( this );
 				}
 				return self;
 			};

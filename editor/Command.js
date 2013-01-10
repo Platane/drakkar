@@ -399,10 +399,9 @@ extend( CmdChangeCurrentElement , {
 	_i : null,
 	_j : null,
 	_update : null,
-	init : function( i , s , update ){
+	init : function( i , update ){
 		
 		this._i = i;
-		this._s = s;
 		this._update = update;
 		
 		this._state = STATE_READY;
@@ -412,7 +411,7 @@ extend( CmdChangeCurrentElement , {
 		if( this._state != STATE_READY )
 			return false;
 		
-		this._j=UIState.element;
+		this._ex=UIState.elements;
 		UIState.setElement(this._i);
 		
 		if( this._update )
@@ -425,7 +424,8 @@ extend( CmdChangeCurrentElement , {
 		if( this._state != STATE_SUCCESS )
 			return false;
 		
-		UIState.setElement(this._j);
+		UIState.elements=this._ex;
+		UIState.notify("select-element");
 		
 		if( this._update )
 			this._update.f.call( this._update.o );
@@ -440,6 +440,140 @@ CmdChangeCurrentElement.create = function( i , update ){
 	return c;
 };
 
+var CmdFlushCurrentElement = function(){};
+extend( CmdFlushCurrentElement , AbstractCmd.prototype );
+extend( CmdFlushCurrentElement , {	
+	_ex : null,
+	_update : null,
+	init : function( update ){
+		
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._ex=UIState.elements;
+		UIState.flushElement();
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		UIState.elements=this._ex;
+		UIState.notify("select-element");
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdFlushCurrentElement.create = function(  update ){
+	var c = new CmdFlushCurrentElement();
+	c.init( update );
+	return c;
+};
+
+
+var CmdRemoveCurrentElement = function(){};
+extend( CmdRemoveCurrentElement , AbstractCmd.prototype );
+extend( CmdRemoveCurrentElement , {	
+	_ex : null,
+	_update : null,
+	init : function( i , update ){
+		
+		this._i = i;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		UIState.removeElement(this._i);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		UIState.addElement(this._i);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdRemoveCurrentElement.create = function( i, update ){
+	var c = new CmdRemoveCurrentElement();
+	c.init( i,update );
+	return c;
+};
+
+
+var CmdAddCurrentElement = function(){};
+extend( CmdAddCurrentElement , AbstractCmd.prototype );
+extend( CmdAddCurrentElement , {	
+	_ex : null,
+	_update : null,
+	init : function( i , update ){
+		
+		this._i = i;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		UIState.addElement(this._i);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+		
+		UIState.removeElement(this._i);
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdAddCurrentElement.create = function( i, update ){
+	var c = new CmdAddCurrentElement();
+	c.init( i,update );
+	return c;
+};
 
 var CmdSetShape = function(){};
 extend( CmdSetShape , AbstractCmd.prototype );
@@ -643,7 +777,10 @@ scope.multi = CmdMultiple;
 scope.deleteLayer = CmdDeleteLayer;
 scope.addLayer = CmdAddLayer;
 scope.changeCurrentLayer = CmdChangeCurrentLayer;
-scope.changeCurrentElement = CmdChangeCurrentElement;
+scope.setCurrentElement = CmdChangeCurrentElement;
+scope.flushCurrentElement = CmdFlushCurrentElement;
+scope.removeCurrentElement = CmdRemoveCurrentElement;
+scope.addCurrentElement = CmdAddCurrentElement;
 scope.setShape = CmdSetShape;
 scope.modifyClass = CmdModifyClass;
 scope.addClass = CmdAddClass;

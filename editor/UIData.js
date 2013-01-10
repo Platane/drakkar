@@ -472,7 +472,7 @@ select-element
 var UIState = new AbstractNotifier();
 UIState.tool=null;
 UIState.layer=null;
-UIState.element=null;
+UIState.elements=[];
 UIState.toolList={
 	edit:"edit",
 	select:"select",
@@ -487,9 +487,29 @@ UIState.setLayer=function(layer){
 	this.layer=layer;
 	this.notify("select-layer");
 };
+UIState.addElement=function(e){
+	var i=this.elements.length;
+	while(i--)
+		if(this.elements[i]==e)
+			return;
+	this.elements.push(e);
+	this.notify("select-element");
+};
 UIState.setElement=function(e){
-	var ex=this.e;
-	this.element=e;
+	this.elements=[e];
+	this.notify("select-element");
+};
+UIState.removeElement=function(e){
+	var i=this.elements.length;
+	while(i--)
+		if(this.elements[i]==e){
+			this.elements.splice(i,1);
+			this.notify("select-element");
+			return;
+		}
+};
+UIState.flushElement=function(e){
+	this.elements=[];
 	this.notify("select-element");
 };
 /*
@@ -580,12 +600,18 @@ var TagMgr={
 			})();
 	},
 	_extract:function(el){
-			for(var i in el._classes )
+			for(var i in el._classes ){
+				if( i.substr(0,9) == "reserved-" )
+					continue;
 				if(!this._contains(this._classes,i))
 					this._push(this._classes,i);
-			for(var i in el._attributes )
+			}
+			for(var i in el._attributes ){
+				if( i.substr(0,9) == "reserved-" )
+					continue;
 				if(!this._contains(this._attributes,i))
 					this._push(this._attributes,i);
+			}
 	},
 	search:function(datamap){
 		this._extract(datamap);
@@ -637,6 +663,7 @@ var TagMgr={
 				i=i+1;
 				break;
 			}
+		if( i>=0 )
 		while(i--){
 			if(tree[i].substr(0,s.length)!=s||matches.length>=max){
 				break;
