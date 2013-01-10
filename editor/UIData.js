@@ -554,23 +554,30 @@ var TagMgr={
 		this._spy(datamap);
 	},
 	_spy:function(datamap){
+		this._classes=[];
+		this._attributes=[];
 		this.search(datamap);
 		datamap.removeListener("set-attribute","layer-struct",this);
-		datamap.registerListener("set-attribute","layer-struct",{o:this,f:function(){this._spy(datamap);}});
+		datamap.registerListener("layer-struct",{o:this,f:function(){this._spy(datamap);}});
+		datamap.registerListener("set-attribute",{o:this,f:function(){this._extract(datamap);}});
 		
 		var i=datamap.getLayers().length;
-		while(i--){
-			var layer=datamap.getLayers()[i];
-			layer.removeListener("set-attribute","element-struct",this);
-			layer.registerListener("set-attribute","element-struct",{o:this,f:function(){this._spy(datamap);}});
-			
-			var j=layer.getElements().length;
-			while(j--){
-				var element=layer.getElements()[j];
-				element.removeListener("set-attribute",this);
-				element.registerListener("set-attribute",{o:this,f:function(){this._spy(datamap);}});
-			}
-		}
+		var self=this;
+		while(i--)
+			(function(){
+				var layer=datamap.getLayers()[i];
+				layer.removeListener("set-attribute","element-struct",self);
+				layer.registerListener("element-struct",{o:self,f:function(){self._spy(datamap);}});
+				layer.registerListener("set-attribute",{o:self,f:function(){self._extract(layer);}});
+				
+				var j=layer.getElements().length;
+				while(j--)
+					(function(){
+						var element=layer.getElements()[j];
+						element.removeListener("set-attribute",self);
+						element.registerListener("set-attribute",{o:self,f:function(){self._extract(element);}});
+					})();
+			})();
 	},
 	_extract:function(el){
 			for(var i in el._classes )
@@ -581,8 +588,6 @@ var TagMgr={
 					this._push(this._attributes,i);
 	},
 	search:function(datamap){
-		this._classes=[];
-		this._attributes=[];
 		this._extract(datamap);
 		var i=datamap.getLayers().length;
 		while(i--){
