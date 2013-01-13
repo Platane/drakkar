@@ -262,6 +262,7 @@ AbstractComponent.prototype = {
 		}
 	},
 	update:function(){},
+	listen:function(enable){return this;},
 }
 
 
@@ -763,13 +764,13 @@ extend( AttributeMgr , {
 			}
 			display=true;
 			(function(){
-				var plus = e.target.innerText=="+";
-				var exClass = e.target.innerText;
 				var target=$(e.target);
+				var plus = target.text()=="+";
+				var exClass = target.text();
 				var dataList=$('<datalist id="class-option"></datalist>');
 				var input=null;
 				var complete=function(){
-					var value=input[0].value;
+					var value=input.val();
 					dataList.children().remove();
 					if( value.length>=1 ){
 						var a =TagMgr.complete("class",value,5);
@@ -778,7 +779,7 @@ extend( AttributeMgr , {
 					}
 				};
 				var accepte=function(){
-					var value=input[0].value;
+					var value=input.val();
 					input.unbind("keyup",keyupHandler);
 					if( plus )
 						if( value.length > 0 ){
@@ -808,7 +809,6 @@ extend( AttributeMgr , {
 						}
 				};
 				var keyupHandler =function(e){
-					console.log(event.which);
 					if(event.which==13){
 						event.preventDefault();
 						accepte();
@@ -816,7 +816,7 @@ extend( AttributeMgr , {
 					}
 					complete();
 				};
-				input=$('<input list="class-option" type="text" style="min-width:20px;" value="'+(plus?'':e.target.innerText)+'" ></input>').insertBefore(target).bind("change",accepte);
+				input=$('<input list="class-option" type="text" style="min-width:20px;" value="'+(plus?'':exClass)+'" ></input>').insertBefore(target).bind("change",accepte);
 				input.bind("keyup",keyupHandler);
 				dataList.insertBefore(target);
 				target.remove();
@@ -875,7 +875,8 @@ AttributeMgr.create=function(uistate){
 	var a = new AttributeMgr();
 	a.init(uistate);
 	return a;
-}
+};
+
 function LayerMgr(){};
 LayerMgr.prototype = {
 	
@@ -1286,6 +1287,203 @@ TimeLine.create = function(  id ){
 }
 
 
+function PropertyStack(){};
+extend( PropertyStack , AbstractComponent.prototype );
+extend( PropertyStack , {
+	el:null,
+	commonElement:null,
+	styleChain:null,
+	init : function(){
+		
+		var w = 500, h = 500;
+		
+		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		
+		$("<div>").attr("id","property-stack").appendTo(el);
+		
+		this.el = el;
+		this.commonElement={};
+		this.initInteraction();
+		this.listen(true);
+	},
+	initInteraction : function(){
+		
+		var uistate = UIState;
+		var self = this;
+		var els=null;
+		// listen
+		(function( scope ){
+			
+			
+				
+				var computeCommonElement=function(){
+					var common=new AbstractAttributeHolder();
+					common._classes={};
+					common._attributes={};
+					if(els!=null&&els.length>0){
+						//classes
+						for(var j in els[0]._classes ){
+							if( j.substr(0,9) == "reserved-" )
+								continue;
+							var accept=true;
+							for( var i=1;i<els.length;i++)
+								if(!els[i]._classes[j])
+									accept=false;
+							if(accept)
+								common._classes[j]=true;
+						}
+						//type
+						var accept=true;
+						for( var i=1;i<els.length;i++)
+							if(els[i].type!=els[0].type)
+								accept=false;
+						if(accept)
+							common.type=els[0].type;
+					}
+					return common;
+				}
+				var computeAndUpdate=function(){
+					var common = computeCommonElement();
+					
+					// is the new commonElement different?
+					var equal=false;
+					/*
+					for(var i in common )
+						if( !self.commonElement[i] )
+							equal=false;
+					for(var i in self.commonElement )
+						if( !common[i] )
+							equal=false;
+					*/
+					//if so update
+					if( !equal ){
+						self.commonElement=common;
+						self.styleChain=mCSS.computeChain(self.commonElement);
+						self.update();
+					}
+				};
+				var changeElement=function(){
+					if( els != null )
+						for(var j=0;j<els.length;j++)
+							els[j].removeListener( this );
+					els=uistate.elements;
+					if( els != null && els.length>0)
+						for(var j=0;j<els.length;j++)
+							els[j].registerListener("set-attribute",{o:this,f:computeAndUpdate});
+					
+					computeAndUpdate();
+				};
+				var listen=function(enable){
+					if( els != null )
+						for(var j=0;j<els.length;j++)
+							els[j].removeListener( this );
+					uistate.removeListener( "select-element" , this );
+					if(enable){
+						uistate.registerListener( "select-element" , {o:this,f:changeElement} );
+						changeElement();
+					}
+				}
+			scope.listen=listen;
+		})( this );
+	},
+	update:function(){
+		var ps = this.el.find( "#property-stack" );
+		var self=this;
+		ps.children().remove();
+		var i=this.styleChain.length;
+		while(i--){
+			var decl=mCSS.declarationsToXML([this.styleChain[i].origin]).children(".css-declaration");
+			decl.data("structure",this.styleChain[i].origin).appendTo(ps);
+		}
+		//TODO add blank lines
+		
+		
+		
+		//bind event
+		var display=false;
+		var displayDataList=function(e){
+			if( display ){
+				self.update();
+				return;
+			}
+			display=true;
+			(function(){
+				var target=$(e.target);
+				var exText = target.text().trim();
+				var plus = exText=="";
+				var dataList=$('<datalist ></datalist>').attr("id","class-option-stack");
+				var input=null;
+				var complete=function(){
+					/*
+					var value=input.val();
+					dataList.children().remove();
+					if( value.length>=1 ){
+						var a =TagMgr.complete("class",value,5);
+						for(var i=0;i<a.length;i++)
+							$("<option>"+a[i]+"</option>").appendTo(dataList);
+					}
+					*/
+				};
+				var correction=function(val){
+					if(!val||val.length==0)
+						return;
+					if(target.hasClass('css-property')){
+						return val;
+						
+					}
+					return val;
+				};
+				var accepte=function(){
+					// search the modified declaration
+					var exDeclaration=input.parents(".css-declaration").data("structure");
+					
+					
+					var value=correction(input.val());
+					
+					target.empty();
+					target.wrapInner(value);
+					target.insertBefore(input);
+					input.remove();
+					dataList.remove();
+					
+					var newDeclaration=target.parents(".css-declaration").text();
+					
+					input.unbind("keyup",keyupHandler);
+					if( plus )
+						if( value ){
+							cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
+							return;
+						}else
+							self.update();
+					else
+						cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
+				};
+				var keyupHandler =function(e){
+					if(event.which==13){
+						event.preventDefault();
+						accepte();
+						return;
+					}
+					complete();
+				};
+				input=$('<input list="class-option-stack" type="text" style="min-width:20px;" value="'+(plus?'':exText)+'" ></input>').insertBefore(target).bind("change",accepte);
+				input.bind("keyup",keyupHandler);
+				dataList.insertBefore(target);
+				target.remove();
+			})();
+		};
+		ps.find(".css-properties").find(".css-property-name,.css-property-value").bind("click",displayDataList);
+	},
+	
+	
+});
+PropertyStack.create=function(){
+	var a = new PropertyStack();
+	a.init();
+	return a;
+};
+
+
 function EditablePathParam(){};
 extend( EditablePathParam , AbstractComponent.prototype );
 extend( EditablePathParam , {
@@ -1397,6 +1595,7 @@ scope.TimeLine = TimeLine;
 scope.EditablePathParam = EditablePathParam;
 scope.EditionToolBar = EditionToolBar;
 scope.AttributeMgr = AttributeMgr;
+scope.PropertyStack = PropertyStack;
 
 })( this );
 

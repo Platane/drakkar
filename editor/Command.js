@@ -722,6 +722,59 @@ CmdModifyClass.create = function( element , claEx , claNew , update ){
 		);
 }
 
+
+var CmdAlterCSSDeclaration = function(){};
+extend( CmdAlterCSSDeclaration , AbstractCmd.prototype );
+extend( CmdAlterCSSDeclaration , {	
+	_newDec : null,
+	_exDec : null,
+	_update : null,
+	init : function( newDec , exDec , update ){
+		
+		this._newDec = newDec;
+		this._exDec = exDec;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		mCSS.alterDeclaration( this._exDec , this._newDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		mCSS.alterDeclaration( this._newDec , this._exDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdAlterCSSDeclaration.create = function( newDec , exDec , update ){
+	var c = new CmdAlterCSSDeclaration();
+	c.init( newDec , exDec , update );
+	return c;
+};
+CmdModifyClass={};
+CmdModifyClass.create = function( element , claEx , claNew , update ){
+	return CmdMultiple.create( 
+		CmdRemoveClass.create( element , claEx ),
+		CmdAddClass.create( element , claNew )
+		);
+}
+
 var CmdMgr = function(){};
 CmdMgr.prototype = {
 	
@@ -785,6 +838,7 @@ scope.setShape = CmdSetShape;
 scope.modifyClass = CmdModifyClass;
 scope.addClass = CmdAddClass;
 scope.removeClass = CmdRemoveClass;
+scope.alterCSSDeclaration = CmdAlterCSSDeclaration;
 scope.mgr = CmdMgr.create();
 
 

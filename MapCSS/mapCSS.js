@@ -45,6 +45,19 @@ var mCSS = mCSS || {};
 	
 	var declarations ;
 	
+	var specif=[
+		"strocke",
+		"strocke-width",
+		"strocke-color",
+		"strocke-opacity",
+		"fill",
+		"fill-color",
+		"fill-opacity",
+	];
+	
+	// iam a ugly structuren dotn judge me please
+	var notifier;
+	
 	var rvb2hex = function( r , v , b ){
 		return "#"+new Number(r).toString( 16 )+new Number(v).toString( 16 )+new Number(b).toString( 16 );
 	}
@@ -106,6 +119,7 @@ var mCSS = mCSS || {};
 	};
 	var init = function( s ){
 		declarations = semanticBuild( parse( s ) );
+		notifier=new AbstractNotifier();
 	};
 	
 	/** Test if the element satisfy the selector
@@ -198,7 +212,7 @@ var mCSS = mCSS || {};
 			for( var i = 0 ; i < declarations.length ; i ++ )
 				for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
 					if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
-						styleChain.push({ dynCondition:null , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props });
+						styleChain.push({ dynCondition:null , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props , origin:declarations[ i ]});
 						break;
 					}
 		
@@ -206,11 +220,98 @@ var mCSS = mCSS || {};
 		return styleChain;
 	}
 	
+	
+	var alterDeclaration=function( exDec , newDec ){
+		if( typeof(newDec) == "string")
+			newDec=semanticBuild(parse(newDec))[0];
+		for(var i=0;i<declarations.length;i++)
+			if( declarations[i]==exDec )
+				declarations[i]=newDec;
+		notifier.notify("set-css");
+	};
+	
+	var setDeclarations=function(newDec){
+		if( typeof(newDec) == "string")
+			newDec=semanticBuild(parse(newDec));
+		declarations=newDec;
+		notifier.notify("set-css");
+	};
+	
+	
+	var declarationsToXML=function(declsD){
+		var declarations=$("<span></span>");
+		var i=declsD.length;
+		while(i--){
+			var decl=declsD[i];
+			var declaration=$("<span>").addClass("css-declaration");
+			
+			
+			//selectors
+			var selectors=$("<span>").addClass("css-selectors");
+			
+			for( var j=0;j<decl.selectors.length;j++){
+				var selector=$("<span>").addClass("css-selector");
+				for( var k=0;k<decl.selectors[j].length;k++){
+					var condition=$("<span>").addClass("css-condition");
+					
+					var c = decl.selectors[j][k];
+					if( c.class )
+						condition.wrapInner("."+c.class ).addClass("css-class");
+					if( c.attributeQuery )
+						condition.wrapInner("["+c.attribute+"]" ).addClass("css-attribute");
+					if( c.id )
+						condition.wrapInner("#"+c.id ).addClass("css-id");
+					if( c.tag )
+						condition.wrapInner(""+c.tag ).addClass("css-tag");
+					if( c.parent ){
+						condition.wrapInner(" " ).addClass("css-ancestor");
+					}
+					
+					condition.appendTo( selector );
+				}
+			}
+			
+			//properties
+			var props=$("<div>").addClass("css-properties");
+			for( var j in decl.props ){
+				var prop=$("<span>").addClass("css-property");
+				
+				$("<span>").addClass("css-property-name").wrapInner(j).appendTo(prop);
+				$("<span>").addClass("css-property-separator").wrapInner(":").appendTo(prop);
+				$("<span>").addClass("css-property-value").wrapInner(decl.props[j]).appendTo(prop);
+				$("<span>").addClass("css-property-end").wrapInner(";").appendTo(prop);
+				
+				prop.appendTo( props );
+			};
+			
+			selector.appendTo( declaration );
+			$("<span>").addClass("css-bracket").wrapInner("{").appendTo(declaration);
+			props.appendTo( declaration );
+			$("<span>").addClass("css-bracket").wrapInner("}").appendTo(declaration);
+			
+			declaration.appendTo(declarations);
+		}
+		return declarations;
+		
+	};
+	var declarationToString=function(declsD){
+		if(!declsD)
+			declsD=declarations;
+		return declarationsToXML.text();
+	}
+	
 	scope.parse = parse;					// should be private
 	scope.semanticBuild = semanticBuild;	// should be private
 	scope.isConcernBy = isConcernBy;		// should be private
 	scope.init = init;
-	scope.computeChain = computeChain;	
+	scope.computeChain = computeChain;
+	
+	scope.alterDeclaration=alterDeclaration;
+	
+	scope.removeListener=function(){notifier.removeListener.apply(notifier,arguments);};
+	scope.registerListener=function(){notifier.registerListener.apply(notifier,arguments);};
+	
+	scope.declarationsToXML = declarationsToXML;
 	
 })( mCSS );
 

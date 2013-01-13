@@ -59,7 +59,7 @@ function init(){
 	//define the model
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
-	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; strocke : 0 #444444; } polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { fill : #A31873 ; fill-opacity : 0.5 ; strocke : 6 #444444; }");
+	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { strocke-width : 10; }");
 	
 	var l = DataLayer.create("layer1");
 	/*
@@ -166,6 +166,8 @@ function init(){
 	
 	TagMgr.init(dataMap);
 	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
+	
+	PropertyStack.create( ).getElement().appendTo("body");
 	
 	/*
 	//init editing tool bar

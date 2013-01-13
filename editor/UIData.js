@@ -371,6 +371,7 @@ extend( LeafletPath , {
 		this.model = dataPath;
 		dataPath.registerListener( "set-attribute" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
 		dataPath.registerListener( "set-shape" , {o:this,f:function(){this._structDirty=true; this.update();}} );
+		mCSS.registerListener( "set-css" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
 		// clone the point array
 		this.lfe = new L.Polygon( L.cloneLatLngArray(this.model._points) );
 		this.lfe.data = this;
@@ -496,6 +497,8 @@ UIState.addElement=function(e){
 	this.notify("select-element");
 };
 UIState.setElement=function(e){
+	if( this.elements.length==1&&this.elements[0]==e)
+		return;
 	this.elements=[e];
 	this.notify("select-element");
 };
@@ -509,6 +512,8 @@ UIState.removeElement=function(e){
 		}
 };
 UIState.flushElement=function(e){
+	if( this.elements.length==0)
+		return;
 	this.elements=[];
 	this.notify("select-element");
 };
