@@ -164,6 +164,9 @@ function init(){
 	el.find( "[data-action=path-edition]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.edit); } );
 	el.find( "[data-action=path-edition2]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.select); } );
 	
+	el.find( "[data-action=path-edition3]" ).bind("click" , function(){ cmd.mgr.undo(); } );
+	el.find( "[data-action=path-edition4]" ).bind("click" , function(){ cmd.mgr.redo(); } );
+	
 	TagMgr.init(dataMap);
 	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
 	

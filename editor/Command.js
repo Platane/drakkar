@@ -731,7 +731,10 @@ extend( CmdAlterCSSDeclaration , {
 	_update : null,
 	init : function( newDec , exDec , update ){
 		
-		this._newDec = newDec;
+		if( typeof(newDec)=="string")
+			this._newDec = mCSS.semanticBuild(mCSS.parse(newDec))[0];
+		else		
+			this._newDec = newDec;
 		this._exDec = exDec;
 		this._update = update;
 		

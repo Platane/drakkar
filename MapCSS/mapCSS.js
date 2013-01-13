@@ -300,8 +300,8 @@ var mCSS = mCSS || {};
 		return declarationsToXML.text();
 	}
 	
-	scope.parse = parse;					// should be private
-	scope.semanticBuild = semanticBuild;	// should be private
+	scope.parse = parse;					// should be private		//cant 
+	scope.semanticBuild = semanticBuild;	// should be private		//cant
 	scope.isConcernBy = isConcernBy;		// should be private
 	scope.init = init;
 	scope.computeChain = computeChain;

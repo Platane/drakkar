@@ -1374,6 +1374,7 @@ extend( PropertyStack , {
 					computeAndUpdate();
 				};
 				var listen=function(enable){
+					mCSS.removeListener(this);
 					if( els != null )
 						for(var j=0;j<els.length;j++)
 							els[j].removeListener( this );
@@ -1381,6 +1382,7 @@ extend( PropertyStack , {
 					if(enable){
 						uistate.registerListener( "select-element" , {o:this,f:changeElement} );
 						changeElement();
+						mCSS.registerListener("set-css",{o:this,f:computeAndUpdate});
 					}
 				}
 			scope.listen=listen;
@@ -1455,8 +1457,9 @@ extend( PropertyStack , {
 							return;
 						}else
 							self.update();
-					else
+					else{
 						cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
+					}
 				};
 				var keyupHandler =function(e){
 					if(event.which==13){
