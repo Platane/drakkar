@@ -1,32 +1,111 @@
 <html>
 	<head>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-		<script type="text/javascript" src="MapObjects/MapObjects.js"></script>
-		<script type="text/javascript" src="MapObjects/EditorFunctions.js"></script>
+		
+		
+		<link rel="stylesheet" href="external/KNACSS-master/css/knacss-garni.css" />
+		<link rel="stylesheet" href="external/KNACSS-master/css/knacss.css" />
+		<link rel="stylesheet" href="external/leaflet/leaflet.css" />
+		<link rel="stylesheet" href="src/CSS/style.css" />
+	
+		<script type="text/javascript" src="external/jquery.min.js"></script>
+		<script type="text/javascript" src="external/leaflet/leaflet.js"></script>
+		<script type="text/javascript" src="src/MapCSS/MapCSSParser.js"></script>
+		<script type="text/javascript" src="src/MapCSS/mapCSS.js"></script>
+		<script type="text/javascript" src="src/Data.js"></script>
+		<script type="text/javascript" src="src/UIData.js"></script>
+		<script type="text/javascript" src="src/Command.js"></script>
+		<script type="text/javascript" src="src/Component.js"></script>
+		<script type="text/javascript" src="src/Interface.js"></script>
+		<script type="text/javascript">
+			
+			window.onload = function(){
+				init();
+				
+			}
+				
+			
+		</script>
 	</head>
 	
 	<body>
-	
-		<div>
-			<h1>Map Editor : Beta version</h1>
-		</div>
 		
-		<div id="editor">
-		
-			<div id="head">
-				<h2>Create your own interactive Map</h2>
+		<header class = "line mod" >
+		<nav>
+			<div class="menu" >
+				<ul>
+					<li id="drawbleBn" data-frame="drawable" >Edite Raw Data</li>
+					<li id="searchBn"   data-frame="search">Search</li>
+				</ul>
 			</div>
 			
-			<div id="options">
-				<input name="createmap" type="button" value="Create Map" onclick="generateMapForm();" /></br>
-				<input type="button" value="load existing Map" onclick="alert('Not yet implemented');" /> 
-			</div>
+		</nav>
+		</header>
 		
-			<div id="box">
-			</div>
-			
 		</div>
+		<div id="main">
+		
+		</div>
+		
+		<div id="popUpPanel" style="display : none; z-index:-10; position : absolute; top : 0; left : 0 ; background-color : rgba( 0 , 0 , 100 , 0.2 ); width : 100%; height : 100%"></div>
 		
 	</body>
 	
+	<div id="framePool" style="display:none" >
+		
+		<!-- edite raw data  -->
+		<div id="drawable" class="frame" >
+			
+		<div class="line gut">
+			<aside id="edition-toolBarclass" class="block mod right w50px" data-contain-type="EditionToolBar" >
+						<div class="btn icon-btn" data-action="path-edition" >#</div>
+						<div class="btn icon-btn" data-action="path-edition2" >@</div>
+						<div class="btn icon-btn" data-action="path-edition3" >8</div>
+						<div class="btn icon-btn" data-action="path-edition4" >*</div>
+			</aside>
+			
+			<div class="centralPanel mod item center w60">
+				<div class="container" data-contain-type="UIMap" class="mod item"  ></div>
+				<div class="container" data-contain-type="LayerMgr" class="mod item" ></div>
+				<div class="" data-contain-type="EditablePathParam"  >
+					<div id="editPathBn" class="btn icon-btn active" >edit</div>
+					<div id="removeNodePathBn" class="btn icon-btn" >rm</div>
+					<div id="addNodePathBn" class="btn icon-btn" >add</div>
+				</div>
+			</div>
+			<div id = "block-param" class="block mod w20" style = "display:none;" ></div>
+		</div>
+			
+			
+		<div id = "block-property" class="subPanel  block mod" ></div>
+		
+		</div>
+		
+		
+		<!-- search -->
+		<div id="search" class="frame" >
+			
+			
+			<div class="centralPanel mod item center w60">
+				<div id="tm-container">
+				</div>
+			</div>
+			<div id = "block-param" class="block mod w20" style = "display:none;" >
+			</div>
+			
+			<div id = "block-result" class="subPanel  block line" >
+				<div class="mod left w100p">
+					<div class="btn" >GO</div>
+				</div>
+				<div class="mod" style="overflow-y:hidden; overflow-x:scroll; white-space: nowrap;">
+					<div style="width:10%; height:inherit; display:inline-block;" >
+					<p> res </p>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+		
+		<div id="blank" class="frame" ></div>
+		
+	</div>
 </html>
