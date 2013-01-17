@@ -239,6 +239,8 @@ var mCSS = mCSS || {};
 	
 	
 	var declarationsToXML=function(declsD){
+		if(!declsD)
+			declsD=declarations;
 		var declarations=$("<span></span>");
 		var i=declsD.length;
 		while(i--){
@@ -294,10 +296,8 @@ var mCSS = mCSS || {};
 		return declarations;
 		
 	};
-	var declarationToString=function(declsD){
-		if(!declsD)
-			declsD=declarations;
-		return declarationsToXML.text();
+	var declarationsToString=function(declsD){
+		return declarationsToXML(declsD).text();
 	}
 	
 	scope.parse = parse;					// should be private		//cant 
@@ -312,6 +312,7 @@ var mCSS = mCSS || {};
 	scope.registerListener=function(){notifier.registerListener.apply(notifier,arguments);};
 	
 	scope.declarationsToXML = declarationsToXML;
+	scope.declarationsToString = declarationsToString;
 	
 })( mCSS );
 

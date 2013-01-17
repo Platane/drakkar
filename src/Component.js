@@ -1287,6 +1287,38 @@ TimeLine.create = function(  id ){
 }
 
 
+function PropertyEditor(){};
+extend( PropertyEditor , AbstractComponent.prototype );
+extend( PropertyEditor , {
+	properties:null,
+	init : function(){
+		
+		var w = 500, h = 500;
+		
+		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		
+		$("<div>").attr("id","property-stack").appendTo(el);
+		
+		this.el = el;
+		this.initInteraction();
+		this.listen(true);
+	},
+	initInteraction : function(){
+		var self = this;
+		(function(scope){
+			var setProperties=function(){
+			
+			
+			};
+			var listen = function(){
+			
+			
+			},
+			scope.listen=listen;
+		})();
+	
+	},
+};
 function PropertyStack(){};
 extend( PropertyStack , AbstractComponent.prototype );
 extend( PropertyStack , {
@@ -1396,9 +1428,9 @@ extend( PropertyStack , {
 		while(i--){
 			var decl=mCSS.declarationsToXML([this.styleChain[i].origin]).children(".css-declaration");
 			decl.data("structure",this.styleChain[i].origin).appendTo(ps);
+			$('<span class="css-property"><span class="css-property-name">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span></span>').appendTo(decl.children(".css-properties"));
 		}
 		//TODO add blank lines
-		
 		
 		
 		//bind event
@@ -1412,7 +1444,7 @@ extend( PropertyStack , {
 			(function(){
 				var target=$(e.target);
 				var exText = target.text().trim();
-				var plus = exText=="";
+				var plus = exText==""&&target.hasClass("css-property-name");
 				var dataList=$('<datalist ></datalist>').attr("id","class-option-stack");
 				var input=null;
 				var complete=function(){
@@ -1448,16 +1480,21 @@ extend( PropertyStack , {
 					input.remove();
 					dataList.remove();
 					
-					var newDeclaration=target.parents(".css-declaration").text();
+					
 					
 					input.unbind("keyup",keyupHandler);
 					if( plus )
 						if( value ){
-							cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
+							$('<span class="css-property-separator">:</span>').appendTo(target.parents(".css-property"));
+							var propertyValue=$('<span class="css-property-value"></span>').appendTo(target.parents(".css-property"));
+							$('<span class="css-property-end">;</span>').appendTo(target.parents(".css-property"));
+							display=false;
+							displayDataList( {target:propertyValue[0]} );
 							return;
 						}else
 							self.update();
 					else{
+						var newDeclaration=target.parents(".css-declaration").text();
 						cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
 					}
 				};
