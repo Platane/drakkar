@@ -473,6 +473,7 @@ select-element
 var UIState = new AbstractNotifier();
 UIState.tool=null;
 UIState.layer=null;
+UIState.declaration=null;
 UIState.elements=[];
 UIState.toolList={
 	edit:"edit",
@@ -517,56 +518,83 @@ UIState.flushElement=function(e){
 	this.elements=[];
 	this.notify("select-element");
 };
-/*
-var UIState = {
-	_listener : null,
-	init : function(){
-		this._listener = {
-			"tool" : [],
-			"layer" : [],
-			"element" : []
+UIState.setDeclaration=function(d){
+	if(d==this.declaration)
+		return;
+	this.declaration=d;
+	this.notify("set-declaration");
+}
+UIState.init=function(){
+	//tweak for declaration update when css update occur
+	mCSS.registerListener( "set-css" , {o:this,f:function(){
+		//compare the declaration saved with the set of declaration
+		
+		var decls = mCSS.getDeclarations();
+		var dec = UIState.declaration;
+		
+		if( dec == null )
+			return;
+		
+		var selectorCompare=function( s1 , s2 ){
+			if(s1.length!=s2.length)
+				return false;
+			for(var i=0;i<s1.length;i++){
+				if(s1[i].length!=s2[i].length)
+					return false;
+				for(var j=0;j<s1[i].length;j++)
+					for( var attr in s1[i][j] ){
+						if(attr=="attributeQuery")
+							continue;
+						if(attr=="parent")
+							continue;		//TODO make a reccursive call
+						if(s2[i][j][attr]!=s1[i][j][attr])
+							return false;
+					}
+			}
+			return true;
 		};
-	},
-	register : function(){
-		var callback,
-			event = arguments[0];
-		if( argument.length == 2 ){
-			callback = arguments[1];
-		}else
-		if( argument.length == 3 ){
-			if( typeof(arguments[2]) =="function" )
-				callback = {o:arguments[1],f:arguments[2]};
-			else
-				callback = {o:arguments[2],f:arguments[1]};
-		}
 		
-		this._listener[ event ].push( callback );
-	},
-	remove : function(){
-		var callback,
-			event = arguments[0];
-		if( argument.length == 2 ){
-			if( arguments[1].o && arguments[1].f )
-				callback = arguments[1];
-			else
-				callback = {o:arguments[1],f:null};
-		}else
-		if( argument.length == 3 ){
-			if( typeof(arguments[2]) =="function" )
-				callback = {o:arguments[1],f:arguments[2]};
-			else
-				callback = {o:arguments[2],f:arguments[1]};
-		}
-		
-		var i=this._listener[ event ].length;
+		//try to match based with the selector
+		var selectorMatch=[];
+		var i=decls.length;
 		while(i--){
-			if( this._listener[ event ][i].o == callback.o && ( !callback.f || this._listener[ event ][i].f == callback.f ) )
-				this._listener[ event ].splice(i,1);
+			if(decls[i]==dec)	//no modification on the selected declaration
+				return;
+			if( selectorCompare( dec.selectors , decls[i].selectors ) )
+				selectorMatch.push(i);
 		}
-	},
-	notify : function
+		if( selectorMatch.length==0 ){
+			//try to match based with the similarity
+			var max_score=-Infinity;
+			var max_i=0;
+			var i=decls.length;
+			while(i--){
+				var score=0;
+				for(var prop in dec.props)
+					if( decls[i].props[prop] != null ){
+						score+=0.5;
+						if( decls[i].props[prop] == dec.props[prop] )
+							score+=1;
+					}
+				for(var prop in decls[i].props)
+					if( dec.props[prop] == null )
+						score-=0.8;
+				
+				if(score>max_score){
+					max_i=i;
+					max_score=score;
+				}
+			}
+			selectorMatch.push(max_i);
+		}
+		
+		UIState.declaration=decls[selectorMatch[0]];
+		UIState.notify("set-declaration");
+		
+	}});
 };
-*/
+
+
 
 /*
  * knows every thing about tags

@@ -87,7 +87,7 @@ AbstractNotifier.prototype = {
 			if( arguments[i].f != undefined && arguments[i].o != undefined ){
 				update = {f:arguments[i].f , o:arguments[i].o};
 			}else{
-				update = {f:arguments[i].update , o:arguments[i]};
+				update = {f:null , o:arguments[i]};
 			}
 		
 		if(this._lock){

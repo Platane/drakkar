@@ -59,7 +59,7 @@ function init(){
 	//define the model
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
-	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{ fill : #17AEF3 ; fill-opacity : 0.5 ; strocke : 0 #444444; } .reserved-selected { strocke-width : 10; }");
+	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{fill-color:#17aef3;fill-opacity:0.5;strocke-width:1;strocke-color:#444444;strocke-opacity:1;} .reserved-selected { strocke-width : 10; }");
 	
 	var l = DataLayer.create("layer1");
 	/*
@@ -168,9 +168,13 @@ function init(){
 	el.find( "[data-action=path-edition4]" ).bind("click" , function(){ cmd.mgr.redo(); } );
 	
 	TagMgr.init(dataMap);
+	UIState.init();
 	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
 	
-	PropertyStack.create( ).getElement().appendTo("body");
+	var ps = PropertyStack.create( );
+	ps.getElement().appendTo("body").css({"display":"inline-block"});
+	ps.editable(true).easyEditable(true);
+	//PropertyEditor.create().getElement().appendTo("body").css({"display":"inline-block"});
 	
 	/*
 	//init editing tool bar

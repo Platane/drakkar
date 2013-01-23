@@ -770,6 +770,7 @@ CmdAlterCSSDeclaration.create = function( newDec , exDec , update ){
 	c.init( newDec , exDec , update );
 	return c;
 };
+
 CmdModifyClass={};
 CmdModifyClass.create = function( element , claEx , claNew , update ){
 	return CmdMultiple.create( 

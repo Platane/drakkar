@@ -1291,40 +1291,290 @@ function PropertyEditor(){};
 extend( PropertyEditor , AbstractComponent.prototype );
 extend( PropertyEditor , {
 	properties:null,
+	onglet:null,
+	_changeAlreadyDone:false,
 	init : function(){
 		
 		var w = 500, h = 500;
 		
-		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		var el = $("<div>").attr("id","property-editor").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
 		
-		$("<div>").attr("id","property-stack").appendTo(el);
+		var main = $("<div>").addClass("main");
+		
+		
+		var onglet_render = $("<div>");
+		
+		$("<div>").addClass("preview").css({"border-radius":"10px" , "min-width":"120px" , "min-height":"120px" , "max-width":"200px" , "max-height":"200px" }).appendTo( onglet_render );
+		$("<div>").appendTo( onglet_render );
+		$("<canvas>").appendTo( onglet_render.find(".preview") );
+		
+		var onglet_action = $("<div>");
+		
+		this.onglet={};
+		this.onglet.render = onglet_render;
+		this.onglet.action = onglet_action;
+		
+		var menu = $("<nav>").addClass("menu");
+		$("<ul>").appendTo( menu );
+		var self=this;
+		for( var i in this.onglet )
+			(function(){
+				var j=i;
+				var bn = $("<li>");
+				bn.wrapInner( i );
+				bn.bind("click",function(){
+					main.children().detach();
+					self.onglet[j].appendTo(main);
+				});
+				bn.appendTo( menu.children("ul") );
+				bn.click();
+			})();
+		
+		menu.appendTo(el);
+		main.appendTo(el);
+		
 		
 		this.el = el;
 		this.initInteraction();
 		this.listen(true);
 	},
+	update:function(){
+		var self = this;
+		var drawCanvas=function(properties){
+
+			var w = self.onglet.render.find(".preview").width(),
+				h = self.onglet.render.find(".preview").height();
+		
+			var maxBorder= (properties["strocke-width"]==null)?15:Math.min(Math.min(w,h)/3,Math.max(properties["strocke-width"]/2+5,15));
+			
+			
+			var w=170,h=170;
+			
+			var smoothRect=function(ctx,w,h,r){
+				var r=Math.min(r,Math.min(w,h)/2);
+				ctx.moveTo(r,0);
+				ctx.lineTo(w-r,0);
+				ctx.quadraticCurveTo(w,0,w,r);
+				ctx.lineTo(w,h-r);
+				ctx.quadraticCurveTo(w,h,w-r,h);
+				ctx.lineTo(r,h);
+				ctx.quadraticCurveTo(0,h,0,h-r);
+				ctx.lineTo(0,r);
+				ctx.quadraticCurveTo(0,0,r,0);
+			};
+			
+			
+			var ctx = self.onglet.render.find("canvas").attr("width",w).attr("height",h).css({"width":w , "height":h})[0].getContext("2d");
+			ctx.clearRect(0,0,w,h);
+			
+			ctx.save();
+			
+			var pas=16;
+			for(var x=0;x<Math.ceil(w/pas);x++)
+			for(var y=0;y<Math.ceil(h/pas);y++){
+				ctx.beginPath();
+				ctx.rect(x*pas,y*pas,(x+1)*pas,(y+1)*pas);
+				ctx.fillStyle=(((x+y)%2==0)?"#cfcfcf":"#dddddd");
+				ctx.fill();
+			}
+			
+			ctx.save();
+			ctx.translate(maxBorder,maxBorder);
+			ctx.beginPath();
+			smoothRect(ctx,w-maxBorder*2,h-maxBorder*2,25);
+			ctx.clip();
+			
+			
+			if( properties["fill-color"]!=null ){
+				ctx.beginPath();
+				ctx.rect(0,0,w,h);
+				ctx.fillStyle=properties["fill-color"];
+				ctx.globalAlpha=properties["fill-opacity"]||1;
+				ctx.fill();
+			}
+			
+			ctx.restore();
+			
+			if( properties["strocke-color"]!=null ){
+				ctx.translate(maxBorder,maxBorder);
+				ctx.beginPath();
+				smoothRect(ctx,w-maxBorder*2,h-maxBorder*2,25);
+				ctx.strokeStyle=properties["strocke-color"];
+				ctx.globalAlpha=properties["strocke-opacity"]||1;
+				ctx.lineWidth=properties["strocke-width"]||1;
+				ctx.lineCap = 'round';
+				ctx.stroke();
+			}
+			
+			ctx.restore();
+		};
+		
+		
+		if( UIState.declaration == null )
+			return;
+			
+		drawCanvas( UIState.declaration.props );
+		
+		if( this._changeAlreadyDone ){
+			this._changeAlreadyDone = false;
+			return;
+		}
+		
+		var properties = UIState.declaration.props;
+		
+		
+		
+		var cloneDeclaration=function(dec){
+			//dirty
+			return mCSS.semanticBuild(mCSS.parse(mCSS.declarationsToString([dec])))[0];
+		};
+		var setDeclaration=function(dec){
+			self._changeAlreadyDone=true;
+			cmd.mgr.execute( cmd.alterCSSDeclaration.create( dec , UIState.declaration ));
+		};
+		
+		
+		
+		var createFlexibleBox=function(name){
+			var box=$('<div class="box">');
+			var label=$('<span>'+name+'</span>');
+			var bn=$('<span>#</span>');
+			var head=$('<span></span>');
+			
+			label.appendTo(head);
+			bn.appendTo(head);
+			
+			var contenu=$('<div class="contenu hidden"></div>');
+			
+			head.appendTo(box);
+			contenu.appendTo(box);
+			
+			bn.bind("click",function(){
+				if(contenu.hasClass("visible"))
+					contenu.removeClass("visible").addClass("hidden");
+				else
+					contenu.addClass("visible").removeClass("hidden");
+			});
+			
+			return box;
+		};
+		var createRangeProp=function(name,propName,f,f_){
+			var ex=properties[propName];
+			if(f)
+				ex=f_(ex);
+			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><input max="1000" class="property-value" type="range"></input></td></tr>');
+			var down = false;
+			var goEdit=function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				var v=prop.find("input.property-value").val()/1000;
+				if(f)
+					v=f(v);
+				nDec.props[propName]=v;
+				setDeclaration( nDec );
+				$("body").unbind("mouseup",goEdit);
+				down=false;
+			};
+			prop.find("input.property-value").val(ex*1000);
+			prop.find("input.property-value").bind("change",function(e){
+				if(down==false){
+					down=true;
+					$("body").bind("mouseup",goEdit);
+				}
+			});
+			
+			return prop;
+		}
+		var createColorProp=function(name,propName){
+			var ex=properties[propName];
+			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="width:100px;height:30px;background-color:'+ex+';"></div></td></tr>');
+			var down = false;
+			prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
+				"onSubmit":function(hsb, hex, rgb, el){
+					var nDec=cloneDeclaration(UIState.declaration);
+					nDec.props[propName]="#"+hex;
+					setDeclaration( nDec );
+				},
+				"onChange":function(hsb, hex, rgb, el){
+					prop.find("div.property-value").css({"background-color":"#"+hex});
+				},
+			});
+			var goEdit=function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props[propName]=prop.find("input.property-value").val()/1000;
+				setDeclaration( nDec );
+				$("body").unbind("mouseup",goEdit);
+				down=false;
+			};
+			
+			prop.find("input.property-value").bind("change",function(e){
+				if(down==false){
+					down=true;
+					$("body").bind("mouseup",goEdit);
+				}
+			});
+			
+			return prop;
+		}
+		
+		
+		
+		var p = $(this.onglet.render.children("div")[1]);
+		p.children().remove();
+		if( properties["fill-color"] || properties["fill-opacity"] ){
+			
+			var box=createFlexibleBox("fill");
+			var contenu=box.find(".contenu");
+			var table=$("<table>").appendTo(contenu);
+			createRangeProp("opacity","fill-opacity").appendTo(table);
+			createColorProp("color","fill-color").appendTo(table);
+			
+			box.appendTo(p);
+		}
+		if( properties["strocke-color"] || properties["strocke-opacity"] || properties["strocke-width"] ){
+			
+			var box=createFlexibleBox("strocke");
+			var contenu=box.find(".contenu");
+			var table=$("<table>").appendTo(contenu);
+			createRangeProp("opacity","strocke-opacity").appendTo(table);
+			createColorProp("color","strocke-color").appendTo(table);
+			createRangeProp("width","strocke-width",function(x){return 30*x*x;},function(x){return Math.sqrt(x/30);}).appendTo(table);
+			
+			box.appendTo(p);
+		}
+		
+	},
 	initInteraction : function(){
 		var self = this;
+		var uistate=UIState;
 		(function(scope){
-			var setProperties=function(){
-			
-			
+			var setDeclaration=function(){
+				self.update();
 			};
-			var listen = function(){
-			
-			
-			},
+			var listen = function(unable){
+				uistate.removeListener( "set-declaration" , this );
+				if(unable){
+					uistate.registerListener( "set-declaration" ,{o:this,f:setDeclaration} );
+					self.update();
+				}
+			};
 			scope.listen=listen;
-		})();
+		})(this);
 	
 	},
+});
+PropertyEditor.create=function(){
+	var a = new PropertyEditor();
+	a.init();
+	return a;
 };
+
 function PropertyStack(){};
 extend( PropertyStack , AbstractComponent.prototype );
 extend( PropertyStack , {
 	el:null,
 	commonElement:null,
 	styleChain:null,
+	_editable:false,
 	init : function(){
 		
 		var w = 500, h = 500;
@@ -1378,6 +1628,7 @@ extend( PropertyStack , {
 					var common = computeCommonElement();
 					
 					// is the new commonElement different?
+					// TODO specified the diffrence check
 					var equal=false;
 					/*
 					for(var i in common )
@@ -1404,20 +1655,84 @@ extend( PropertyStack , {
 							els[j].registerListener("set-attribute",{o:this,f:computeAndUpdate});
 					
 					computeAndUpdate();
+					UIState.setDeclaration(null);
+				};
+				var changeDeclaration=function(){
+					this.el.find(".css-declaration").each(function(){
+						var e=$(this);
+						if( e.data("structure") == uistate.declaration )
+							e.addClass("selected");
+						else
+							e.removeClass("selected");
+					});
+					
 				};
 				var listen=function(enable){
-					mCSS.removeListener(this);
+					mCSS.removeListener("set-css",this);
 					if( els != null )
 						for(var j=0;j<els.length;j++)
 							els[j].removeListener( this );
 					uistate.removeListener( "select-element" , this );
+					uistate.registerListener( "set-declaration", this );
 					if(enable){
 						uistate.registerListener( "select-element" , {o:this,f:changeElement} );
 						changeElement();
 						mCSS.registerListener("set-css",{o:this,f:computeAndUpdate});
+						uistate.registerListener( "set-declaration",{o:this,f:changeDeclaration} );
 					}
+					return self;
 				}
+			
+			
+			
+			var propertyEditor=null;
+			var displayEditorPanel=function(){
+				var dec = uistate.declaration;
+				
+				if(dec==null){
+					propertyEditor.getElement().css({"display" : "none","top":"0px"});
+					return;
+				}
+				propertyEditor.getElement().css({"display" : "block"});
+				self.el.find(".css-declaration").each(function(){
+					var e=$(this);
+					if( e.data("structure") == uistate.declaration ){
+						var y = e.position().top-25;
+						var x= self.el.position().left+self.el.width()/1.2;
+						propertyEditor.getElement().css({"top":y+"px" , "left":x+"px"});
+					}
+				});
+			}
+
+			var easyEditable=function(enable){
+				uistate.removeListener("set-declaration",{o:this,f:displayEditorPanel});
+				
+				if( enable){
+					uistate.registerListener("set-declaration",{o:this,f:displayEditorPanel});
+					if( !propertyEditor )
+						propertyEditor = PropertyEditor.create();
+					propertyEditor.getElement().appendTo( self.el );
+					propertyEditor.listen(true);
+					displayEditorPanel();
+				} else 
+					if( propertyEditor ){
+						propertyEditor.getElement().detach();
+						propertyEditor.listen(false);
+					}
+				return self;
+			};
+			
+			var editable=function(enable){
+				if( enable != self._editable ){
+					self._editable = enable;
+					self.update();
+				}
+				return self;
+			};
+			
 			scope.listen=listen;
+			scope.editable=editable;
+			scope.easyEditable=easyEditable;
 		})( this );
 	},
 	update:function(){
@@ -1429,6 +1744,8 @@ extend( PropertyStack , {
 			var decl=mCSS.declarationsToXML([this.styleChain[i].origin]).children(".css-declaration");
 			decl.data("structure",this.styleChain[i].origin).appendTo(ps);
 			$('<span class="css-property"><span class="css-property-name">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span></span>').appendTo(decl.children(".css-properties"));
+			if( this.styleChain[i].origin == UIState.declaration )
+				decl.addClass("selected");
 		}
 		//TODO add blank lines
 		
@@ -1494,7 +1811,7 @@ extend( PropertyStack , {
 						}else
 							self.update();
 					else{
-						var newDeclaration=target.parents(".css-declaration").text();
+						var newDeclaration=target.parents(".css-declaration").text().replace( new RegExp( "\xA0" , "g" ) , "" );
 						cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
 					}
 				};
@@ -1506,15 +1823,24 @@ extend( PropertyStack , {
 					}
 					complete();
 				};
-				input=$('<input list="class-option-stack" type="text" style="min-width:20px;" value="'+(plus?'':exText)+'" ></input>').insertBefore(target).bind("change",accepte);
+				input=$('<input list="class-option-stack" type="text" style="min-width:20px;" value="'+(plus?'':exText)+'" ></input>').insertBefore(target).bind("focusout",accepte).focus();
 				input.bind("keyup",keyupHandler);
 				dataList.insertBefore(target);
 				target.remove();
 			})();
 		};
-		ps.find(".css-properties").find(".css-property-name,.css-property-value").bind("click",displayDataList);
+		
+		if( this._editable )
+			ps.find(".css-properties").find(".css-property-name,.css-property-value").bind("click",displayDataList);
+		ps.find(".css-declaration").bind("click",function( e ){
+			var dec = $(e.target).hasClass("css-declaration")?$(e.target).data("structure"):$(e.target).parents(".css-declaration").data("structure");
+			if( dec == null || dec == UIState.declaration )
+				return;
+			UIState.setDeclaration( dec );
+		});
 	},
-	
+	easyEditable:function(enable){return this;},
+	editable:function(enable){return this;},
 });
 PropertyStack.create=function(){
 	var a = new PropertyStack();
@@ -1635,6 +1961,7 @@ scope.EditablePathParam = EditablePathParam;
 scope.EditionToolBar = EditionToolBar;
 scope.AttributeMgr = AttributeMgr;
 scope.PropertyStack = PropertyStack;
+scope.PropertyEditor = PropertyEditor;
 
 })( this );
 

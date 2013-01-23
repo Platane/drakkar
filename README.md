@@ -1,4 +1,4 @@
 Drakkar
 =================
 
-Drakkar is a smart historical map editor. 
+Drakkar is a smart historical map editor. WIP

@@ -221,26 +221,3 @@ li.selected{
 	padding-left:0.1em;
 	padding-right:0.1em;
 }
-
-
-.css-declaration span{
-	margin-left:0.1em;
-	margin-right:0.1em;
-	padding-left:0.2em;
-	padding-right:0.2em;
-}
-.css-declaration span.css-condition{
-	margin:0;
-	padding:0;
-}
-span.css-property {
-	display:block;
-	color:#555;
-}
-.css-selector {
-	display:block;
-}
-.css-declaration {
-	display:block;
-	margin:20px;
-}

@@ -314,6 +314,7 @@ var mCSS = mCSS || {};
 	scope.declarationsToXML = declarationsToXML;
 	scope.declarationsToString = declarationsToString;
 	
+	scope.getDeclarations = function(){ return declarations; };
 })( mCSS );
 
 /**  @class Element that know how to compute the style chain to apply render effect.

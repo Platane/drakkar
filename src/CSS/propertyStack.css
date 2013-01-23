@@ -1,0 +1,55 @@
+
+#property-stack{
+	background-image:url("/ressources/ricepaper.png");
+}
+
+.css-declaration{
+	border-radius:10px;
+	padding:10px;
+	background-color:#ddd;
+	color:#52451B;
+}
+
+.css-declaration.selected{
+	background-color:#aaa;
+}
+
+.css-condition{
+	font-family:Consolas;
+}
+
+.css-condition.css-tag{
+	color:#89D93F;
+}
+.css-condition.css-class{
+	color:#528226
+}
+.css-property-value{
+	color:#319148
+}
+.css-property-name{
+	color:#8EF230
+}
+
+
+
+.css-declaration span{
+	margin-left:0.1em;
+	margin-right:0.1em;
+	padding-left:0.2em;
+	padding-right:0.2em;
+}
+.css-declaration span.css-condition{
+	margin:0;
+	padding:0;
+}
+span.css-property {
+	display:block;
+}
+.css-selector {
+	display:block;
+}
+.css-declaration {
+	display:block;
+	margin:20px;
+}
