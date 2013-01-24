@@ -771,6 +771,100 @@ CmdAlterCSSDeclaration.create = function( newDec , exDec , update ){
 	return c;
 };
 
+
+var CmdAddCSSDeclaration = function(){};
+extend( CmdAddCSSDeclaration , AbstractCmd.prototype );
+extend( CmdAddCSSDeclaration , {	
+	_newDec : null,
+	_update : null,
+	init : function( newDec , update ){
+		
+		if( typeof(newDec)=="string")
+			this._newDec = mCSS.semanticBuild(mCSS.parse(newDec))[0];
+		else		
+			this._newDec = newDec;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		mCSS.addDeclaration( this._newDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		mCSS.removeDeclaration( this._newDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdAddCSSDeclaration.create = function( newDec , update ){
+	var c = new CmdAddCSSDeclaration();
+	c.init( newDec , update );
+	return c;
+};
+
+var CmdRemoveCSSDeclaration = function(){};
+extend( CmdRemoveCSSDeclaration , AbstractCmd.prototype );
+extend( CmdRemoveCSSDeclaration , {	
+	_newDec : null,
+	_update : null,
+	init : function( newDec , update ){
+		
+		if( typeof(newDec)=="string")
+			this._newDec = mCSS.semanticBuild(mCSS.parse(newDec))[0];
+		else		
+			this._newDec = newDec;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		mCSS.removeDeclaration( this._newDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		mCSS.addDeclaration( this._newDec );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdRemoveCSSDeclaration.create = function( newDec , update ){
+	var c = new CmdRemoveCSSDeclaration();
+	c.init( newDec , update );
+	return c;
+};
+
+
 CmdModifyClass={};
 CmdModifyClass.create = function( element , claEx , claNew , update ){
 	return CmdMultiple.create( 
@@ -843,6 +937,8 @@ scope.modifyClass = CmdModifyClass;
 scope.addClass = CmdAddClass;
 scope.removeClass = CmdRemoveClass;
 scope.alterCSSDeclaration = CmdAlterCSSDeclaration;
+scope.removeCSSDeclaration = CmdRemoveCSSDeclaration;
+scope.addCSSDeclaration = CmdAddCSSDeclaration;
 scope.mgr = CmdMgr.create();
 
 

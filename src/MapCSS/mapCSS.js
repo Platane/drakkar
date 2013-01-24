@@ -211,7 +211,7 @@ var mCSS = mCSS || {};
 		if( declarations )
 			for( var i = 0 ; i < declarations.length ; i ++ )
 				for( var j = 0 ; j < declarations[ i ].selectors.length ; j ++ ) 
-					if( isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
+					if( element == null || isConcernBy( element , declarations[ i ].selectors[ j ] ) ){
 						styleChain.push({ dynCondition:null , priority : priorite( declarations[ i ].selectors[ j ] ) , props : declarations[ i ].props , origin:declarations[ i ]});
 						break;
 					}
@@ -227,6 +227,18 @@ var mCSS = mCSS || {};
 		for(var i=0;i<declarations.length;i++)
 			if( declarations[i]==exDec )
 				declarations[i]=newDec;
+		notifier.notify("set-css");
+	};
+	var addDeclaration=function( newDec ){
+		if( typeof(newDec) == "string")
+			newDec=semanticBuild(parse(newDec))[0];
+		declarations.push(newDec)
+		notifier.notify("set-css");
+	};
+	var removeDeclaration=function( dec ){
+		for(var i=0;i<declarations.length;i++)
+			if( declarations[i]==dec )
+				declarations.splice(i,1);
 		notifier.notify("set-css");
 	};
 	
@@ -307,6 +319,8 @@ var mCSS = mCSS || {};
 	scope.computeChain = computeChain;
 	
 	scope.alterDeclaration=alterDeclaration;
+	scope.addDeclaration=addDeclaration;
+	scope.removeDeclaration=removeDeclaration;
 	
 	scope.removeListener=function(){notifier.removeListener.apply(notifier,arguments);};
 	scope.registerListener=function(){notifier.registerListener.apply(notifier,arguments);};

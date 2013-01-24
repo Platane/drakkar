@@ -7,13 +7,13 @@
 	*/
 }
 
-#property-editor .contenu.hidden{
+.contenu.hidden{
 	height:0px;
 	overflow-y:hidden;
 	
 	-webkit-transition: height 1s ease;
 }
-#property-editor .contenu.visible{
+.contenu.visible{
 	height:auto;
 	overflow-y:hidden;
 	

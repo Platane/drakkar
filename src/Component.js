@@ -1305,7 +1305,11 @@ extend( PropertyEditor , {
 		var onglet_render = $("<div>");
 		
 		$("<div>").addClass("preview").css({"border-radius":"10px" , "min-width":"120px" , "min-height":"120px" , "max-width":"200px" , "max-height":"200px" }).appendTo( onglet_render );
-		$("<div>").appendTo( onglet_render );
+		var toolBox=$("<div></div>").addClass("tool-box").appendTo( onglet_render );
+		$("<div></div>").wrapInner("stroke").addClass("btn icon-btn").attr("data-action" , "stroke" ).appendTo(toolBox);
+		$("<div></div>").wrapInner("fill").addClass("btn icon-btn").attr("data-action" , "fill" ).appendTo(toolBox);
+		$("<div></div>").wrapInner("nothing").addClass("btn icon-btn").attr("data-action" , "" ).appendTo(toolBox);
+		$("<div></div>").appendTo( onglet_render );
 		$("<canvas>").appendTo( onglet_render.find(".preview") );
 		
 		var onglet_action = $("<div>");
@@ -1518,7 +1522,7 @@ extend( PropertyEditor , {
 		
 		
 		
-		var p = $(this.onglet.render.children("div")[1]);
+		var p = $(this.onglet.render.children("div")[2]);
 		p.children().remove();
 		if( properties["fill-color"] || properties["fill-opacity"] ){
 			
@@ -1529,7 +1533,14 @@ extend( PropertyEditor , {
 			createColorProp("color","fill-color").appendTo(table);
 			
 			box.appendTo(p);
-		}
+			
+			this.el.find(".btn[data-action=fill]").css({"display":"none"});
+		}else
+			this.el.find(".btn[data-action=fill]").css({"display":"block"}).bind("click",function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props["fill-color"]="#ffffff";
+				setDeclaration( nDec );
+			});
 		if( properties["strocke-color"] || properties["strocke-opacity"] || properties["strocke-width"] ){
 			
 			var box=createFlexibleBox("strocke");
@@ -1540,7 +1551,14 @@ extend( PropertyEditor , {
 			createRangeProp("width","strocke-width",function(x){return 30*x*x;},function(x){return Math.sqrt(x/30);}).appendTo(table);
 			
 			box.appendTo(p);
-		}
+		
+			this.el.find(".btn[data-action=stroke]").css({"display":"none"});
+		}else
+			this.el.find(".btn[data-action=stroke]").css({"display":"block"}).bind("click",function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props["strocke-color"]="#ffffff";
+				setDeclaration( nDec );
+			});
 		
 	},
 	initInteraction : function(){
@@ -1568,18 +1586,195 @@ PropertyEditor.create=function(){
 	return a;
 };
 
+
+var SmartTextInput=function(){}
+SmartTextInput.uid=0;
+SmartTextInput.prototype={
+	el:null,
+	init:function(_accepte,_complete){
+		var sp=$('<span></span>');
+		
+		var edit=function(e){
+			var target=$(e.target);
+			var exText = target.text().trim();
+			var empty = exText==""||exText=="+";
+			var dataList=null;
+			var input=null;
+			
+			var complete=function(){
+				var value=input.val();
+				var options
+				if( !_complete )
+					return;
+				options=_complete.f.call( _complete.o , value , target );
+				if( !dataList )
+					return;
+				dataList.children().remove();
+				if( !options||options.length == 0)
+					return;
+				for( var i=0;i<options.length;i++)
+					$('<option>').wrapInner(options[i]).appendTo(dataList);
+			};
+			var accepte=function(){
+					
+					var value=input.val();
+					
+					
+					input.unbind("keyup",keyupHandler);
+					if( _accepte )
+						value = _accepte.f.call( _accepte.o , exText , value , target );
+						
+					target.empty();
+					if( value != null ){
+						target.wrapInner(value);
+						target.insertBefore(input);
+					}
+					input.remove();
+					if( dataList )
+						dataList.remove();
+					
+			};
+			var keyupHandler =function(e){
+				if(event.which==13){
+					event.preventDefault();
+					accepte();
+					return;
+				}
+				complete();
+			};
+			input=$('<input type="text" style="min-width:20px;" value="'+(empty?'':exText)+'" ></input>').insertBefore(target).bind("focusout",accepte).focus();
+			if( _complete != null ){
+					var id="dataList"+(SmartTextInput.uid++)
+					dataList=$('<datalist ></datalist>').attr("id",id).insertBefore(target);
+					input.attr("list",id);
+			}
+			input.bind("keyup",keyupHandler);
+			target.detach();
+		};
+		
+		sp.bind("click",edit);
+		this.el=sp;
+	},
+}
+SmartTextInput.create=function( accepte , complete ){
+	var a=new SmartTextInput();
+	var accepte=(!accepte||accepte.f)?accepte:{f:accepte,o:this};
+	var complete=(!complete||complete.f)?complete:{f:complete,o:this};
+	a.init(accepte,complete);
+	return a.el;
+};
+
 function PropertyStack(){};
 extend( PropertyStack , AbstractComponent.prototype );
 extend( PropertyStack , {
 	el:null,
 	commonElement:null,
-	styleChain:null,
+	styleChain:null,		// displayed styleChain
+	styleChainCommon:null,	// styleChain of the common element, only use in full mode
 	_editable:false,
+	_full:false,
 	init : function(){
 		
 		var w = 500, h = 500;
 		
 		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		
+		var self=this;
+		
+		var tb=$("<div>").addClass("tool-box").appendTo(el);
+		$('<input type="checkbox" checked="checked"></input><span>display all</span>').appendTo(tb).bind("change",function(e){
+			self.full( $(e.target).is(':checked') );
+		});
+		$('<input type="checkbox" checked="checked"></input><span>easy edit</span>').appendTo(tb).bind("change",function(e){
+			self.easyEditable( $(e.target).is(':checked') );
+		});
+		
+		var contenu=$('<div class="contenu hidden"></div>');
+		var bnDeploy=$('<div class="btn">add declaration</div>').appendTo(tb).bind("click",function(e){
+			if(contenu.hasClass("visible")){
+				contenu.removeClass("visible").addClass("hidden");
+				bnDeploy.empty().wrapInner("add declaration");
+			}else{
+				contenu.addClass("visible").removeClass("hidden");
+				bnDeploy.empty().wrapInner("hidde");
+				go();
+			}
+		});
+		contenu.appendTo(tb);
+		
+		// add declaration
+		var self=this;
+		var go=(function(){
+			
+			var hint=$("<span>selector generated from selection : </span>");
+			
+			var cond=function(s){
+				if(s[0]=="#")
+					return "css-id";
+				if(s[0]==".")
+					return "css-class";
+				return "css-tag";
+			}
+			var accepte=function(ex,ne,el){
+				el.removeClass( cond(ex) ).addClass( cond(ne) );
+				
+				if( ne=="")
+					return null;
+					
+				if( ex=="" || ex=="+" )
+					SmartTextInput.create(accepte,complete).wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").appendTo(contenu.find(".css-selector"));
+				
+				return ne;
+			};
+			var complete=function(v,el){
+					
+					
+			};
+			
+			var computeCommonSelector=function(){
+				var sp=$('<span>').addClass("css-selector");
+				if( self.commonElement ){	
+					if( self.commonElement.type )
+						SmartTextInput.create(accepte,complete).wrapInner(self.commonElement.type).addClass("css-condition").addClass("css-tag").appendTo(sp);
+					if( self.commonElement.id )
+						SmartTextInput.create(accepte,complete).wrapInner("#"+self.commonElement.id).addClass("css-condition").addClass("css-id").appendTo(sp);
+					for( var i in self.commonElement._classes )
+						SmartTextInput.create(accepte,complete).wrapInner("."+i).addClass("css-condition").addClass("css-class").appendTo(sp);
+				}
+				SmartTextInput.create(accepte,complete).wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").appendTo(sp);
+				return sp;
+			}
+			
+			var addToCSS=function(){
+				var selector=contenu.find(".css-selector");
+				var tags=selector.children("css-tag");
+				if( tags.length>1)
+					hintDisplayer("only one tag per selector");
+				for(var i=1;i<tags.length;i++)
+					$(tags[i]).remove();
+				selector.children("css-tag").detach().prependTo(selector);
+				
+				var last=selector.children(":last");
+				if( last.text().trim() == "+" )
+					last.remove();
+				
+				var decl=selector.text()+"{}";
+				
+				cmd.mgr.execute( cmd.addCSSDeclaration.create( decl) );
+				bnDeploy.empty().wrapInner("add declaration");
+				contenu.removeClass("visible").addClass("hidden");
+			}
+			
+			return compute=function(){
+				contenu.children().remove();
+				hint.appendTo(contenu);
+				computeCommonSelector().appendTo(contenu);
+				$('<div class="btn">Ok</div>').appendTo(contenu).bind("click",addToCSS);
+			}
+			
+		})();
+		//$("<span>generated from selection:</span>")
+		
 		
 		$("<div>").attr("id","property-stack").appendTo(el);
 		
@@ -1595,9 +1790,6 @@ extend( PropertyStack , {
 		var els=null;
 		// listen
 		(function( scope ){
-			
-			
-				
 				var computeCommonElement=function(){
 					var common=new AbstractAttributeHolder();
 					common._classes={};
@@ -1730,7 +1922,75 @@ extend( PropertyStack , {
 				return self;
 			};
 			
+			var computeAndUpdateFull=function(){
+					var common = computeCommonElement();
+					
+					// is the new commonElement different?
+					// TODO specified the diffrence check
+					var equal=false;
+					/*
+					for(var i in common )
+						if( !self.commonElement[i] )
+							equal=false;
+					for(var i in self.commonElement )
+						if( !common[i] )
+							equal=false;
+					*/
+					//if so update
+					if( !equal ){
+						self.commonElement=common;
+						self.styleChainCommon=mCSS.computeChain(self.commonElement);
+						self.enlightCommon();
+						displayEditorPanel();
+					}
+				};
+			var changeElementFull=function(){
+					if( els != null )
+						for(var j=0;j<els.length;j++)
+							els[j].removeListener( this );
+					els=uistate.elements;
+					if( els != null && els.length>0)
+						for(var j=0;j<els.length;j++)
+							els[j].registerListener("set-attribute",{o:this,f:computeAndUpdateFull});
+					
+					computeAndUpdateFull();
+				};
+			var computeFull=function(){
+				self.styleChain=mCSS.computeChain();
+				var i=self.styleChain.length;
+				while(i--){
+					var j=self.styleChain[i].origin.selectors[0].length;
+					while(j--)
+						if( self.styleChain[i].origin.selectors[0][j].class && self.styleChain[i].origin.selectors[0][j].class.substr(0,9) == "reserved-" ){
+							self.styleChain.splice(i,1);
+							break;
+						}
+				}
+				self.update();
+			}
+			
+			var full=function(enable){
+				self._full=enable;
+				uistate.removeListener( "select-element" , this );
+				mCSS.removeListener("set-css",this );
+				if( els != null )
+					for(var j=0;j<els.length;j++)
+						els[j].removeListener( this );
+				if( enable ){
+					mCSS.registerListener("set-css",{o:this,f:computeFull});
+					uistate.registerListener( "select-element" , {o:this,f:changeElementFull} );
+					changeElementFull();
+					computeFull();
+				}else{
+					uistate.registerListener( "select-element" , {o:this,f:changeElement} );
+					changeElement();
+					mCSS.registerListener("set-css",{o:this,f:computeAndUpdate});
+				}
+				return self;
+			}
+			
 			scope.listen=listen;
+			scope.full=full;
 			scope.editable=editable;
 			scope.easyEditable=easyEditable;
 		})( this );
@@ -1747,6 +2007,7 @@ extend( PropertyStack , {
 			if( this.styleChain[i].origin == UIState.declaration )
 				decl.addClass("selected");
 		}
+		this.enlightCommon();
 		//TODO add blank lines
 		
 		
@@ -1839,8 +2100,28 @@ extend( PropertyStack , {
 			UIState.setDeclaration( dec );
 		});
 	},
+	enlightCommon:function(){
+		if( !this._full )
+			return;
+		var set=this.el.find(".css-declaration").addClass("secondaire");
+		if( !this.styleChainCommon || this.styleChainCommon.length == 0 )
+			return;
+		for(var i=0;i<this.styleChainCommon.length;i++){
+			var j=set.length;
+			while(j--){
+				var e=$(set[j]);
+				if( e.data("structure") == this.styleChainCommon[i].origin ){
+					e.removeClass("secondaire");
+						var p=e.parent();
+						e.detach();
+						e.prependTo(p);
+					}
+			}
+		}
+	},
 	easyEditable:function(enable){return this;},
 	editable:function(enable){return this;},
+	full:function(enable){return this;},
 });
 PropertyStack.create=function(){
 	var a = new PropertyStack();
@@ -1963,6 +2244,8 @@ scope.AttributeMgr = AttributeMgr;
 scope.PropertyStack = PropertyStack;
 scope.PropertyEditor = PropertyEditor;
 
+
+scope.SmartTextInput = SmartTextInput;
 })( this );
 
 //window.onload = function(){ init(); }

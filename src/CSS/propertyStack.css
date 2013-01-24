@@ -10,9 +10,15 @@
 	color:#52451B;
 }
 
+.css-declaration.secondaire{
+	opacity:0.7;
+}
+
 .css-declaration.selected{
 	background-color:#aaa;
 }
+
+
 
 .css-condition{
 	font-family:Consolas;
