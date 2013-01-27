@@ -304,7 +304,7 @@ a img { border: 0; }
 .w33    { width: 33.333%; }
 .w40    { width: 40%; }
 .w50    { width: 50%; }
-.w60    { width: 60%; }
+.w60    { width: 100%; }
 .w66    { width: 66.666%; }
 .w70    { width: 70%; }
 .w75    { width: 75%; }

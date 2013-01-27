@@ -272,7 +272,7 @@ extend( UIMap , {
 	uiDataMap : null,
 	init : function( model ){
 		
-		var w = 500, h = 500;
+		var w = "90%", h = "100%";
 		
 		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
 		
