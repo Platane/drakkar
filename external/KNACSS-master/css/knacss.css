@@ -297,6 +297,7 @@ a img { border: 0; }
 }
 
 /* blocks widths (percentage and pixels) */
+.w5 {width : 6%;}
 .w10    { width: 10%; }
 .w20    { width: 20%; }
 .w25    { width: 25%; }
