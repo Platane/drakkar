@@ -272,9 +272,9 @@ extend( UIMap , {
 	uiDataMap : null,
 	init : function( model ){
 		
-		var w = "90%", h = "100%";
+		var w = "70%", h = "100%", m = "6%";
 		
-		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).attr("margin-left" , m).css( { "width": w , "height": h , "margin-left" : m } ).appendTo( $("body") );
 		
 		var uiDataMap = LeafletMap.create( model , el[0] );
 		uiDataMap.lfe.fitWorld();
@@ -302,7 +302,7 @@ extend( UIMap , {
 		
 		var self = this;
 		
-		var sup = $("<div>").css( { "width": w , "height": h , "position" : "absolute" , "display" : "none"  } ).attr( "id" , "mapToolPanel" ).appendTo( map );
+		var sup = $("<div>").css( { "width": w , "height": h , "position" : "absolute" , "display" : "none" } ).attr( "id" , "mapToolPanel" ).appendTo( map );
 		
 		// pathTracable
 		(function( scope ){
@@ -1295,7 +1295,7 @@ extend( PropertyEditor , {
 	_changeAlreadyDone:false,
 	init : function(){
 		
-		var w = 500, h = 500;
+		var w = "25%", h = "60%";
 		
 		var el = $("<div>").attr("id","property-editor").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
 		
