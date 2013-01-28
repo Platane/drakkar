@@ -20,6 +20,15 @@
 	-webkit-transition: height 1s ease;
 }
 
+.tool-box table{
+
+
+}
+
+.tool-box table td {
+	border:none;
+}
+
 #property-editor .property input[type=range]{
 	width:100px;
 }

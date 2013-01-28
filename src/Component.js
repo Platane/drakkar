@@ -1466,7 +1466,7 @@ extend( PropertyEditor , {
 			var ex=properties[propName];
 			if(f)
 				ex=f_(ex);
-			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><input max="1000" class="property-value" type="range"></input></td></tr>');
+			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><input max="1000" class="property-value" type="range"></input></td></tr>');
 			var down = false;
 			var goEdit=function(){
 				var nDec=cloneDeclaration(UIState.declaration);
@@ -1478,21 +1478,37 @@ extend( PropertyEditor , {
 				$("body").unbind("mouseup",goEdit);
 				down=false;
 			};
-			prop.find("input.property-value").val(ex*1000);
-			prop.find("input.property-value").bind("change",function(e){
+			var range = prop.find("input.property-value").val(ex*1000);
+			range.bind("change",function(e){
 				if(down==false){
 					down=true;
 					$("body").bind("mouseup",goEdit);
 				}
 			});
+			var inherit=$('<span>').wrapInner("inherit");
+			var checkBox=prop.find("input[type=checkbox]");
+			checkBox.bind("change",function(e){
+				if(!checkBox.is(":checked")){
+					inherit.insertBefore( range );
+					range.detach();
+					prop.find("span.property-name").addClass("unuse");
+				}else{
+					range.insertBefore( inherit );
+					inherit.detach();
+					prop.find("span.property-name").removeClass("unuse");
+				}
+			});
+			
+			checkBox.attr('checked', properties[propName]!=null );
+			checkBox.change();
 			
 			return prop;
 		}
 		var createColorProp=function(name,propName){
 			var ex=properties[propName];
-			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="width:100px;height:30px;background-color:'+ex+';"></div></td></tr>');
+			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="width:100px;height:30px;background-color:'+ex+';"></div></td></tr>');
 			var down = false;
-			prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
+			var colorPicker=prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
 				"onSubmit":function(hsb, hex, rgb, el){
 					var nDec=cloneDeclaration(UIState.declaration);
 					nDec.props[propName]="#"+hex;
@@ -1502,6 +1518,19 @@ extend( PropertyEditor , {
 					prop.find("div.property-value").css({"background-color":"#"+hex});
 				},
 			});
+			var inherit=$('<span>').wrapInner("inherit");
+			var checkBox=prop.find("input[type=checkbox]");
+			checkBox.bind("change",function(e){
+				if(!checkBox.is(":checked")){
+					inherit.insertBefore( colorPicker );
+					colorPicker.detach();
+					prop.find("span.property-name").addClass("unuse");
+				}else{
+					colorPicker.insertBefore( inherit );
+					inherit.detach();
+					prop.find("span.property-name").removeClass("unuse");
+				}
+			});
 			var goEdit=function(){
 				var nDec=cloneDeclaration(UIState.declaration);
 				nDec.props[propName]=prop.find("input.property-value").val()/1000;
@@ -1509,13 +1538,15 @@ extend( PropertyEditor , {
 				$("body").unbind("mouseup",goEdit);
 				down=false;
 			};
-			
 			prop.find("input.property-value").bind("change",function(e){
 				if(down==false){
 					down=true;
 					$("body").bind("mouseup",goEdit);
 				}
 			});
+			
+			checkBox.attr('checked', properties[propName]!=null );
+			checkBox.change();
 			
 			return prop;
 		}
@@ -1773,7 +1804,6 @@ extend( PropertyStack , {
 			}
 			
 		})();
-		//$("<span>generated from selection:</span>")
 		
 		
 		$("<div>").attr("id","property-stack").appendTo(el);

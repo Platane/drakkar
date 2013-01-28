@@ -37,7 +37,9 @@
 	color:#8EF230
 }
 
-
+.property-name.unuse{
+	text-decoration:line-through;
+}
 
 .css-declaration span{
 	margin-left:0.1em;
