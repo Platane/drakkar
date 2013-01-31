@@ -1290,7 +1290,6 @@ TimeLine.create = function(  id ){
 function PropertyEditor(){};
 extend( PropertyEditor , AbstractComponent.prototype );
 extend( PropertyEditor , {
-	properties:null,
 	onglet:null,
 	_changeAlreadyDone:false,
 	init : function(){
@@ -1333,6 +1332,8 @@ extend( PropertyEditor , {
 				bn.appendTo( menu.children("ul") );
 				bn.click();
 			})();
+		
+		menu.find("li:first").click();
 		
 		menu.appendTo(el);
 		main.appendTo(el);
@@ -1468,12 +1469,22 @@ extend( PropertyEditor , {
 				ex=f_(ex);
 			var prop = $('<tr data-propName="'+propName+'" data-type="range"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><input max="1000" class="property-value" type="range"></input></td></tr>');
 			var down = false;
+			// valid the change the property
 			var goEdit=function(){
 				var nDec=cloneDeclaration(UIState.declaration);
 				var v=prop.find("input.property-value").val()/1000;
 				if(f)
-					v=f(v);
+					v=Math.round( f(v)*100 )/100;
 				nDec.props[propName]=v;
+				setDeclaration( nDec );
+				$("body").unbind("mouseup",goEdit);
+				down=false;
+			};
+			//enable the property
+			var unableEdit=function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props[propName]=null;
+				delete nDec.props[propName];
 				setDeclaration( nDec );
 				$("body").unbind("mouseup",goEdit);
 				down=false;
@@ -1492,10 +1503,12 @@ extend( PropertyEditor , {
 					inherit.insertBefore( range );
 					range.detach();
 					prop.find("span.property-name").addClass("unuse");
+					unableEdit();
 				}else{
 					range.insertBefore( inherit );
 					inherit.detach();
 					prop.find("span.property-name").removeClass("unuse");
+					goEdit();
 				}
 			});
 			
@@ -1507,17 +1520,28 @@ extend( PropertyEditor , {
 		var createColorProp=function(name,propName){
 			var ex=properties[propName];
 			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="width:100px;height:30px;background-color:'+ex+';"></div></td></tr>');
-			var down = false;
 			var colorPicker=prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
 				"onSubmit":function(hsb, hex, rgb, el){
-					var nDec=cloneDeclaration(UIState.declaration);
-					nDec.props[propName]="#"+hex;
-					setDeclaration( nDec );
+					goEdit();
 				},
 				"onChange":function(hsb, hex, rgb, el){
 					prop.find("div.property-value").css({"background-color":"#"+hex});
+					ex="#"+hex;
 				},
 			});
+			// valid the change the property
+			var goEdit=function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props[propName]=ex;
+				setDeclaration( nDec );
+			};
+			//enable the property
+			var unableEdit=function(){
+				var nDec=cloneDeclaration(UIState.declaration);
+				nDec.props[propName]=null;
+				delete nDec.props[propName];
+				setDeclaration( nDec );
+			};
 			var inherit=$('<span>').wrapInner("inherit");
 			var checkBox=prop.find("input[type=checkbox]");
 			checkBox.bind("change",function(e){
@@ -1525,23 +1549,12 @@ extend( PropertyEditor , {
 					inherit.insertBefore( colorPicker );
 					colorPicker.detach();
 					prop.find("span.property-name").addClass("unuse");
+					unableEdit();
 				}else{
 					colorPicker.insertBefore( inherit );
 					inherit.detach();
 					prop.find("span.property-name").removeClass("unuse");
-				}
-			});
-			var goEdit=function(){
-				var nDec=cloneDeclaration(UIState.declaration);
-				nDec.props[propName]=prop.find("input.property-value").val()/1000;
-				setDeclaration( nDec );
-				$("body").unbind("mouseup",goEdit);
-				down=false;
-			};
-			prop.find("input.property-value").bind("change",function(e){
-				if(down==false){
-					down=true;
-					$("body").bind("mouseup",goEdit);
+					goEdit()
 				}
 			});
 			
@@ -1571,6 +1584,7 @@ extend( PropertyEditor , {
 				var nDec=cloneDeclaration(UIState.declaration);
 				nDec.props["fill-color"]="#ffffff";
 				setDeclaration( nDec );
+				self.update();
 			});
 		if( properties["strocke-color"] || properties["strocke-opacity"] || properties["strocke-width"] ){
 			
@@ -1589,6 +1603,7 @@ extend( PropertyEditor , {
 				var nDec=cloneDeclaration(UIState.declaration);
 				nDec.props["strocke-color"]="#ffffff";
 				setDeclaration( nDec );
+				self.update();
 			});
 		
 	},
@@ -2102,7 +2117,10 @@ extend( PropertyStack , {
 						}else
 							self.update();
 					else{
-						var newDeclaration=target.parents(".css-declaration").text().replace( new RegExp( "\xA0" , "g" ) , "" );
+						var HTMLdec=target.parents(".css-declaration");
+						if(!value||value.trim()=="")
+							target.parents(".css-property").remove();
+						var newDeclaration=HTMLdec.text().replace( new RegExp( "\xA0" , "g" ) , "" );	//replace the &nbsp;
 						cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
 					}
 				};
@@ -2204,7 +2222,6 @@ extend( EditablePathParam , {
 		this.el.find("#addNodePathBn").removeClass( "active" );
 		this.mapUI.pathTraceable(false).pathEditable(false).pathNodeRemovable(true,element,update).pathNodeAddable(false);
 	},
-	
 	update:function(){
 	
 	},
@@ -2278,4 +2295,3 @@ scope.PropertyEditor = PropertyEditor;
 scope.SmartTextInput = SmartTextInput;
 })( this );
 
-//window.onload = function(){ init(); }

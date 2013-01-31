@@ -175,10 +175,6 @@ function init(){
 	ps.getElement().appendTo("body").css({"display":"inline-block"});
 	ps.editable(true).easyEditable(true).full(true);
 	
-	SmartTextInput.create( function(e){console.log(e);} ).wrapInner("hello").appendTo("body");
-	SmartTextInput.create( function(e){console.log(e);} ).wrapInner("hdello").appendTo("body");
-	SmartTextInput.create( function(e){console.log(e);} ).wrapInner("hdello").appendTo("body");
-	
 	//PropertyEditor.create().getElement().appendTo("body").css({"display":"inline-block"});
 	
 	/*

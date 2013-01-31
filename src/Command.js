@@ -16,7 +16,7 @@ Stack.prototype = {
 		this._tab.unshift( e );
 		
 		if( this._tab.length > this._n )
-			this._tab.splice( n , this._tab.length - this._n );
+			this._tab.splice( this._n , this._tab.length - this._n );
 	
 	},
 	pop : function( ){

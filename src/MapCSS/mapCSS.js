@@ -222,17 +222,22 @@ var mCSS = mCSS || {};
 	
 	
 	var alterDeclaration=function( exDec , newDec ){
-		if( typeof(newDec) == "string")
-			newDec=semanticBuild(parse(newDec))[0];
-		for(var i=0;i<declarations.length;i++)
-			if( declarations[i]==exDec )
-				declarations[i]=newDec;
+		try{
+			if( typeof(newDec) == "string")
+				newDec=semanticBuild(parse(newDec))[0];
+			for(var i=0;i<declarations.length;i++)
+				if( declarations[i]==exDec )
+					declarations[i]=newDec;
+		}catch(e){ console.log(e); }	//nevermind
+		
 		notifier.notify("set-css");
 	};
 	var addDeclaration=function( newDec ){
-		if( typeof(newDec) == "string")
-			newDec=semanticBuild(parse(newDec))[0];
-		declarations.push(newDec)
+		try {
+			if( typeof(newDec) == "string")
+				newDec=semanticBuild(parse(newDec))[0];
+			declarations.push(newDec);
+		}catch(e){ console.log(e); }	//nevermind
 		notifier.notify("set-css");
 	};
 	var removeDeclaration=function( dec ){
