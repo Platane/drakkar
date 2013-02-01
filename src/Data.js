@@ -154,8 +154,9 @@ extend( AbstractAttributeHolder , {
 	type : null,
 	id : null,
 	
-	init:function(classes,attributes){
+	init:function(name,classes,attributes){
 		this.stamp="obj"+(DataMap.objStamp++);
+		this.id=name||this.stamp;
 		this._attributes=attributes||{};
 		this._classes=classes||{};
 	},
@@ -211,7 +212,6 @@ extend( AbstractAttributeHolder , {
 		return c;
 	},
 });
-
 
 
 /**
@@ -397,7 +397,7 @@ extend( DataPath, {
 		return c;
 	},
 });
-DataPath.create = function( p , classes , attributes ){
+DataPath.create = function( p , name , classes , attributes ){
 	var l = new DataPath();
 	l.init.apply( l , arguments );
 	return l;

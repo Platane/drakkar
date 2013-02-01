@@ -43,6 +43,7 @@ function initMenuAction(){
 		});
 	});
 	swapFrame( "drawable" );
+	swapFrame( "search" );
 };
 
 			/*
@@ -171,9 +172,18 @@ function init(){
 	UIState.init();
 	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
 	
+	/*
 	var ps = PropertyStack.create( );
 	ps.getElement().appendTo("body").css({"display":"inline-block"});
 	ps.editable(true).easyEditable(true).full(true);
+	*/
+	
+	var organ=SearchOrgan.create();
+	organ.getElement().appendTo( $('body') );
+	organ.request();
+	
+	var ei = ElementInfo.create();
+	ei.getElement().appendTo( $('body') );
 	
 	//PropertyEditor.create().getElement().appendTo("body").css({"display":"inline-block"});
 	

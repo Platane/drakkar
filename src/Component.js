@@ -270,11 +270,17 @@ function UIMap(){};
 extend( UIMap , AbstractComponent.prototype );
 extend( UIMap , {
 	uiDataMap : null,
-	init : function( model ){
+	init : function( model , container ){
 		
-		var w = "90%", h = "100%", m = "10%";
+		var w = 500, 
+			h = 500;
 		
-		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).attr("margin-left" , m).css( { "width": w , "height": h , "margin-left" : m } ).appendTo( $("body") );
+		if(container){
+			w=container.width();
+			h=container.height();
+		}
+		
+		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css({'width':w+'px','height':h+'px'}).appendTo( $("body") );
 		
 		var uiDataMap = LeafletMap.create( model , el[0] );
 		uiDataMap.lfe.fitWorld();
@@ -285,10 +291,11 @@ extend( UIMap , {
 		this.el = el;
 		this.model = model;
 		
-		window.uiDataMap = uiDataMap;
-		
 		if( model )
 			this.updatetable( true );
+		
+		if(container)
+			this.el.appendTo(container);
 		
 		this.initInteraction();
 		
@@ -301,8 +308,6 @@ extend( UIMap , {
 		var map = this.el;
 		
 		var self = this;
-		
-		var sup = $("<div>").css( { "width": w , "height": h , "position" : "absolute" , "display" : "none" } ).attr( "id" , "mapToolPanel" ).appendTo( map );
 		
 		// pathTracable
 		(function( scope ){
@@ -685,27 +690,9 @@ extend( UIMap , {
 			
 		})( this );
 	},
-	//wat
-	_selection : { 
-		on : false,
-		layerName : null,
-		f : null,
-	},
 	update : function(){
 		
-		uiDataMap.update();
-		/*
-		//flush map
-		for(var i in this.lfe._layers)
-			this.lfe.removeLayer( this.lfe._layers[i] );
-		this.model.draw( this.lfe );
-		
-		if( this._selection.on )
-			// pretty dirty
-			for( var i in this.lfe._layers )
-				if( this.lfe._layers[i].model.getParent().getName() == this._selection.layerName )
-					this.lfe._layers[i].on("mousedown" , this._selection.f );
-		*/
+		this.uiDataMap.update();
 	},
 	
 	pathTraceable : function( unable , update ){return this;},
@@ -887,10 +874,6 @@ LayerMgr.prototype = {
 	_layerAddable : false,
 	_layerSelectionable : false,
 	
-	_updateDeletable : false,
-	_updateAddable : false,
-	_updateSelectionable : false,
-	
 	init : function( map  ){
 		
 		this.map = map;
@@ -970,10 +953,7 @@ LayerMgr.prototype = {
 					item.bind("click" , function(){
 						if( UIState.layer == j)
 							return;
-						liste.find("li").removeClass( "selected" );		// scope conflict
-						item.addClass( "selected" );
-						cmd.mgr.execute( cmd.changeCurrentLayer.create( j , state ) );
-							
+						UIState.setLayer(j);	
 					});
 					
 					if( j == state.currentLayerSelected )
@@ -989,7 +969,7 @@ LayerMgr.prototype = {
 		
 	
 	//property
-	layerDeletable : function( unable , update ){
+	layerDeletable : function( unable  ){
 		if( unable ){
 			
 			$( "#delAllLayerBn" ).remove();
@@ -1000,25 +980,19 @@ LayerMgr.prototype = {
 				
 				var cmds = [];
 				
-				cmds.push( cmd.changeCurrentLayer.create( self.selected  , self ) );
+				UIState.setLayer(null);
+				
+				//cmds.push( cmd.changeCurrentLayer.create( self.selected  ) );
 				var layers = self.map.getLayers();
 				for( var i = 0 ; i < layers.length ; i ++ )
 					cmds.push( cmd.deleteLayer.create( layers[ i ] , self.map ) );
-				
-				
-				
-				cmd.mgr.execute( cmd.multi.createWithTab( cmds , { f : function(){ 
-							if( self._updateDeletable ) 
-								self._updateDeletable.f.call( self._updateDeletable.o );
-							self.map.notify 
-							}, o : self } ) );
+				cmd.mgr.execute( cmd.multi.createWithTab( cmds ) );
 				
 			});
 			bnDeletall[ 0 ].innerHTML = "del All";
 			
 			
 			this._layerDeletable = true;
-			this._updateDeletable = update;
 			
 			this.update();
 			
@@ -1033,7 +1007,7 @@ LayerMgr.prototype = {
 		}
 		return this;
 	},
-	layerAddable : function( unable , update ){
+	layerAddable : function( unable  ){
 		if( unable ){
 			$( "#addLayerBn" ).remove();
 			var self = this;
@@ -1049,18 +1023,16 @@ LayerMgr.prototype = {
 			bn[ 0 ].innerHTML = "new";
 			
 			this._layerAddable = true;
-			this._updateAddable = update;
 		} else {
 			$( "#addLayerBn" ).remove();
 			this._layerAddable = false;
 		}
 		return this;
 	},
-	layerSelectionable : function( unable , update ){
+	layerSelectionable : function( unable  ){
 		if( unable ){
 			
 			this._layerSelectionable = true;
-			this._updateSelectionable = update;
 			
 			this.update();
 			
@@ -1277,7 +1249,12 @@ extend( TimeLine , {
 		hintEnd.find("p")[0].innerText = this._FloatYear2Date( this.dateEnd ).getFullYear();
 		
 	},
-	
+	getInterval : function(){
+		return {
+			dtstart:0,
+			dtend:0
+		};
+	},
 	editable : function( unable , update ){},
 } );
 TimeLine.create = function(  id ){
@@ -2279,6 +2256,294 @@ EditionToolBar.create = function( model , mapUI ){
 }
 
 
+function SearchOrgan(){};
+extend( SearchOrgan , AbstractComponent.prototype );
+extend( SearchOrgan , {
+	_timeMgr:null,
+	_tagMgr:null,
+	_zoneMgr:null,
+	_results:null,
+	init:function(){
+		var w=700,
+			h=100;
+		
+		var el=$('<div>').css({'width':w+'px','height':h+'px'});
+		
+		$('<div>').addClass('btn').addClass('left').addClass('w100p').css({'height':'100px'}).appendTo(el);
+		
+		$('<div>').addClass('mod').css({'overflow-y':'hidden','overflow-x':'auto','white-space':'nowrap'}).appendTo(el);
+		
+		this.el=el;
+		
+	},
+	request:function(){
+		/*
+		var timeInterval=this._timeMgr.getInterval();
+		var tags=this._tagMgr.getTags();
+		var zone=this._zoneMgr.getZone();
+		*/
+		var timeInterval={dtstart:1950,dtend:2013};
+		var tags={classes:[]};
+		var zone={A:{lat:1,lng:2},B:{lat:3,lng:4}};
+		
+		var buildUrl=function(timeInterval,tags,zone){
+			var path="simulatedProxy/search.json?callback=?&jsonp=?";
+			
+			path+="?";
+			path+="tags=";
+			for(var i=0;i<tags.classes.length;i++){
+				path+=tags.classes[i];
+				if(i!=tags.length-1)
+					path+="|";
+			}
+			path+="&Alat="+zone.A.lat;
+			path+="&Alng="+zone.A.lng;
+			path+="&Blat="+zone.B.lat;
+			path+="&Blng="+zone.B.lng;
+			
+			path+="&dtstart="+timeInterval.dtstart;
+			path+="&dtend="+timeInterval.dtend;
+			
+			return path;
+		}
+		
+		var path=buildUrl(timeInterval,tags,zone);
+		var self=this;
+		/*
+		$.getJSON( path,function(data){
+			console.log(path);
+			console.log(data);
+		});
+		*/
+		var dataO={
+'results':[
+	{	
+		'author':'leny',
+		'name':'france',
+		'gravatarHash':'a0408d1e61bbc0795fee026ddcdbd7a3',
+		'description':'who need a map?',
+		'elements':[
+			{
+			'type':'polygon',
+			'id':'france',
+			'classes':{
+				'country':true,
+				'OF-member':true
+			},
+			'attributes':{
+				'population':5,
+				'language':'fr',
+			},
+			'structure':[
+				{
+					'lat':5,
+					'lng':12
+				},
+				{
+					'lat':75,
+					'lng':12
+				},
+				{
+					'lat':60,
+					'lng':30
+				},
+				{
+					'lat':0,
+					'lng':30
+				}
+			]
+			}
+		]
+	},
+	{
+	'author':'al',
+	'name':'allemagne',
+	'gravatarHash':'a0408d1e61bbc0795fee026ddcdbd8a3',
+	'description':'I do',
+	'elements':[
+			{
+			'type':'polygon',
+			'id':'germany',
+			'classes':{
+				'country':true,
+				'OF-member':true
+			},
+			'attributes':{
+				'population':5,
+				'language':'fr',
+			},
+			'structure':[
+				{
+					'lat':30,
+					'lng':120
+				},
+				{
+					'lat':750,
+					'lng':120
+				},
+				{
+					'lat':600,
+					'lng':300
+				},
+				{
+					'lat':0,
+					'lng':300
+				}
+			]
+			}
+		]
+	}
+]	
+};
+		var data=JSON.stringify(dataO);
+		this.requestHandler(data);
+	},
+	requestHandler:function(data){
+		var q=JSON.parse(data);
+		var res=q.results;
+		
+		//gather all the classes of each element
+		for(var i=0;i<res.length;i++){
+			var classes={};
+			for(var j=0;j<res[i].elements.length;j++)
+				for( var c in res[i].elements[j].classes )
+					classes[c]=true;
+			res[i].allClasses=classes;
+		}
+		
+		//build the dataMap for each results
+		for(var i=0;i<res.length;i++){
+			var dm=DataMap.create();
+			var dl=DataLayer.create();
+			for(var j=0;j<res[i].elements.length;j++){
+				var el=res[i].elements[j];
+				var de=null;
+				switch(el.type){
+					case "polygon":
+						var points=[];
+						for(var k=0;k<el.structure.length;k++)
+							points.push( new L.LatLng( el.structure[k].lat,el.structure[k].lng ) );
+						var classes=el.classes;
+						var attributes=el.attributes;
+						var name=el.id;
+						de=DataPath.create( points , name , classes , attributes );
+					break;
+				}
+				dl.addElement(de);
+			}
+			dm.addLayer(dl);
+			res[i].datamap=dm;
+		}
+		
+		this.results=res;
+		
+		var self=this;
+		var stock=this.el.find('.mod');
+		stock.children().remove();
+		for(var i=0;i<res.length;i++){
+			(function(){
+				var squarre=$('<div>').addClass('w100p').css({'display':'inline-block'}).appendTo(stock);
+				$('<span>').wrapInner(res[i].author).addClass('author').appendTo(squarre);
+				var j=i;
+				squarre.bind('click',function(){
+					self.displayResult(res[j]);
+				});
+			})();
+		}
+	},
+	displayResult:function(r){
+		UIState.setResult(r);
+	},
+});
+SearchOrgan.create=function(){
+	var so=new SearchOrgan();
+	so.init();
+	return so;
+};
+
+
+function ElementInfo(){};
+extend( ElementInfo , AbstractComponent.prototype );
+extend( ElementInfo , {
+	result:null,
+	uimap:null,
+	init:function(){
+		
+		var w=300,
+			h=500;
+		
+		var self=this;
+		
+		var el=$('<div>').css({'width':w+'px','height':h+'px'});
+		
+		$('<div>').addClass('map').css({'width':200+'px','height':200+'px'}).appendTo(el);
+		$('<span>').addClass('name').appendTo(el);
+		$('<div>').addClass('portrait').appendTo(el);
+		$('<span>').addClass('author').appendTo(el);
+		$('<div>').addClass('description').appendTo(el);
+		$('<div>').addClass('classes-uses').appendTo(el);
+		
+		$('<div>').wrapInner('add').addClass('btn').appendTo(el)
+		.bind('click',function(){
+			cmd.mgr.execute( cmd.addLayer.create( self.result.datamap.getLayers()[0] , dataMap ) );
+		});
+		
+		this.el=el;
+		
+		this.initInteraction();
+		this.listen(true);
+		this.update();
+	},
+	initInteraction:function(){
+		
+	},
+	update:function(){
+		if( UIState.result==this.result )
+			return;
+		if( UIState.result == null ){
+			
+			
+		}else{
+			this.el.find('.author').empty().wrapInner( '@'+UIState.result.author );
+			this.el.find('.name').empty().wrapInner( UIState.result.name );
+			this.el.find('.description').empty().wrapInner( UIState.result.description );
+			this.el.find('.portrait').children().remove();
+			$('<img>').attr('src','http://www.gravatar.com/avatar/'+UIState.result.gravatarHash+'?s=60&d=mm').appendTo(this.el.find('.portrait'));
+			var classContainer=this.el.find('.classes-uses');
+			classContainer.children().remove();
+			for(var c in UIState.result.allClasses )
+				$('<span>').wrapInner( c ).appendTo(classContainer);
+			
+			if(this.uimap){
+				this.uimap.listen(false);
+				this.uimap.getElement().remove();
+			}
+			this.uimap=UIMap.create(UIState.result.datamap , this.el.find('.map'));
+			this.uimap.listen(true);
+			this.uimap.getElement().appendTo( this.el.find('.map') );
+			this.uimap.getElement().find('.leaflet-control-attribution').remove();
+			this.uimap.uiDataMap.lfe.fitWorld();
+			this.uimap.uiDataMap.update();
+			//this.uimap.uiDataMap.lfe.draw();
+		}
+	},
+	listen:function(enable){
+		
+		UIState.removeListener('set-result',this);
+		
+		if(enable){
+			UIState.registerListener('set-result',{o:this,f:this.update});
+		}else{
+		
+		}
+	},
+});
+ElementInfo.create=function(){
+	var e = new ElementInfo();
+	e.init();
+	return e;
+}
+
 //exposure
 scope.state = state;
 scope.popUp = popUp;
@@ -2290,6 +2555,8 @@ scope.EditionToolBar = EditionToolBar;
 scope.AttributeMgr = AttributeMgr;
 scope.PropertyStack = PropertyStack;
 scope.PropertyEditor = PropertyEditor;
+scope.SearchOrgan = SearchOrgan;
+scope.ElementInfo = ElementInfo;
 
 
 scope.SmartTextInput = SmartTextInput;

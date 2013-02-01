@@ -474,6 +474,7 @@ var UIState = new AbstractNotifier();
 UIState.tool=null;
 UIState.layer=null;
 UIState.declaration=null;
+UIState.result=null;
 UIState.elements=[];
 UIState.toolList={
 	edit:"edit",
@@ -523,6 +524,12 @@ UIState.setDeclaration=function(d){
 		return;
 	this.declaration=d;
 	this.notify("set-declaration");
+}
+UIState.setResult=function(d){
+	if(d==this.result)
+		return;
+	this.result=d;
+	this.notify("set-result");
 }
 UIState.init=function(){
 	//tweak for declaration update when css update occur
