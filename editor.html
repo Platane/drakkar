@@ -10,6 +10,9 @@
 		<link rel="stylesheet" href="external/bootstrap/css/bootstrap.css" />
 		<link rel="stylesheet" href="src/CSS/editorPanel.css" />
 		<link rel="stylesheet" href="src/CSS/propertyStack.css" />
+		<link rel="stylesheet" href="src/CSS/elementInfo.css" />
+		<link rel="stylesheet" href="src/CSS/timeLine.css" />
+		<link rel="stylesheet" href="src/CSS/layerMgr.css" />
 		<link rel="stylesheet" href="src/CSS/global.css" />
 		
 		
@@ -81,7 +84,8 @@
 			</div>
 		</div>
 		
-		<!-- edite property declaration  -->
+		
+		<!-- edit property declaration  -->
 		<div id="decorable" class="frame" >
 			
 			<div class="height-main row-fluid">
@@ -90,80 +94,36 @@
 			
 			<div class="compo span7 height-full">
 				<div class="composant offset1 span10 height10" data-contain-type="UIMap" ></div>
-				<div class="span7 height2"  ></div>
+				<div class="composant span5 height2" data-contain-type="LayerMgr" ></div>
 			</div>
 			
 			<div class="composant offset1 span3 height-full" data-contain-type="PropertyStack" ></div>
 			
 			</div>
 			
-			<div class="height-bottom compo">
-			</div>
-		</div>
-	</div>
-	<div id="framePool2" style="display:none" >
-		
-		<!-- edite raw data  -->
-		<div id="drawable" class="frame" >
-			
-		<div class="line gut">
-			
-			
-			<div class="centralPanel mod item left w80">
-			<aside id="edition-toolBarclass" class="block mod left w5" data-contain-type="EditionToolBar" >
-						<div class="btn icon-btn" data-action="path-edition" title="Edit selected shape"><img src="img/edit.png"/></div>
-						<div class="btn icon-btn" data-action="path-edition2" title="Select an element"><img src="img/select.png"/></div>
-						<br/>
-						<span style="border-bottom=1px"></span>
-						<br/>
-						<div class="btn icon-btn" data-action="path-edition3" title="Undo"><img src="img/undo.png"/></div>
-						<div class="btn icon-btn" data-action="path-edition4" title="Redo"><img src="img/redo.png"/></div>
-			</aside>
-			
-				<div class="container" data-contain-type="UIMap" class="mod item"  ></div>
-				<div class="container" data-contain-type="LayerMgr" class="mod item" ></div>
-				<!--<div class="" data-contain-type="EditablePathParam"  >
-					<div id="editPathBn" class="btn icon-btn active" >edit</div>
-					<div id="removeNodePathBn" class="btn icon-btn" >rm</div>
-					<div id="addNodePathBn" class="btn icon-btn" >add</div>
-				</div>-->
-			</div>
-			<div id = "block-param" class="block mod w20" style = "display:none;" ></div>
-		</div>
-			
-		<div id = "block-property" class="subPanel  block mod" ></div>
-		
+			<div class="composant height-bottom span12" data-contain-type="AttributeMgr"></div>
 		</div>
 		
 		
-		<!-- search -->
+		<!-- search   -->
 		<div id="search" class="frame" >
-			
-			
-			<div class="centralPanel mod item center w60">
-				<div id="tm-container">
-				</div>
-			</div>
-			<div id = "block-param" class="block mod w20" style = "display:none;" >
-			</div>
-			
-			<div id = "block-result" class="subPanel  block line" >
-				<div class="mod left w100p">
-					<div class="btn" >GO</div>
-				</div>
-				<div class="mod" style="overflow-y:hidden; overflow-x:auto; white-space: nowrap;">
-					<div style="width:10%; height:inherit; display:inline-block; background-color:#78df45;" >
-					<p> res </p>
+			<div class="height12">
+				<div class="height8 row-fluid">
+				
+					<div class="span5 height12">
+						<div class="composant span12 height9" data-contain-type="FlatMap"></div>
+						<div id="timeLine" class="composant span12 height3" data-contain-type="TimeLine"></div>
 					</div>
-				<div 
+					
+					<div class="composant span3 height12" data-contain-type="TagForQuery" ></div>
+					
+					<div id="elementInfo" class="composant offset1 span3 height12" data-contain-type="ElementInfo" ></div>
+					
+				</div>
+				<div id="searchOrgan" class="composant height4 row-fluid" data-contain-type="SearchOrgan" ></div>
 			</div>
-			
 		</div>
 		
-		<div id="blank" class="frame" ></div>
-		
 	</div>
-	
-	<div id="hello" style="width:45%;"></div>
 	
 </html>

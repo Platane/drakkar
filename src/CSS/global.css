@@ -1,5 +1,6 @@
+.composant,
 .compo {
-	background-color : #eee;
+	background-color : #fff;
 	border:solid 1px #ccc;
 }
 nav {
@@ -79,9 +80,13 @@ nav {
 .height-full{
 	height:100%;
 }
+.height-partial {
+	height:88%
+}
 .height-bottom{
 	height:12%;
 }
 html{
 	overflow-y:hidden;
+	overflow-x:hidden;
 }

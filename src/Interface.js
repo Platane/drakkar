@@ -53,25 +53,42 @@ var fillContainer=function(){
 				var component;
 				switch( componentName){
 					case "UIMap" :
-						component = window[ componentName ].create( dataMap , $(this) );
+						component = window[ componentName ].create( dataMap );
+					break;
+					case "TimeLine" :
+						component = window[ componentName ].create( );
+						component.editable(true);
+					break;
+					case "ElementInfo" :
+						component = window[ componentName ].create( dataMap );
+					break;
+					case "SearchOrgan" :
+						component = window[ componentName ].create();
 					break;
 					case "LayerMgr" :
-						component = window[ componentName ].create( dataMap ).layerAddable(true).layerDeletable(true).layerSelectionable(true);
-						dataMap.registerListener( component );
+						component = window[ componentName ].create( dataMap );
 					break;
 					case "PropertyStack" :
-						component = window[ componentName ].create( $(this) );
+						component = window[ componentName ].create();
 					break;
-					case "EditionToolBar" :
-						component = window[ componentName ].create( dataMap , null );
+					case "AttributeMgr" :
+						component = window[ componentName ].create( );
 					break;
 					default :
+						return;
 						component = window[ componentName ].create( dataMap );
 				};
 				component.getElement().appendTo( $(this) );
 				$(this).data( "component" , component );
 			});
 		});
+		
+		// some elements need to be linked
+		$(".composant#searchOrgan").data("component").timeMgr=$(".composant#timeLine").data("component");
+		
+		$('.frame#decorable').find('.composant[data-contain-type="UIMap"]').data("component").elementSelectionnable(true).enhanceSelection(true);
+		$('.frame#drawable').find('.composant[data-contain-type="UIMap"]').data("component").enhanceSelection(true);
+		
 		dataMap.notify();
 };
 			/*
@@ -98,8 +115,8 @@ function init(){
 	l.addElement( DataDot.create(new L.latLng(100,520)) );
 	*/
 	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
-	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , { "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
-	l.addElement( DataPath.create( [ new L.latLng(30,120) , new L.latLng(750,120) , new L.latLng(700,500) , new L.latLng(0,500) ] , { "country":true , "OFSE-member":true } ) );
+	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , null,{ "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
+	l.addElement( DataPath.create( [ new L.latLng(30,120) , new L.latLng(750,120) , new L.latLng(700,500) , new L.latLng(0,500) ] , null,{ "country":true , "OFSE-member":true } ) );
 	l.addElement( DataPath.create( [ new L.latLng(-60,30) , new L.latLng(-800,30) , new L.latLng(-900,800) , new L.latLng(-100,800) ]  ) );
 	l.addElement( DataPath.create( [ new L.latLng(0,-160) , new L.latLng(-80,-160) , new L.latLng(-90,-100) , new L.latLng(0,-100) ]  ) );
 	dataMap.addLayer(l);
@@ -108,8 +125,8 @@ function init(){
 	
 	// fill the container
 	
-	initMenuAction();
 	fillContainer();
+	initMenuAction();
 	UIState.init();
 	/*
 	//linker

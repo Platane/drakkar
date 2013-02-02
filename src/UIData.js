@@ -75,16 +75,12 @@ extend( LeafletMap , {
 		this.model = dataMap;
 		this.lfe = new L.Map( el );
 		this.lfe.data = this;
-		
+		this.listen(true);
 	},
-	update : function( lbl ){
-	
-		switch( lbl ){
+	update : function(){
+		var i,j;
 			
-			default : 
-			
-			
-			var i,j;
+			//check the structre
 			
 			// every element in the model is in the LL
 			i = this.model.getLayers().length;
@@ -120,100 +116,8 @@ extend( LeafletMap , {
 			
 			j = this.layers.length;
 			while( j-- )
-				this.layers[ j ].update( lbl );
+				this.layers[ j ].update();
 			
-			/*	
-			for( var i=0;i<this.model.getLayers().length;i++)
-				if( (name = this.model.getLayer( i ).getName()) != this.layers.getName() ){
-					// is it a swap? 
-					// if so we should found the layer futher
-					// search it
-					for( var j=i+1;j<this.layers.length;j++ )
-						if( name == this.layers[j].getName() )
-							break;
-					if( j<this.layers.length ){
-						//swap for concordance
-						// duno what do with the LL
-						var tmp = this.layers[j];
-						this.layers[j] = this.layers[i];
-						this.layers[i] = tmp;
-						i--;
-						continue;
-					}
-					else
-					{
-					// is it an addition? 
-					// if so we shouldn't found the layer futher
-						this.layers.splice( i, 0 , LeafletLayer.create( this.model.getLayer( i ) ) );
-						i--;
-						continue;
-					}
-				}
-				
-			/*
-			// all elements from data are in LL
-			i = dataMap.getLayers().length;
-			while( i-- ){
-				var accept = false;
-				for( j in lfe._layers )
-					if( dataMap.getLayers()[ i ].getName() == lfe._layers[ j ].data.getName() ){
-						accept = true;
-						break;
-					}
-				if( !accept ){
-					// not in LL
-					lfe.addLayer( LeafletLayer.create( dataMap.getLayer(i) ).lfe );
-				}
-			}
-			
-			// all elements LL are in data
-			for( j in lfe._layers ){
-				var accept = false;
-				i = dataMap.getLayers().length;
-				while( i-- )
-					if( dataMap.getLayers()[ i ].getName() == lfe._layers[ j ].data.getName() ){
-						accept = true;
-						break;
-					}
-				if( !accept ){
-					// not in data
-					lfe.removeLayer( lfe._layers[ j ] );
-				}
-				
-				lfe._layers[ j ].data.update( lbl );
-			}			
-			
-			/*
-			//check if any layer has been added / deleted / swapped
-			for( var i=0;i<this.model.getLayers().length;i++)
-				if( (name = this.model.getLayer( i ).getName()) != this.lfe._layers[i].data.name ){
-					// is it a swap? 
-					// if so we should found the layer futher
-					// search it
-					for( var j=i+1;j<this.lfe._layers.length;j++ )
-						if( name == this.lfe._layers[j].data.name )
-							break;
-					if( j<this.lfe._layers.length ){
-						//swap for concordance
-						var tmp = this.lfe._layers[j];
-						this.lfe._layers[j] = this.lfe._layers[i];
-						this.lfe._layers[i] = tmp;
-						i--;
-						continue;
-					}
-					else
-					{
-					// is it an addition? 
-					// if so we shouldn't found the layer futher
-						this.lfe._layers.splice( i, 0 , LeafletLayer.create( this.model.getLayer( i ) ).lfe );
-						i--;
-						continue;
-					}
-				}
-			*/
-		}
-		
-		
 		//bindable
 		if( this._eventDirty ){
 			i =this._event.length;
@@ -223,6 +127,20 @@ extend( LeafletMap , {
 			}
 			this._eventDirty = false;
 		}
+	},
+	/*
+	 * listen the layer-struct event
+	 * propage listen to the layer ( the layers will propage to the elements )
+	 */
+	listen : function(enable){
+		this.model.removeListener(this);
+		if( enable ){
+			this.model.registerListener('layer-struct',{o:this,f:this.update});
+			this.update();
+		}
+		var i = this.layers.length;
+		while( i-- )
+			this.layers[i].listen(enable);
 	},
 });
 LeafletMap.create=function( dataMap , el ){
@@ -258,7 +176,7 @@ extend( LeafletLayer , {
 		while( i-- )
 			this.llc.removeLayer( this.elements[ i ].lfe );
 	},
-	update : function( lbl ){
+	update : function( ){
 		var i,j;
 		
 		// every element in the model is in the LL
@@ -307,7 +225,7 @@ extend( LeafletLayer , {
 		
 		j = this.elements.length;
 		while( j-- )
-			this.elements[ j ].update( lbl );
+			this.elements[ j ].update( );
 			
 			
 		//bindable
@@ -322,6 +240,16 @@ extend( LeafletLayer , {
 			}
 			this._eventDirty = false;
 		}
+	},
+	listen : function(enable){
+		this.model.removeListener(this);
+		if( enable ){
+			this.model.registerListener('element-struct',{o:this,f:this.update});
+			this.update();
+		}
+		var i = this.elements.length;
+		while( i-- )
+			this.elements[i].listen(enable);
 	},
 });
 LeafletLayer.create = function( dataLayer , llc ){
@@ -369,14 +297,12 @@ extend( LeafletPath , {
 	init : function( dataPath ){
 		AbstractLeafletItem.prototype.init.call( this );
 		this.model = dataPath;
-		dataPath.registerListener( "set-attribute" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
-		dataPath.registerListener( "set-shape" , {o:this,f:function(){this._structDirty=true; this.update();}} );
-		mCSS.registerListener( "set-css" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
+		
 		// clone the point array
 		this.lfe = new L.Polygon( L.cloneLatLngArray(this.model._points) );
 		this.lfe.data = this;
-		//this.name = dataPath.getName();
-		this.update();
+		
+		this.listen(true);
 	},
 	update : function(){
 		var updateNeeded=false;
@@ -421,6 +347,15 @@ extend( LeafletPath , {
 			this._eventDirty = false;
 		}
 	},
+	listen : function(enable){
+		this.model.removeListener( this );
+		mCSS.removeListener( this );
+		if( enable ){
+			this.model.registerListener( "set-attribute" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
+			this.model.registerListener( "set-shape" , {o:this,f:function(){this._structDirty=true; this.update();}} );
+			mCSS.registerListener( "set-css" , {o:this,f:function(){this._chainDirty=true; this.update();}} );
+		}
+	}
 });
 LeafletPath.create = function( dataPath ){
 	var m = new LeafletPath();
@@ -531,6 +466,10 @@ UIState.setResult=function(d){
 	this.result=d;
 	this.notify("set-result");
 }
+/* 
+ * a tweak
+ * listen the change of css, notify a set-declaration and dispatch the new declaration
+ */
 UIState.init=function(){
 	//tweak for declaration update when css update occur
 	mCSS.registerListener( "set-css" , {o:this,f:function(){

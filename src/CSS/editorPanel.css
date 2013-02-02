@@ -45,6 +45,9 @@
 	border:solid 1px #ddd;
 }
 
+#property-editor .preview canvas{
+	border:solid 1px #ddd;
+}
 
 #property-editor {
 	position:absolute;

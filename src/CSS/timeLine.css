@@ -1,0 +1,12 @@
+#timeLine .dot{
+	background-color:#ccc;
+	width:50px;
+	height:50px;
+}
+#timeLine .hint{
+	-webkit-user-select:none;
+	user-select:none;
+	-moz-user-select:none;
+	cursor:default;
+}
+

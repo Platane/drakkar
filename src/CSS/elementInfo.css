@@ -1,0 +1,22 @@
+#elementInfo .map{
+	border:solid 1px #ddd;
+	min-width:150;
+}
+#elementInfo {
+	padding:15px;
+}
+
+#elementInfo .map {
+	margin-left:20px;
+	margin-bottom:1em;
+}
+
+
+#elementInfo .author {
+	display:inline-block;
+}
+#elementInfo .portrait {
+	display:inline-block;
+	float:right;
+	margin-right:10px;
+}

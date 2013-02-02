@@ -1,0 +1,7 @@
+.composant[data-contain-type="LayerMgr"] .selected{
+	background-color:rgba(180,180,180,0.4);
+}
+.composant[data-contain-type="LayerMgr"] {
+	max-width:200px;
+	padding-right:10px;
+}
