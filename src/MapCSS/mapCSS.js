@@ -15,6 +15,7 @@
  * declaration follow this :
  * 
  * dec = {
+ *		stamp : {string},
  *		selectors : [
  * 					selector : [
  *								condition : { class : {string}  } || { id : {string}  }  ||  { tag : {string}  } || { parent : {condition} } || { attributeQuery : {function} , attribute : {string} }
@@ -43,6 +44,8 @@ var mCSS = mCSS || {};
 
 (function( scope ){
 	
+	var uid=0;
+	
 	var declarations ;
 	
 	var specif=[
@@ -65,7 +68,12 @@ var mCSS = mCSS || {};
 	var parse = function( s ){
 		if( !scope._parser )
 			throw "missing dependancy MapCSSParser.js";
-		return scope._parser.parse( s , "start" );
+		var p=scope._parser.parse( s , "start" );
+		
+		//add unique stamp
+		for(var i=0;i<p.length;i++)
+			p[i].stamp= 'dec'+(uid++);
+		return p;
 	};
 	var semanticBuild = function( rawTree ){
 		for(var i=0;i<rawTree.length;i++){
@@ -226,7 +234,7 @@ var mCSS = mCSS || {};
 			if( typeof(newDec) == "string")
 				newDec=semanticBuild(parse(newDec))[0];
 			for(var i=0;i<declarations.length;i++)
-				if( declarations[i]==exDec )
+				if( declarations[i].stamp==exDec.stamp )
 					declarations[i]=newDec;
 		}catch(e){ console.log(e); }	//nevermind
 		
@@ -242,7 +250,7 @@ var mCSS = mCSS || {};
 	};
 	var removeDeclaration=function( dec ){
 		for(var i=0;i<declarations.length;i++)
-			if( declarations[i]==dec )
+			if( declarations[i].stamp==dec.stamp )
 				declarations.splice(i,1);
 		notifier.notify("set-css");
 	};

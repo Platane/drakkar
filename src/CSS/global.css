@@ -1,0 +1,87 @@
+.compo {
+	background-color : #eee;
+	border:solid 1px #ccc;
+}
+nav {
+	height:10%;
+}
+.height-main{
+	height:78%;
+}
+
+[class*="height"]{
+	/*margin-top:2.127659574468085%*/
+}
+
+.height12 {
+  height: 100%;
+  *height: 99.94680851063829%;
+}
+
+.height11 {
+  height: 91.48936170212765%;
+  *height: 91.43617021276594%;
+}
+
+.height10 {
+  height: 82.97872340425532%;
+  *height: 82.92553191489361%;
+}
+
+.height9 {
+  height: 74.46808510638297%;
+  *height: 74.41489361702126%;
+}
+
+.height8 {
+  height: 65.95744680851064%;
+  *height: 65.90425531914893%;
+}
+
+.height7 {
+  height: 57.44680851063829%;
+  *height: 57.39361702127659%;
+}
+
+.height6 {
+  height: 48.93617021276595%;
+  *height: 48.88297872340425%;
+}
+
+.height5 {
+  height: 40.42553191489362%;
+  *height: 40.37234042553192%;
+}
+
+.height4 {
+  height: 31.914893617021278%;
+  *height: 31.861702127659576%;
+}
+
+.height3 {
+  height: 23.404255319148934%;
+  *height: 23.351063829787233%;
+}
+
+.height2 {
+  height: 14.893617021276595%;
+  *height: 14.840425531914894%;
+}
+
+.height1 {
+  height: 6.382978723404255%;
+  *height: 6.329787234042553%;
+}
+
+.offset12 {
+  margin-left: 980px;
+}
+.height-full{
+	height:100%;
+}
+.height-bottom{
+	height:12%;
+}
+html{
+	overflow-y:hidden;
+}

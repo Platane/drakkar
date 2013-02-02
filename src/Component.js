@@ -272,6 +272,7 @@ extend( UIMap , {
 	uiDataMap : null,
 	init : function( model , container ){
 		
+		/*
 		var w = 500, 
 			h = 500;
 		
@@ -281,6 +282,8 @@ extend( UIMap , {
 		}
 		
 		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css({'width':w+'px','height':h+'px'}).appendTo( $("body") );
+		*/
+		var el = $("<div>").css({'width':'100%','height':'100%'}).appendTo( $("body") );
 		
 		var uiDataMap = LeafletMap.create( model , el[0] );
 		uiDataMap.lfe.fitWorld();
@@ -703,9 +706,9 @@ extend( UIMap , {
 	elementSelectionnable : function( unable , update ){return this;},
 	enhanceSelection : function( unable ){return this;},
 });
-UIMap.create = function( leafletElement , id ){
+UIMap.create = function( leafletElement , container ){
 	var m = new UIMap();
-	m.init( leafletElement , id );
+	m.init( leafletElement , container );
 	return m;
 }
 
@@ -1263,7 +1266,10 @@ TimeLine.create = function(  id ){
 	return lm;
 }
 
-
+/*
+ * easy property editor
+ * is set up by the property stack currently
+ */
 function PropertyEditor(){};
 extend( PropertyEditor , AbstractComponent.prototype );
 extend( PropertyEditor , {
@@ -1271,20 +1277,19 @@ extend( PropertyEditor , {
 	_changeAlreadyDone:false,
 	init : function(){
 		
-		var w = "25%", h = "60%";
-		
-		var el = $("<div>").attr("id","property-editor").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		var el = $("<div>").attr("id","property-editor").addClass( "componant" ).css({"z-index":1000}).appendTo( $("body") );
 		
 		var main = $("<div>").addClass("main");
 		
 		
 		var onglet_render = $("<div>");
 		
-		$("<div>").addClass("preview").css({"border-radius":"10px" , "min-width":"120px" , "min-height":"120px" , "max-width":"200px" , "max-height":"200px" }).appendTo( onglet_render );
-		var toolBox=$("<div></div>").addClass("tool-box").appendTo( onglet_render );
-		$("<div></div>").wrapInner("stroke").addClass("btn icon-btn").attr("data-action" , "stroke" ).appendTo(toolBox);
-		$("<div></div>").wrapInner("fill").addClass("btn icon-btn").attr("data-action" , "fill" ).appendTo(toolBox);
-		$("<div></div>").wrapInner("nothing").addClass("btn icon-btn").attr("data-action" , "" ).appendTo(toolBox);
+		$("<div>").addClass("preview").css({"border-radius":"10px" , "min-width":"100px" , "min-height":"100px" , "max-width":"200px" , "max-height":"200px" , 'display':'inline-block'}).appendTo( onglet_render );
+		var toolBox=$("<div></div>").addClass("btn-toolbar").appendTo( onglet_render );  //.css({'display':'inline-block'})
+		var group=$("<div></div>").addClass("btn-group btn-group-vertical").appendTo( toolBox );
+		$("<div></div>").wrapInner("stroke").addClass("btn btn-small").attr("data-action" , "stroke" ).appendTo(group);
+		$("<div></div>").wrapInner("fill").addClass("btn btn-small").attr("data-action" , "fill" ).appendTo(group);
+		$("<div></div>").wrapInner("nothing").addClass("btn btn-small").attr("data-action" , "" ).appendTo(group);
 		$("<div></div>").appendTo( onglet_render );
 		$("<canvas>").appendTo( onglet_render.find(".preview") );
 		
@@ -1294,19 +1299,20 @@ extend( PropertyEditor , {
 		this.onglet.render = onglet_render;
 		this.onglet.action = onglet_action;
 		
-		var menu = $("<nav>").addClass("menu");
-		$("<ul>").appendTo( menu );
+		
+		var menu = $("<ul>").addClass("nav nav-tabs");
 		var self=this;
 		for( var i in this.onglet )
 			(function(){
 				var j=i;
-				var bn = $("<li>");
-				bn.wrapInner( i );
+				var bn = $('<li><a href="#">'+i+'</a></li>');
 				bn.bind("click",function(){
 					main.children().detach();
 					self.onglet[j].appendTo(main);
+					menu.find("li").removeClass("active");
+					bn.addClass("active");
 				});
-				bn.appendTo( menu.children("ul") );
+				bn.appendTo( menu );
 				bn.click();
 			})();
 		
@@ -1330,7 +1336,7 @@ extend( PropertyEditor , {
 			var maxBorder= (properties["strocke-width"]==null)?15:Math.min(Math.min(w,h)/3,Math.max(properties["strocke-width"]/2+5,15));
 			
 			
-			var w=170,h=170;
+			var w=130,h=130;
 			
 			var smoothRect=function(ctx,w,h,r){
 				var r=Math.min(r,Math.min(w,h)/2);
@@ -1432,10 +1438,17 @@ extend( PropertyEditor , {
 			contenu.appendTo(box);
 			
 			bn.bind("click",function(){
-				if(contenu.hasClass("visible"))
+				if(contenu.hasClass("visible")){
 					contenu.removeClass("visible").addClass("hidden");
-				else
+					contenu.height(0);
+				}else{
 					contenu.addClass("visible").removeClass("hidden");
+					var h=5;
+					contenu.children().each(function(){
+						h+=$(this).height();
+					});
+					contenu.height(h);
+				}
 			});
 			
 			return box;
@@ -1496,7 +1509,7 @@ extend( PropertyEditor , {
 		}
 		var createColorProp=function(name,propName){
 			var ex=properties[propName];
-			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="width:100px;height:30px;background-color:'+ex+';"></div></td></tr>');
+			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="background-color:'+ex+';"></div></td></tr>');
 			var colorPicker=prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
 				"onSubmit":function(hsb, hex, rgb, el){
 					goEdit();
@@ -1687,6 +1700,11 @@ SmartTextInput.create=function( accepte , complete ){
 	return a.el;
 };
 
+/*
+ * an element that display a list of declaration
+ * declaration can be raw edited
+ * or edited throught the easy editor panel
+ */
 function PropertyStack(){};
 extend( PropertyStack , AbstractComponent.prototype );
 extend( PropertyStack , {
@@ -1696,11 +1714,9 @@ extend( PropertyStack , {
 	styleChainCommon:null,	// styleChain of the common element, only use in full mode
 	_editable:false,
 	_full:false,
-	init : function(){
+	init : function( container ){
 		
-		var w = 500, h = 500;
-		
-		var el = $("<div>").addClass( "componant" ).attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } ).appendTo( $("body") );
+		var el = $("<div>").addClass( "componant" ).css( { "width":'100%' , "height":'100%' } );
 		
 		var self=this;
 		
@@ -1800,10 +1816,15 @@ extend( PropertyStack , {
 		
 		$("<div>").attr("id","property-stack").appendTo(el);
 		
+		if(container)
+			el.appendTo(container);
+		
 		this.el = el;
 		this.commonElement={};
 		this.initInteraction();
 		this.listen(true);
+		
+		this.el.find('.tool-box').find('input[type=checkbox]').change();
 	},
 	initInteraction : function(){
 		
@@ -1900,9 +1921,14 @@ extend( PropertyStack , {
 			
 			
 			var propertyEditor=null;
+			/*
+			 * move the editor panel to the selected declaration, pointed by uistate
+			 * assuming the editor panel is instanciate
+			 */
 			var displayEditorPanel=function(){
 				var dec = uistate.declaration;
-				
+				if(propertyEditor==null)
+					return;
 				if(dec==null){
 					propertyEditor.getElement().css({"display" : "none","top":"0px"});
 					return;
@@ -1912,15 +1938,17 @@ extend( PropertyStack , {
 					var e=$(this);
 					if( e.data("structure") == uistate.declaration ){
 						var y = e.position().top-25;
-						var x= self.el.position().left+self.el.width()/1.2;
+						var x= self.el.position().left-propertyEditor.getElement().width();
 						propertyEditor.getElement().css({"top":y+"px" , "left":x+"px"});
 					}
 				});
 			}
-
+			
+			/*
+			 * behavior modifier
+			 */
 			var easyEditable=function(enable){
 				uistate.removeListener("set-declaration",{o:this,f:displayEditorPanel});
-				
 				if( enable){
 					uistate.registerListener("set-declaration",{o:this,f:displayEditorPanel});
 					if( !propertyEditor )
@@ -1936,6 +1964,9 @@ extend( PropertyStack , {
 				return self;
 			};
 			
+			/*
+			 * behavior modifier
+			 */
 			var editable=function(enable){
 				if( enable != self._editable ){
 					self._editable = enable;
@@ -1991,6 +2022,9 @@ extend( PropertyStack , {
 				self.update();
 			}
 			
+			/*
+			 * behavior modifier
+			 */
 			var full=function(enable){
 				self._full=enable;
 				uistate.removeListener( "select-element" , this );
@@ -2017,6 +2051,9 @@ extend( PropertyStack , {
 			scope.easyEditable=easyEditable;
 		})( this );
 	},
+	/*
+	 * destroy the list and build a proper one based on the styleChain attribute
+	 */
 	update:function(){
 		var ps = this.el.find( "#property-stack" );
 		var self=this;
@@ -2030,8 +2067,6 @@ extend( PropertyStack , {
 				decl.addClass("selected");
 		}
 		this.enlightCommon();
-		//TODO add blank lines
-		
 		
 		//bind event
 		var display=false;
@@ -2144,13 +2179,29 @@ extend( PropertyStack , {
 			}
 		}
 	},
+	
+	/*
+	 * behavior modifier
+	 * when on, an easy editor panel pop up when a declaration is selected
+	 */
 	easyEditable:function(enable){return this;},
+	
+	/*
+	 * behavior modifier
+	 * when on, the declaration can be edited as smartTextInput
+	 */
 	editable:function(enable){return this;},
+	
+	/*
+	 * behavior modifier
+	 * when on, all the declaration are displayed, instead of just the one which concern the selected element
+	 * declaration that not concern the selected element are displayed, but with a different style ( has the secondaire class )  and are re order so that they appear at the end of the list
+	 */
 	full:function(enable){return this;},
 });
-PropertyStack.create=function(){
+PropertyStack.create=function( container ){
 	var a = new PropertyStack();
-	a.init();
+	a.init( container );
 	return a;
 };
 

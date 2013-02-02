@@ -45,7 +45,35 @@ function initMenuAction(){
 	swapFrame( "drawable" );
 	swapFrame( "search" );
 };
-
+var fillContainer=function(){
+	$("#framePool").find(".frame").each(function(){
+		$(this).find(".composant").each( function(){
+			$(this).children().remove();
+				var componentName = $(this).attr( "data-contain-type" );
+				var component;
+				switch( componentName){
+					case "UIMap" :
+						component = window[ componentName ].create( dataMap , $(this) );
+					break;
+					case "LayerMgr" :
+						component = window[ componentName ].create( dataMap ).layerAddable(true).layerDeletable(true).layerSelectionable(true);
+						dataMap.registerListener( component );
+					break;
+					case "PropertyStack" :
+						component = window[ componentName ].create( $(this) );
+					break;
+					case "EditionToolBar" :
+						component = window[ componentName ].create( dataMap , null );
+					break;
+					default :
+						component = window[ componentName ].create( dataMap );
+				};
+				component.getElement().appendTo( $(this) );
+				$(this).data( "component" , component );
+			});
+		});
+		dataMap.notify();
+};
 			/*
 function resize(){
 	var currentFrameLabel = $( "#main > div" ).attr( "id" );
@@ -79,45 +107,11 @@ function init(){
 	//uimap.pathEditable(true,dataPath);
 	
 	// fill the container
-	$("#framePool").find(".frame").each(function(){
-		$(this).find(".container").each( function(){
-			$(this).children().remove();
-			var componentName = $(this).attr( "data-contain-type" );
-			var component;
-			switch( componentName){
-				case "UIMap" :
-					component = window[ componentName ].create( dataMap ).elementSelectionnable(true).enhanceSelection(true);
-					dataMap.registerListener( component );
-				break;
-				case "LayerMgr" :
-					component = window[ componentName ].create( dataMap ).layerAddable(true).layerDeletable(true).layerSelectionable(true);
-					dataMap.registerListener( component );
-				break;
-				case "EditablePathParam" :
-					component = window[ componentName ].create( dataMap , null );
-					dataMap.registerListener( component );
-				break;
-				case "EditionToolBar" :
-					component = window[ componentName ].create( dataMap , null );
-				break;
-				default :
-					component = window[ componentName ].create( dataMap );
-			};
-			component.getElement().appendTo( $(this) );
-			$(this).data( "component" , component );
-		});
-	});
-	dataMap.notify();
-	/*
-	$(".container[data-contain-type=EditablePathParam]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
-	$(".container[data-contain-type=EditionToolBar]").data( "component" ).mapUI = $(".container[data-contain-type=UIMap]").data( "component" );
-	*/
+	
 	initMenuAction();
-	var uiMap = $(".container[data-contain-type=UIMap]").data( "component" );
-	
-	
-	
-	
+	fillContainer();
+	UIState.init();
+	/*
 	//linker
 	(function(uimap,uistate){
 		var lastTool=null;
@@ -129,23 +123,8 @@ function init(){
 			}
 			switch( uistate.tool ){
 				case uistate.toolList.edit :
-				/** edition tool */
 				
 				(function(){
-					/*
-					if( uistate.element )
-						uimap.pathEditable( true , uistate.element );
-					// if the element selected change, update
-					var key=uistate.registerListener("select-element" , {o:this,f:function(){
-						//the previous selected element should degrade properly
-						
-						if( uistate.element )
-							pathEditable( true , uistate.element );
-						else
-							pathEditable( false );
-							
-					}});
-					*/
 					uimap.pathEditable( true );
 					cancelLastTool={o:null,f:null};
 					cancelLastTool.o=this;
@@ -176,7 +155,7 @@ function init(){
 	var ps = PropertyStack.create( );
 	ps.getElement().appendTo("body").css({"display":"inline-block"});
 	ps.editable(true).easyEditable(true).full(true);
-	*/
+	
 	
 	var organ=SearchOrgan.create();
 	organ.getElement().appendTo( $('body') );
@@ -184,46 +163,8 @@ function init(){
 	
 	var ei = ElementInfo.create();
 	ei.getElement().appendTo( $('body') );
-	
-	//PropertyEditor.create().getElement().appendTo("body").css({"display":"inline-block"});
-	
-	/*
-	//init editing tool bar
-	(function( dataMap , uiMap , layerMgr ){
-		var self = this;
-		
-		var el = $("#edition-toolBarclass");
-		var editionPathBn = el.find( "[data-action=path-edition]" );
-		
-		var attemptToEdit = function(){
-			if( state.currentLayerSelected == null ){
-				hintDisplayer.display( "select a layer" );
-				layerMgr.layerSelectionable(true,{f:attemptToEdit , o:this});
-				
-				state.taskMgr.stack( function(){ layerMgr.layerSelectionable(true) } , this , "select a layer for edition" );
-				
-				return;
-			}
-			if( state.currentElementSelected == null ){
-				hintDisplayer.display( "click on a element to edit it" );
-				uiMap.elementSelectionnable( true , {f:attemptToEdit , o:this} );
-				
-				state.taskMgr.stack( function(){ uiMap.elementSelectionnable(true); } , this , "select an element for edition"  );
-				
-				return;
-			}
-			uiMap.pathEditable( true , dataMap.getLayer( state.currentLayerSelected ).getElement( state.currentElementSelected ) );
-			state.taskMgr.stack( function(){ uiMap.pathEditable(false); } , this , "edit an element"  );
-		};
-		
-		editionPathBn.bind( "click" , attemptToEdit );
-		
-		el.data( "controler" , this );
-	})( dataMap , uiMap , $(".container[data-contain-type=LayerMgr]").data( "component" ) );
 	*/
 	
-	var tm = TimeLine.create( "timeLine" ).editable( true );
-	tm.getElement().appendTo( $("#tm-container") );
 };
 
 scope.init = init;

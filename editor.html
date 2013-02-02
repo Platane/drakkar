@@ -1,14 +1,16 @@
 <html>
 	<head>
 		
-		
+		<!--
 		<link rel="stylesheet" href="external/KNACSS-master/css/knacss-garni.css" />
 		<link rel="stylesheet" href="external/KNACSS-master/css/knacss.css" />
-		<link rel="stylesheet" href="external/leaflet/leaflet.css" />
 		<link rel="stylesheet" href="src/CSS/style.css" />
+		-->
+		<link rel="stylesheet" href="external/leaflet/leaflet.css" />
+		<link rel="stylesheet" href="external/bootstrap/css/bootstrap.css" />
 		<link rel="stylesheet" href="src/CSS/editorPanel.css" />
 		<link rel="stylesheet" href="src/CSS/propertyStack.css" />
-		
+		<link rel="stylesheet" href="src/CSS/global.css" />
 		
 		
 		
@@ -40,67 +42,66 @@
 	<body>
 		<header class = "line mod" >
 		<nav>
-			
-				<ul id="menu">
-					<li>
-					File
-					<ul>
-						<li><a href="#">New<span class="shortcut">ctrl+n</span></td></a></li>
-						<li><a href="#">Open<span class="shortcut">ctrl+o</span></a></li>
-						<li><a href="#">Close<span class="shortcut">ctrl+alt+w</span></a></li>
-						<li><a href="#">Save<span class="shortcut">ctrl+s</span></a></li>
-						<li><a href="#">Save as<span class="shortcut">ctrl+alt+s</span></a></li>
-						<li><a href="#">Exit<span class="shortcut">ctrl+alt+q</span></a></li>
-					</ul>
-					</li>
-					<li>
-						Edit
-						<ul>
-							<li><a href="#">Undo<span class="shortcut">ctrl+z</span></a></li>
-							<li><a href="#">Copy<span class="shortcut">ctrl+c</span></a></li>
-							<li><a href="#">Cut<span class="shortcut">ctrl+x</span></a></li>
-							<li><a href="#">Paste<span class="shortcut">ctrl+v</span></a></li>
-							<li><a href="#">Import element<span class="shortcut">ctrl+i</span></a></li>
-							<li><a href="#">Draw element<span class="shortcut">ctrl+alt+i</span></a></li>
-							<li><a href="#">Open library<span class="shortcut">ctrl+f</span></a></li>
-							<li><a href="#">See related elements<span class="shortcut">ctrl+alt+f</span></a></li>
-						</ul>
-					</li>
-					<li>
-						Layer
-						<ul>
-							<li><a href="#">Add ping<span class="shortcut">ctrl+p</span></a></li>
-							<li><a href="#">Style<span class="shortcut">ctrl+d</span></a></li>
-							<li><a href="#">Brush<span class="shortcut">ctrl+b</span></a></li>
-							<li><a href="#">Show/Hide selected layer<span class="shortcut">ctrl+h</span></a></li>
-							<li><a href="#">Lock/Unlock selected layer<span class="shortcut">ctrl+v</span></a></li>
-							<li><a href="#">Merge below<span class="shortcut">ctrl+e</span></a></li>
-							<li><a href="#">Merge all selected<span class="shortcut">ctrl+alt+e</span></a></li>
-						</ul>
-					</li>
-					<li>
-					Help
-					<ul>
-						<li><a href="#">Consult the online documentation<span class="shortcut">ctrl+alt+h</span></a></li>
-						<li><a href="#">Open library<span class="shortcut">ctrl+f</span></a></li>
-					</ul>
-					</li>
+			<div class="menu" >
+				<ul>
+					<li id="drawbleBn" data-frame="drawable" >Edite Raw Data</li>
+					<li id="searchBn"   data-frame="decorable">Decoration</li>
+					<li id="searchBn"   data-frame="search">Search</li>
 				</ul>
-			
-			
+			</div>
+
 		</nav>
 		</header>
-		
-		</div>
-		<div id="main">
-		
-		</div>
+
+		<div id="main"></div>
 		
 		<div id="popUpPanel" style="display : none; z-index:-10; position : absolute; top : 0; left : 0 ; background-color : rgba( 0 , 0 , 100 , 0.2 ); width : 100%; height : 100%"></div>
 		
 	</body>
 	
+	
 	<div id="framePool" style="display:none" >
+		<!-- edite raw data  -->
+		<div id="drawable" class="frame" >
+			
+			<div class="height-main row-fluid">
+			
+			<div class="compo span1 height-full"></div>
+			
+			<div class="compo span7 height-full">
+				<div class="composant offset1 span10 height10" data-contain-type="UIMap" ></div>
+				<div class="compo span7 height2" ></div>
+			</div>
+			
+			<div class="compo span4 height-full"></div>
+			
+			</div>
+			
+			<div class="height-bottom compo">
+			</div>
+		</div>
+		
+		<!-- edite property declaration  -->
+		<div id="decorable" class="frame" >
+			
+			<div class="height-main row-fluid">
+			
+			<div class="compo span1 height-full"></div>
+			
+			<div class="compo span7 height-full">
+				<div class="composant offset1 span10 height10" data-contain-type="UIMap" ></div>
+				<div class="span7 height2"  ></div>
+			</div>
+			
+			<div class="composant offset1 span3 height-full" data-contain-type="PropertyStack" ></div>
+			
+			</div>
+			
+			<div class="height-bottom compo">
+			</div>
+		</div>
+	</div>
+	<div id="framePool2" style="display:none" >
 		
 		<!-- edite raw data  -->
 		<div id="drawable" class="frame" >
@@ -162,4 +163,7 @@
 		<div id="blank" class="frame" ></div>
 		
 	</div>
+	
+	<div id="hello" style="width:45%;"></div>
+	
 </html>
