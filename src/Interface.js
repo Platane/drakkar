@@ -74,6 +74,9 @@ var fillContainer=function(){
 					case "AttributeMgr" :
 						component = window[ componentName ].create( );
 					break;
+					case "WorldMap" :
+						component = window[ componentName ].create( );
+					break;
 					default :
 						return;
 						component = window[ componentName ].create( dataMap );
@@ -85,6 +88,7 @@ var fillContainer=function(){
 		
 		// some elements need to be linked
 		$(".composant#searchOrgan").data("component").timeMgr=$(".composant#timeLine").data("component");
+		$(".composant#searchOrgan").data("component").zoneMgr=$('.composant[data-contain-type="WorldMap"]').data("component");
 		
 		$('.frame#decorable').find('.composant[data-contain-type="UIMap"]').data("component").elementSelectionnable(true).enhanceSelection(true);
 		$('.frame#drawable').find('.composant[data-contain-type="UIMap"]').data("component").enhanceSelection(true);

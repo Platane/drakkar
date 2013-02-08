@@ -197,6 +197,10 @@ extend( AbstractAttributeHolder , {
 	getName:function(){
 		return this.id;
 	},
+	setName:function(id){
+		this.id=id;
+		this.notify( "set-attribute" );
+	},
 	
 	clone:function(){
 		var c = new AbstractAttributeHolder();

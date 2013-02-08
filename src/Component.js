@@ -694,15 +694,191 @@ UIMap.create = function( datamap  ){
 	return m;
 }
 
+function WorldMap(){};
+extend( WorldMap , AbstractComponent.prototype );
+extend( WorldMap , {
+	map:null,
+	top:null,
+	bot:null,
+	init:function(){
+		var width=500,
+			height=500;
+		var el=$('<div>')
+		.width(width).height(height)
+		.appendTo($('body'));
+		var map=L.map(el[0],{
+			center:new L.LatLng(40,-10),
+			zoom:3,
+			maxZoom:7,
+			maxBounds:new L.LatLngBounds(new L.LatLng(-83.7,-180), new L.LatLng(83.7,180))
+		});
+		el.detach()
+		.css({'width':'100%' , 'height':'100%'});
+		var onEachFeature=function(feature, layer){
+			layer.setStyle({
+				opacity:1,
+				weight:0.3
+			});
+		};
+		L.geoJson(countriesGeoJSON,{onEachFeature: onEachFeature}).addTo(map);
+		
+		this.top=new L.LatLng(35,-20);
+		this.bot=new L.LatLng(60,30);
+		
+		this.map=map;
+		this.el=el;
+		this.initInteraction();
+		this.editable(true);
+	},
+	initInteraction:function(){
+		var self=this;
+		(function(scope){
+			
+			var target;
+			var anchorM={x:0,y:0};
+			var anchorD={x:0,y:0};
+			var newTop,newBot;
+			var startDrag=function(e){
+				target=e.target;
+				anchorM.x=e.originalEvent.pageX;
+				anchorM.y=e.originalEvent.pageY;
+				
+				self.map.off('mousemove',onDrag);
+				self.map.off('mouseup',stopDrag);
+				
+				self.map.on('mousemove',onDrag);
+				self.map.on('mouseup',stopDrag);
+				
+				anchorD=self.map.project(e.target.getLatLng());
+				e.originalEvent.stopPropagation();
+				e.originalEvent.preventDefault();
+			};
+			var stopDrag=function(e){
+				self.map.off('mousemove',onDrag);
+				self.map.off('mouseup',stopDrag);
+				
+				self.top=newTop||self.top;
+				self.bot=newBot||self.bot;
+			};
+			var onDrag=function(e){
+				var dx=(e.originalEvent.pageX-anchorM.x),
+					dy=(e.originalEvent.pageY-anchorM.y);
+				
+				newTop=self.top;
+				newBot=self.bot;
+				
+				if(target.i==4){
+					var t=self.map.project(self.top);
+					t.x+=dx;
+					t.y+=dy;
+					newTop=self.map.unproject(t);
+					
+					var t=self.map.project(self.bot);
+					t.x+=dx;
+					t.y+=dy;
+					newBot=self.map.unproject(t);
+				}
+				if(target.i==0){
+					var t=self.map.project(self.top);
+					t.x+=dx;
+					t.y+=dy;
+					newTop=self.map.unproject(t);
+				}
+				if(target.i==1){
+					var t=self.map.project(self.top);
+					t.y+=dy;
+					newTop=self.map.unproject(t);
+					var t=self.map.project(self.bot);
+					t.x+=dx;
+					newBot=self.map.unproject(t);
+				}
+				if(target.i==2){
+					var t=self.map.project(self.bot);
+					t.x+=dx;
+					t.y+=dy;
+					newBot=self.map.unproject(t);
+				}
+				if(target.i==3){
+					var t=self.map.project(self.top);
+					t.x+=dx;
+					newTop=self.map.unproject(t);
+					var t=self.map.project(self.bot);
+					t.y+=dy;
+					newBot=self.map.unproject(t);
+				}
+				
+				ctrlsPoints[0].setLatLng(new L.LatLng(newTop.lat,newTop.lng));
+				ctrlsPoints[1].setLatLng(new L.LatLng(newTop.lat,newBot.lng));
+				ctrlsPoints[2].setLatLng(new L.LatLng(newBot.lat,newBot.lng));
+				ctrlsPoints[3].setLatLng(new L.LatLng(newBot.lat,newTop.lng));
+				ctrlsPoints[4].setLatLng(new L.LatLng(newBot.lat/2+newTop.lat/2,newBot.lng/2+newTop.lng/2));
+				
+				rect.setLatLngs([ctrlsPoints[0].getLatLng(),ctrlsPoints[1].getLatLng(),ctrlsPoints[2].getLatLng(),ctrlsPoints[3].getLatLng(),ctrlsPoints[0].getLatLng()]);
+				
+			};
+			
+			
+			var ctrlsPoints=[
+				new L.Marker( new L.LatLng(self.top.lat,self.top.lng) ),
+				new L.Marker( new L.LatLng(self.top.lat,self.bot.lng) ),
+				new L.Marker( new L.LatLng(self.bot.lat,self.bot.lng) ),
+				new L.Marker( new L.LatLng(self.bot.lat,self.top.lng) ),
+				new L.Marker( new L.LatLng(self.bot.lat/2+self.top.lat/2,self.bot.lng/2+self.top.lng/2) ),
+			];
+			for(var i=0;i<5;i++)
+				ctrlsPoints[i].i=i;
+				
+			var rect= new L.Rectangle( new L.LatLngBounds( self.top , self.bot ) );
+			
+			
+			var makeMeEditable=function(enable){
+				self.map.off('mousemove',onDrag);
+				self.map.off('mouseup',stopDrag);
+				for(var i=0;i<ctrlsPoints.length;i++)
+					ctrlsPoints[i].off('mousedown',startDrag);
+				if(enable){
+					rect.addTo(self.map);
+					for(var i=0;i<ctrlsPoints.length;i++){
+						ctrlsPoints[i].addTo(self.map);
+						ctrlsPoints[i].on('mousedown',startDrag);
+					}
+				}
+			};
+			scope.editable=makeMeEditable;
+		})(this);
+	},
+	getZone:function(){
+		return {A:new L.latLng(this.top.lat,this.top.lng),B:new L.latLng(this.bot.lat,this.bot.lng)};
+	},
+	editable:function(enable){return this;},
+});
+WorldMap.create = function( ){
+	var m = new WorldMap();
+	m.init(  );
+	return m;
+}
+
+
 function AttributeMgr(){};
 extend( AttributeMgr , {
 	el : null,
 	uistate : null,
+	classesElement:null,
+	idElement:null,
 	init : function(){
 		this.uistate=UIState;
 		
-		var el=$("<div></div>").css({'width':'100%','height':'100%'});
-		$('<div id="class"></div>').appendTo(el);
+		var el=$("<div>").addClass('attributeMgr').css({'width':'100%','height':'100%'});
+		
+		var visage=$('<div>').css({'display':'inline-block'}).addClass('span1').addClass('height12').appendTo(el);
+		
+		var main=$('<div>').css({'display':'inline-block'}).addClass('span11').addClass('height12').appendTo(el);
+		
+		var id=$('<span><span style="margin-right:1em;" class="label">Name : </span></span>').css({'display':'block','height':'20px'}).appendTo(main);
+		this.idElement=$('<span>').appendTo(id);
+		
+		var classes=$('<span><span style="margin-right:1em;" class="label">Class : </span></span>').appendTo(main);
+		this.classesElement=$('<div>').css({'width':'70%','overflow-x':'auto','white-space':'nowrap','display':'inline-block'}).appendTo(classes);
 		
 		this.el=el;
 		
@@ -728,7 +904,7 @@ extend( AttributeMgr , {
 		}
 		
 		var accepte=function(exvalue , value , target){
-			return value;
+			return value.trim().replace(/ /g,'-');
 		};
 		var complete=function(value , target){
 			return ['belier','carotet','tapenade'];
@@ -756,12 +932,50 @@ extend( AttributeMgr , {
 				return;
 			}
 		};
-		var classes=this.el.find("#class");
+		var finishPlus=function(exvalue , value , target){
+			var value=(!value)?'':value.trim();
+			
+			if(value!=""){
+				//modify the class
+				var t=[];
+				var i=els.length;
+				while(i--)
+					t.push(cmd.addClass.create( els[i] , value ));
+				cmd.mgr.execute(cmd.multi.createWithTab( t ));
+				return;
+			}
+		};
+		
+		var classes=this.classesElement;
 		classes.children().remove();
 		for( var c in commonClasses ){
+			$('<span>.</span>').appendTo(classes);
 			var sin = SmartTextInput.create(accepte,complete,finish)
-			.wrapInner(c).addClass('class').appendTo(classes);
+			.wrapInner(c).addClass('class').appendTo(classes).css({'margin-right':'1em'});
 		}
+		var sin = SmartTextInput.create(accepte,complete,finish)
+			.wrapInner('&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;&nbsp;').addClass('class').appendTo(classes).css({'margin-right':'1em'});
+		
+		var accepte=function(exvalue , value , target){
+			return value.trim().replace(/ /g,'-');
+		};
+		var finish=function(exvalue , value , target){
+			var value=(!value)?'':value.trim();
+			if(exvalue==value)
+				return;
+			cmd.mgr.execute(cmd.modifyId.create(els[0],value));
+			return;
+		};
+		var id=this.idElement;
+		id.children().remove();
+		if(els.length==1){	
+			var name=els[0].getName()||'';
+			if(name.length==0)
+				name='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+			SmartTextInput.create(accepte,null,finish)
+				.wrapInner(name).addClass('id').appendTo(id);
+		}else
+			$('<span>---</span>').addClass('id').appendTo(id);
 		/*
 		var display=false;
 		var displayDataList=function(e){
@@ -1091,7 +1305,7 @@ extend( TimeLine , {
 		this.bandStart = this.dateEnd - 100;
 		this.bandEnd = this.dateEnd;
 		
-		var w = 500, h = 150;
+		var w = 500, h = 50;
 		
 		//var el = $("<div>").addClass( "block" ).addClass("timeLine").attr( "width" , w ).attr( "height" , h ).css( { "width": w , "height": h } );
 		var el = $("<div>").addClass("timeLine").css( { "width": '100%' , "height": '100%' } );
@@ -1128,8 +1342,10 @@ extend( TimeLine , {
 			var dragS = false;
 			var dragE = false;
 			
-			var startS = function(){
+			var startS = function(e){
 				dragS = true;
+				e.preventDefault();
+				e.stopPropagation();
 			}
 			var moveS = function( e ){
 				if( !dragS )
@@ -1159,8 +1375,10 @@ extend( TimeLine , {
 			
 			
 			
-			var startE = function(){
+			var startE = function(e){
 				dragE = true;
+				e.preventDefault();
+				e.stopPropagation();
 			}
 			var moveE = function( e ){
 				if( !dragE )
@@ -1651,13 +1869,20 @@ SmartTextInput.prototype={
 	el:null,
 	init:function(_accepte,_complete,_finish){
 		var sp=$('<span></span>');
-		
+		if(!SmartTextInput.rule)
+			SmartTextInput.rule=$('<span>').attr('id','rule').css({'width':'auto' , 'display':'none'}).appendTo($('body'));
 		var edit=function(e){
 			var target=$(e.target);
 			var exText = target.text().trim();
 			var empty = exText==""||exText=="+";
 			var dataList=null;
 			var input=null;
+			
+			var resizeToContenu=function(){
+				//use a span that got the same style as a ruler
+				SmartTextInput.rule.empty().wrapInner(input.val()+'&nbsp;&nbsp;&nbsp;');
+				input.width(SmartTextInput.rule.width());
+			};
 			
 			var complete=function(){
 				var value=input.val();
@@ -1701,14 +1926,21 @@ SmartTextInput.prototype={
 				}
 				complete();
 			};
-			input=$('<input type="text" style="min-width:20px;" value="'+(empty?'':exText)+'" ></input>').insertBefore(target).bind("focusout",accepte).focus();
+			var keydownHandler =function(e){
+				resizeToContenu();
+			};
+			input=$('<input type="text" style="width:auto;" value="'+(empty?'':exText)+'" ></input>').insertBefore(target).bind("focusout",accepte).focus();
 			if( _complete != null ){
 					var id="dataList"+(SmartTextInput.uid++)
 					dataList=$('<datalist ></datalist>').attr("id",id).insertBefore(target);
 					input.attr("list",id);
 			}
 			input.bind("keyup",keyupHandler);
+			input.bind("keydown",keydownHandler);
+			resizeToContenu();
 			target.detach();
+			
+			//style="min-width:20px;" 
 		};
 		
 		sp.bind("click",edit);
@@ -1740,7 +1972,7 @@ extend( PropertyStack , {
 	_full:false,
 	init : function( container ){
 		
-		var el = $("<div>").addClass( "componant" ).css( { "width":'100%' , "height":'100%' } );
+		var el = $("<div>").addClass("property-stack").css( { "width":'100%' , "height":'100%' } );
 		
 		var self=this;
 		
@@ -1838,7 +2070,7 @@ extend( PropertyStack , {
 		})();
 		
 		
-		$("<div>").attr("id","property-stack").appendTo(el);
+		$("<div>").addClass("list").appendTo(el);
 		
 		if(container)
 			el.appendTo(container);
@@ -2079,7 +2311,7 @@ extend( PropertyStack , {
 	 * destroy the list and build a proper one based on the styleChain attribute
 	 */
 	update:function(){
-		var ps = this.el.find( "#property-stack" );
+		var ps = this.el.find( ".list" );
 		var self=this;
 		ps.children().remove();
 		var i=this.styleChain.length;
@@ -2364,8 +2596,9 @@ extend( SearchOrgan , {
 		var timeInterval,tags,zone;
 		if( this.timeMgr )
 			timeInterval=this.timeMgr.getInterval();
+		if( this.timeMgr )
+			zone=this.zoneMgr.getZone();
 		tags={classes:[]};
-		zone={A:{lat:1,lng:2},B:{lat:3,lng:4}};
 		
 		var buildUrl=function(timeInterval,tags,zone){
 			var path="simulatedProxy/search.json?callback=?&jsonp=?";
@@ -2641,6 +2874,7 @@ scope.PropertyStack = PropertyStack;
 scope.PropertyEditor = PropertyEditor;
 scope.SearchOrgan = SearchOrgan;
 scope.ElementInfo = ElementInfo;
+scope.WorldMap = WorldMap;
 
 
 scope.SmartTextInput = SmartTextInput;

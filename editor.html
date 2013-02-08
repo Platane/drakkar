@@ -13,6 +13,7 @@
 		<link rel="stylesheet" href="src/CSS/elementInfo.css" />
 		<link rel="stylesheet" href="src/CSS/timeLine.css" />
 		<link rel="stylesheet" href="src/CSS/layerMgr.css" />
+		<link rel="stylesheet" href="src/CSS/attributeMgr.css" />
 		<link rel="stylesheet" href="src/CSS/global.css" />
 		
 		
@@ -26,6 +27,7 @@
 		
 		<script type="text/javascript" src="src/MapCSS/MapCSSParser.js"></script>
 		<script type="text/javascript" src="src/MapCSS/mapCSS.js"></script>
+		<script type="text/javascript" src="src/country.js"></script>
 		<script type="text/javascript" src="src/Data.js"></script>
 		<script type="text/javascript" src="src/UIData.js"></script>
 		<script type="text/javascript" src="src/Command.js"></script>
@@ -96,12 +98,14 @@
 				<div class="composant offset1 span10 height10" data-contain-type="UIMap" ></div>
 				<div class="composant span5 height2" data-contain-type="LayerMgr" ></div>
 			</div>
-			
+			<!-- <input id="myInput" type="text" style="width:auto;"></input> -->
 			<div class="composant offset1 span3 height-full" data-contain-type="PropertyStack" ></div>
 			
 			</div>
 			
+			<div class="row-fluid">
 			<div class="composant height-bottom span12" data-contain-type="AttributeMgr"></div>
+			</div>
 		</div>
 		
 		
@@ -111,7 +115,7 @@
 				<div class="height8 row-fluid">
 				
 					<div class="span5 height12">
-						<div class="composant span12 height9" data-contain-type="FlatMap"></div>
+						<div class="composant span12 height9" data-contain-type="WorldMap"></div>
 						<div id="timeLine" class="composant span12 height3" data-contain-type="TimeLine"></div>
 					</div>
 					

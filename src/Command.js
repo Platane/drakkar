@@ -624,6 +624,52 @@ CmdSetShape.create = function( dataE , args , update ){
 	return c;
 };
 
+var CmdModifyId = function(){};
+extend( CmdModifyId , AbstractCmd.prototype );
+extend( CmdModifyId , {	
+	_cla : null,
+	_element : null,
+	_update : null,
+	init : function( element , id , update ){
+		
+		this._newId = id;
+		this._exId = element.getName();
+		this._element = element;
+		this._update = update;
+		
+		this._state = STATE_READY;
+	},
+	execute : function( ){
+		if( this._state != STATE_READY )
+			return false;
+		
+		this._element.setName( this._newId );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_SUCCESS;
+		return true;
+	},
+	undo : function( ){
+		if( this._state != STATE_SUCCESS )
+			return false;
+			
+		this._element.setName( this._exId );
+		
+		if( this._update )
+			this._update.f.call( this._update.o );
+		
+		this._state = STATE_CANCEL;
+		return true;
+	},
+} );
+CmdModifyId.create = function( element , id , update ){
+	var c = new CmdModifyId();
+	c.init( element , id , update );
+	return c;
+};
+
 
 var CmdAddClass = function(){};
 extend( CmdAddClass , AbstractCmd.prototype );
@@ -721,6 +767,7 @@ CmdModifyClass.create = function( element , claEx , claNew , update ){
 		CmdAddClass.create( element , claNew )
 		);
 }
+
 
 
 var CmdAlterCSSDeclaration = function(){};
@@ -936,6 +983,7 @@ scope.setShape = CmdSetShape;
 scope.modifyClass = CmdModifyClass;
 scope.addClass = CmdAddClass;
 scope.removeClass = CmdRemoveClass;
+scope.modifyId = CmdModifyId;
 scope.alterCSSDeclaration = CmdAlterCSSDeclaration;
 scope.removeCSSDeclaration = CmdRemoveCSSDeclaration;
 scope.addCSSDeclaration = CmdAddCSSDeclaration;
