@@ -28,9 +28,11 @@ AbstractNotifier.prototype = {
 		
 		var update=null,
 			i=0;
-			
+		
+		//firsts arguments are a list of strings, jump to the first element that is not a string
 		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++);
 		
+		//as this function can be call with various from, make test on the arguments
 		if( i+1<arguments.length )
 			update = {f:arguments[i+1] , o:arguments[i]};
 		else
@@ -52,12 +54,12 @@ AbstractNotifier.prototype = {
 			return update;
 		}
 		
-		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++){
+		for(i=0;i<arguments.length&&typeof(arguments[i])=="string";i++){	// for each string in arguments
 			if( !this._listener[ arguments[i] ] )
 				this._listener[ arguments[i] ] = [];
-			this._listener[ arguments[i] ].push( update );
+			this._listener[ arguments[i] ].push( update );					// push the callBack
 		}
-		if( i==0 ){
+		if( i==0 ){		//default behavior
 			if( !this._listener[ "all" ] )
 				this._listener[ "all" ] = [];
 			this._listener[ "all" ].push( update );
@@ -160,6 +162,9 @@ extend( AbstractAttributeHolder , {
 		this._attributes=attributes||{};
 		this._classes=classes||{};
 	},
+	generatStamp:function(){
+		this.stamp="obj"+(DataMap.objStamp++);
+	},
 	removeAttribute:function( attributeName ){
 		delete this._attributes[ attributeName ];
 		this.notify( "set-attribute" );
@@ -202,11 +207,15 @@ extend( AbstractAttributeHolder , {
 		this.notify( "set-attribute" );
 	},
 	
-	clone:function(){
+	clone:function(perfectClone){
 		var c = new AbstractAttributeHolder();
 		c.id = this.id;
 		c.type = this.type;
 		c._parent = this._parent;
+		if(perfectClone)
+			c.stamp=this.stamp;	
+		else
+			c.generatStamp(); //so its not a perfect clone
 		c._classes = {};
 		for( var i in this._classes )
 			c._classes[i]=true;
@@ -350,6 +359,22 @@ extend( DataLayer , {
 			this._elements.splice( i , 1 );
 		this.notify("element-struct");
 	},
+	clone:function(){
+		var c = new DataLayer();
+		var superDad = AbstractAttributeHolder;
+		if( superDad != null ){
+			var cP = superDad.prototype.clone.call( this );
+			for(var i in cP)
+				c[i]=cP[i];
+		}
+		c._elements=new Array(this._elements.length);
+		var i=this._elements.length;
+		while(i--){
+			c._elements[i]=this._elements[i].clone();
+			c._elements[i]._parent=c;
+		}
+		return c;
+	},
 });
 DataLayer.create = function( name ){
 	var l = new DataLayer();
@@ -358,6 +383,7 @@ DataLayer.create = function( name ){
 		l.id = name;
 	return l;
 };
+
 
 var DataPath = function(){};
 extend( DataPath, AbstractAttributeHolder.prototype );

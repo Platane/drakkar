@@ -265,19 +265,25 @@ AbstractComponent.prototype = {
 	listen:function(enable){return this;},
 }
 
-
+/**
+ * @class an element that wrap leaflet element. 
+ * @description this element use LeafletItem 
+ */
 function UIMap(){};
 extend( UIMap , AbstractComponent.prototype );
 extend( UIMap , {
 	uiDataMap : null,
 	uistate:null,
-	init : function( model ){
+	init : function( model , w , h  ){
 		
-		var el = $("<div>").css({'width':'100%','height':'100%'}).appendTo( $("body") );
+		var w=w||500,
+			h=h||500;
+		
+		var el = $("<div>").css({'width':w+'px','height':h+'px'}).appendTo( $("body") );
 		
 		var uiDataMap = LeafletMap.create( model , el[0] );
 		uiDataMap.lfe.fitWorld();
-		el.detach();
+		el.detach().css({'width':'100%','height':'100%'});
 		uiDataMap.update();
 		
 		this.uiDataMap = uiDataMap;
@@ -570,7 +576,7 @@ extend( UIMap , {
 			scope.pathNodeRemovable = pathNodeRemovable;
 			
 		})( this );
-	
+		
 		//elementSelectionnable
 		(function( scope ){
 			
@@ -674,12 +680,89 @@ extend( UIMap , {
 			scope.enhanceSelection = enhanceSelection;
 			
 		})( this );
+		
+		// enhanceLayerSelection
+		(function( scope ){
+			// update the uimap, all the element pointed by the uistate must have the class reserved-selected and only them
+			var currentSelect=[]; // is a UiData
+			var selectionEnhance = function(){
+							var newSelect;
+							if(!uistate.layer)
+								newSelect=[];
+							else
+								newSelect=datamap.getLayer(uistate.layer).getElements();
+							
+							// remove class if no longuer selected
+							var i=currentSelect.length;
+							while(i--){
+								var stillIn=false;
+								var j=newSelect.length;
+								while(j--)
+									if(currentSelect[i].model==newSelect[j])
+										stillIn=true;
+								if(!stillIn){
+									currentSelect[i].model.removeClass( "reserved-layer-selected" );
+									currentSelect.splice(i,1);
+								}
+							}
+							// add class
+							var j=newSelect.length;
+							while(j--){
+								var i=currentSelect.length;
+								var notYetIn=true;
+								while(i--)
+									if(currentSelect[i].model==newSelect[j])
+										notYetIn=false;
+								if(notYetIn){
+									var uielement= uimap.getElement( newSelect[j] );
+									currentSelect.push( uielement );
+									uielement.model.addClass( "reserved-layer-selected" );
+								}
+							}
+			};
+			var enhanceLayerSelection = function( unable  ){
+					uistate.removeListener( "select-layer" , {o:this,f:selectionEnhance} );
+					if( unable ){
+						uistate.registerListener( "select-layer" , {o:this,f:selectionEnhance} );
+						selectionEnhance();
+					}else{
+						//remove all the class reserved-selected
+						var i=currentSelect.length;
+						while(i--)
+							currentSelect[i].model.removeClass( "reserved-layer-selected" );
+						currentSelect=[];
+					}
+					return scope;
+			};	
+			scope.enhanceLayerSelection = enhanceLayerSelection;
+			
+		})( this );
 	},
 	update : function(){
 		
 		this.uiDataMap.update();
 	},
-	
+	resize: function(w,h){
+		/*
+		if(!w||!h){
+			if(this.el.parent()){
+				w=this.el.parent().attr('width')
+			}
+		}
+		
+		var el=$("<div>").css({'width':'100%','height':'100%'});
+		*/
+		var el=$("<div>").css({'width':w+'px','height':h+'px'});
+		
+		this.uiDataMap.listen(false);
+		this.el.children().remove();
+		this.el.replaceWith(el);
+		
+		this.el=el;
+		this.uiDataMap = LeafletMap.create( this.model , this.el[0] );
+		this.uiDataMap.update();
+		this.uiDataMap.lfe.fitWorld();
+	},
 	pathTraceable : function( unable , update ){return this;},
 	pathEditable : function( unable , points , update ){return this;},
 	pathNodeRemovable : function( unable , points , update ){return this;},
@@ -687,10 +770,11 @@ extend( UIMap , {
 	pathSelectionnable : function( unable , update ){return this;},
 	elementSelectionnable : function( unable , update ){return this;},
 	enhanceSelection : function( unable ){return this;},
+	enhanceLayerSelection : function( unable ){return this;},
 });
-UIMap.create = function( datamap  ){
+UIMap.create = function( datamap , width , height ){
 	var m = new UIMap();
-	m.init( datamap  );
+	m.init( datamap , width , height );
 	return m;
 }
 
@@ -1118,7 +1202,7 @@ LayerMgr.prototype = {
 		// create the element
 		var el = $("<div>").css({'width':'100%' , 'height':'100%'}); 
 		
-		$("<ul>").appendTo( el );
+		$("<table>").addClass('table table-condensed table-hover').appendTo( el );
 		$("<div>").addClass("toolBox").appendTo( el );
 		
 		
@@ -1133,10 +1217,10 @@ LayerMgr.prototype = {
 		
 		var el = this.el;
 		
-		var liste = el.find("ul");
+		var liste = el.find("table");
 		
 		// clear the list
-		liste.children("li").remove();
+		liste.children().remove();
 		
 		// 
 		var layers = this.datamap.getLayers();
@@ -1148,19 +1232,20 @@ LayerMgr.prototype = {
 				// create this anonymous scope make the var set persistent
 				var stamp = layers[i].getStamp();
 				var j=i;
-				var item = $("<li>").attr( "i" , ""+i );
+				var item = $("<tr>").attr( "i" , ""+i );
 				var bin;
 				
 				// the name
-				$("<span>"+layers[i].getName()+"</span>").appendTo( item );
+				$("<td><span>"+layers[i].getName()+"</span></td>").appendTo( item );
 				
 				//add a trash bin button
 				if( self._layerDeletable ){
-					var bin = $("<span></span>").addClass("icon-trash");
+					var bin = $("<span>").addClass("icon-trash");
 					bin.bind( "click" , function(){
 						cmd.mgr.execute( cmd.deleteLayer.create( stamp , self.datamap ) );	
 					});
-					bin.appendTo( item );
+					bin.children('span');
+					bin.appendTo( $('<td>').appendTo(item) );
 					bin.hide();
 				}
 				
@@ -1253,6 +1338,29 @@ LayerMgr.prototype = {
 			$( "#addLayerBn" ).remove();
 			this._layerAddable = false;
 		}
+		return this;
+	},
+	layerHiddable : function( unable  ){
+		/*
+		if( unable ){
+			$( "#addLayerBn" ).remove();
+			var self = this;
+			var bn = $("<div>").attr("id" , "addLayerBn" ).addClass( "btn" ).attr("name" , "new" ).appendTo( this.el.find(".toolBox" ) ).bind( "click" , function(){
+				popUp.addLayer.create( self.datamap , { f : function(){ 
+							if( self._updateAddable ) 
+								self._updateAddable.f.call( self._updateAddable.o );
+							self.map.notify(); 
+							}, o : self } );
+				
+				//popUp.addLayer.create( self.map , { f : self.map.notify , o : self.map } );
+			});
+			bn[ 0 ].innerHTML = "new";
+			
+			this._layerAddable = true;
+		} else {
+			$( "#addLayerBn" ).remove();
+			this._layerAddable = false;
+		}*/
 		return this;
 	},
 	layerSelectionable : function( unable  ){
@@ -2325,6 +2433,7 @@ extend( PropertyStack , {
 		this.enlightCommon();
 		
 		//bind event
+		if(false){
 		var display=false;
 		var displayDataList=function(e){
 			if( display ){
@@ -2409,6 +2518,36 @@ extend( PropertyStack , {
 		
 		if( this._editable )
 			ps.find(".css-properties").find(".css-property-name,.css-property-value").bind("click",displayDataList);
+		
+		}
+		
+		var accepteName=function(){};
+		var accepteValue=function(){};
+		var finishProperty=function(exvalue , value , target){
+			var HTMLdec=target.parents(".css-declaration");
+			if(!value||value.trim()=="")
+				target.parents(".css-property").remove();
+			var newDeclaration=HTMLdec.text().replace( new RegExp( "\xA0" , "g" ) , "" );	//replace the &nbsp;
+			var exDeclaration=target.parents(".css-declaration").data("structure");
+			cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
+		};
+		if( this._editable ||true )
+			ps.find(".css-properties").find(".css-property-name,.css-property-value").each(function(){
+				var sp=$(this);
+				
+				var input=SmartTextInput.create( null , null , finishProperty );
+				
+				input.empty().wrapInner( sp.text() );
+				
+				$(sp.attr('class').split(' ')).each(function() { 
+					if (this !== '') 
+						input.addClass(this+''); 
+				});
+				
+				sp.replaceWith(input);
+			});
+		
+		
 		ps.find(".css-declaration").bind("click",function( e ){
 			var dec = $(e.target).hasClass("css-declaration")?$(e.target).data("structure"):$(e.target).parents(".css-declaration").data("structure");
 			if( dec == null || dec == UIState.declaration )
@@ -2650,24 +2789,7 @@ extend( SearchOrgan , {
 				'population':5,
 				'language':'fr',
 			},
-			'structure':[
-				{
-					'lat':5,
-					'lng':12
-				},
-				{
-					'lat':75,
-					'lng':12
-				},
-				{
-					'lat':60,
-					'lng':30
-				},
-				{
-					'lat':0,
-					'lng':30
-				}
-			]
+			'structure':[{"lat":50.378992,"lng":3.588184},{"lat":49.907497,"lng":4.286023},{"lat":49.985373,"lng":4.799222},{"lat":49.529484,"lng":5.674052},{"lat":49.442667,"lng":5.897759},{"lat":49.463803,"lng":6.18632},{"lat":49.201958,"lng":6.65823},{"lat":49.017784,"lng":8.099279},{"lat":48.333019,"lng":7.593676},{"lat":47.620582,"lng":7.466759},{"lat":47.449766,"lng":7.192202},{"lat":47.541801,"lng":6.736571},{"lat":47.287708,"lng":6.768714},{"lat":46.725779,"lng":6.037389},{"lat":46.27299,"lng":6.022609},{"lat":46.429673,"lng":6.5001},{"lat":45.991147,"lng":6.843593},{"lat":45.70858,"lng":6.802355},{"lat":45.333099,"lng":7.096652},{"lat":45.028518,"lng":6.749955},{"lat":44.254767,"lng":7.007562},{"lat":44.127901,"lng":7.549596},{"lat":43.693845,"lng":7.435185},{"lat":43.128892,"lng":6.529245},{"lat":43.399651,"lng":4.556963},{"lat":43.075201,"lng":3.100411},{"lat":42.473015,"lng":2.985999},{"lat":42.343385,"lng":1.826793},{"lat":42.795734,"lng":0.701591},{"lat":42.579546,"lng":0.338047},{"lat":43.034014,"lng":-1.502771},{"lat":43.422802,"lng":-1.901351},{"lat":44.02261,"lng":-1.384225},{"lat":46.014918,"lng":-1.193798},{"lat":47.064363,"lng":-2.225724},{"lat":47.570327,"lng":-2.963276},{"lat":47.954954,"lng":-4.491555},{"lat":48.68416,"lng":-4.59235},{"lat":48.901692,"lng":-3.295814},{"lat":48.644421,"lng":-1.616511},{"lat":49.776342,"lng":-1.933494},{"lat":49.347376,"lng":-0.989469},{"lat":50.127173,"lng":1.338761},{"lat":50.946606,"lng":1.639001},{"lat":51.148506,"lng":2.513573},{"lat":50.796848,"lng":2.658422},{"lat":50.780363,"lng":3.123252},{"lat":50.378992,"lng":3.588184}],
 			}
 		]
 	},
@@ -2688,24 +2810,29 @@ extend( SearchOrgan , {
 				'population':5,
 				'language':'fr',
 			},
-			'structure':[
-				{
-					'lat':30,
-					'lng':120
-				},
-				{
-					'lat':750,
-					'lng':120
-				},
-				{
-					'lat':600,
-					'lng':300
-				},
-				{
-					'lat':0,
-					'lng':300
-				}
-			]
+			'structure':[{"lat":58.635,"lng":-3.005005},{"lat":57.553025,"lng":-4.073828},{"lat":57.690019,"lng":-3.055002},{"lat":57.6848,"lng":-1.959281},{"lat":56.870017,"lng":-2.219988},{"lat":55.973793,"lng":-3.119003},{"lat":55.909998,"lng":-2.085009},{"lat":55.804903,"lng":-2.005676},{"lat":54.624986,"lng":-1.114991},{"lat":54.464376,"lng":-0.430485},{"lat":53.325014,"lng":0.184981},{"lat":52.929999,"lng":0.469977},{"lat":52.73952,"lng":1.681531},{"lat":52.099998,"lng":1.559988},{"lat":51.806761,"lng":1.050562},{"lat":51.289428,"lng":1.449865},{"lat":50.765739,"lng":0.550334},{"lat":50.774989,"lng":-0.787517},{"lat":50.500019,"lng":-2.489998},{"lat":50.69688,"lng":-2.956274},{"lat":50.228356,"lng":-3.617448},{"lat":50.341837,"lng":-4.542508},{"lat":49.96,"lng":-5.245023},{"lat":50.159678,"lng":-5.776567},{"lat":51.210001,"lng":-4.30999},{"lat":51.426009,"lng":-3.414851},{"lat":51.426848,"lng":-3.422719},{"lat":51.593466,"lng":-4.984367},{"lat":51.9914,"lng":-5.267296},{"lat":52.301356,"lng":-4.222347},{"lat":52.840005,"lng":-4.770013},{"lat":53.495004,"lng":-4.579999},{"lat":53.404547,"lng":-3.093831},{"lat":53.404441,"lng":-3.09208},{"lat":53.985,"lng":-2.945009},{"lat":54.600937,"lng":-3.614701},{"lat":54.615013,"lng":-3.630005},{"lat":54.790971,"lng":-4.844169},{"lat":55.061601,"lng":-5.082527},{"lat":55.508473,"lng":-4.719112},{"lat":55.783986,"lng":-5.047981},{"lat":55.311146,"lng":-5.586398},{"lat":56.275015,"lng":-5.644999},{"lat":56.78501,"lng":-6.149981},{"lat":57.818848,"lng":-5.786825},{"lat":58.630013,"lng":-5.009999},{"lat":58.550845,"lng":-4.211495},{"lat":58.635,"lng":-3.005005}],
+			}
+		]
+	},
+	{
+	'author':'teodor',
+	'name':'den',
+	'gravatarHash':'a0408d1e61bbc0795fee026ddcdbd8a3',
+	'description':'Border of the denmark',
+	'elements':[
+			{
+			'type':'polygon',
+			'id':'denmark',
+			'classes':{
+				'country':true,
+				'border':true,
+				'europeen':true,
+			},
+			'attributes':{
+				'population':5,
+				'language':'den',
+			},
+			'structure':[{"lat":51.345781,"lng":3.314971},{"lat":51.267259,"lng":4.047071},{"lat":51.475024,"lng":4.973991},{"lat":51.037298,"lng":5.606976},{"lat":50.803721,"lng":6.156658},{"lat":50.128052,"lng":6.043073},{"lat":50.090328,"lng":5.782417},{"lat":49.529484,"lng":5.674052},{"lat":49.985373,"lng":4.799222},{"lat":49.907497,"lng":4.286023},{"lat":50.378992,"lng":3.588184},{"lat":50.780363,"lng":3.123252},{"lat":50.796848,"lng":2.658422},{"lat":51.148506,"lng":2.513573},{"lat":51.345781,"lng":3.314971}],
 			}
 		]
 	}
@@ -2799,10 +2926,12 @@ extend( ElementInfo , {
 		$('<div><p></p></div>').addClass('description').appendTo(el);
 		$('<div>').addClass('classes-uses').appendTo(el);
 		
-		$('<div>').wrapInner('add').addClass('btn').appendTo(el)
+		var bn=$('<div>').wrapInner('add').addClass('btn').appendTo(el)
 		.bind('click',function(){
-			if( self.result!= null )
-				cmd.mgr.execute( cmd.addLayer.create( self.result.datamap.getLayers()[0] , datamap ) );
+			if( self.result!= null ){
+				cmd.mgr.execute( cmd.addLayer.create( self.result.datamap.getLayers()[0].clone() , datamap ) );
+			}
+			bn.hide();
 		});
 		
 		this.el=el;
@@ -2822,6 +2951,7 @@ extend( ElementInfo , {
 			
 			
 		}else{
+			this.el.find('.btn').show();
 			this.el.find('.author').children().empty().wrapInner( '@'+result.author );
 			this.el.find('.name').children().empty().wrapInner( result.name );
 			this.el.find('.description').children().empty().wrapInner( result.description );
@@ -2831,16 +2961,18 @@ extend( ElementInfo , {
 			for(var c in result.allClasses )
 				$('<span>').wrapInner( c ).appendTo(classContainer);
 			
+			var map=this.el.find('.map');
 			if(this.uimap){
 				this.uimap.listen(false);
 				this.uimap.getElement().remove();
 			}
-			this.uimap=UIMap.create(result.datamap );
+			this.uimap=UIMap.create(result.datamap,map.width(),map.height());
 			this.uimap.listen(true);
-			this.uimap.getElement().appendTo( this.el.find('.map') );
+			this.uimap.getElement().appendTo( map );
 			this.uimap.getElement().find('.leaflet-control-attribution').remove();
 			this.uimap.uiDataMap.lfe.fitWorld();
 			this.uimap.uiDataMap.update();
+			this.uimap.uiDataMap.lfe.fitWorld();
 			//this.uimap.uiDataMap.lfe.draw();
 		}
 		this.result=result;

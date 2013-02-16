@@ -60,7 +60,10 @@ extend( LeafletMap , {
 		return null;
 	},
 	getLayer : function( layer ){
-		var stamp = this.model.getLayer( layer ).getStamp();
+		var leafletLayer=this.model.getLayer( layer );
+		if(!leafletLayer)
+			return null;
+		var stamp = leafletLayer.getStamp();
 		var i=this.layers.length;
 		while(i--)
 			if(this.layers[i].getStamp()==stamp)
@@ -294,6 +297,9 @@ var LeafletPath = function(){};
 extend( LeafletPath , AbstractLeafletItem.prototype );
 extend( LeafletPath , {
 	_structDirty : true,
+	_selected:false,
+	_hidden:false,
+	_layerSelected:false,
 	init : function( dataPath ){
 		AbstractLeafletItem.prototype.init.call( this );
 		this.model = dataPath;

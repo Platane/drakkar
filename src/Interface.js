@@ -53,7 +53,7 @@ var fillContainer=function(){
 				var component;
 				switch( componentName){
 					case "UIMap" :
-						component = window[ componentName ].create( dataMap );
+						component = window[ componentName ].create( dataMap , 1200 , 1000 );
 					break;
 					case "TimeLine" :
 						component = window[ componentName ].create( );
@@ -90,8 +90,10 @@ var fillContainer=function(){
 		$(".composant#searchOrgan").data("component").timeMgr=$(".composant#timeLine").data("component");
 		$(".composant#searchOrgan").data("component").zoneMgr=$('.composant[data-contain-type="WorldMap"]').data("component");
 		
-		$('.frame#decorable').find('.composant[data-contain-type="UIMap"]').data("component").elementSelectionnable(true).enhanceSelection(true);
+		$('.frame#decorable').find('.composant[data-contain-type="UIMap"]').data("component").elementSelectionnable(true).enhanceSelection(true).enhanceLayerSelection(true);
 		$('.frame#drawable').find('.composant[data-contain-type="UIMap"]').data("component").enhanceSelection(true);
+		
+		$('.frame#decorable').find('.composant[data-contain-type="LayerMgr"]').data("component").layerSelectionable(true).layerDeletable(true);
 		
 		dataMap.notify();
 };
@@ -109,7 +111,7 @@ function init(){
 	//define the model
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
-	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{fill-color:#17aef3;fill-opacity:0.5;strocke-width:1;strocke-color:#444444;strocke-opacity:1;} .reserved-selected { strocke-width : 10; }");
+	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{fill-color:#17aef3;fill-opacity:0.5;strocke-width:1;strocke-color:#444444;strocke-opacity:1;} .reserved-layer-selected { strocke-color : #aaaaaa; } .reserved-selected { strocke-color : #ffffff; } .reserved-hidden { fill-color : #ffffff; }");
 	
 	var l = DataLayer.create("layer1");
 	/*
@@ -119,10 +121,7 @@ function init(){
 	l.addElement( DataDot.create(new L.latLng(100,520)) );
 	*/
 	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
-	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , null,{ "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
-	l.addElement( DataPath.create( [ new L.latLng(30,120) , new L.latLng(750,120) , new L.latLng(700,500) , new L.latLng(0,500) ] , null,{ "country":true , "OFSE-member":true } ) );
-	l.addElement( DataPath.create( [ new L.latLng(-60,30) , new L.latLng(-800,30) , new L.latLng(-900,800) , new L.latLng(-100,800) ]  ) );
-	l.addElement( DataPath.create( [ new L.latLng(0,-160) , new L.latLng(-80,-160) , new L.latLng(-90,-100) , new L.latLng(0,-100) ]  ) );
+	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(10,0) , new L.latLng(10,8) , new L.latLng(0,8) ] , null,{ "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
 	dataMap.addLayer(l);
 	
 	//uimap.pathEditable(true,dataPath);
