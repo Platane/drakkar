@@ -987,14 +987,11 @@ extend( AttributeMgr , {
 				commonClasses[j]=true;
 		}
 		
-		var accepte=function(exvalue , value , target){
+		var correcter=function(value){
 			return value.trim().replace(/ /g,'-');
 		};
-		var complete=function(value , target){
-			return ['belier','carotet','tapenade'];
-		};
-		var finish=function(exvalue , value , target){
-			var value=value.trim();
+		var finish=function(target,exvalue){
+			var value=target.text().trim();
 			if(exvalue==value)
 				return;
 			if(value==null||value==""){
@@ -1016,17 +1013,20 @@ extend( AttributeMgr , {
 				return;
 			}
 		};
-		var finishPlus=function(exvalue , value , target){
-			var value=(!value)?'':value.trim();
+		var finishPlus=function(target,exvalue){
+			var value=target.text().trim();
 			
 			if(value!=""){
-				//modify the class
 				var t=[];
 				var i=els.length;
+				
+				target.data('SmartEdit').finish=finish;	//change the behavior, useless as the cmd will call an update on this element
+				
 				while(i--)
 					t.push(cmd.addClass.create( els[i] , value ));
 				cmd.mgr.execute(cmd.multi.createWithTab( t ));
-				return;
+			}else{
+				target.empty().wrapInner('&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;&nbsp;');
 			}
 		};
 		
@@ -1034,19 +1034,19 @@ extend( AttributeMgr , {
 		classes.children().remove();
 		for( var c in commonClasses ){
 			$('<span>.</span>').appendTo(classes);
-			var sin = SmartTextInput.create(accepte,complete,finish)
-			.wrapInner(c).addClass('class').appendTo(classes).css({'margin-right':'1em'});
+			$('<span>'+c+'</span>')
+			.addClass('class')
+			.smartlyEditable({'finish':finish , 'correcter':correcter})
+			.appendTo(classes);
 		}
-		var sin = SmartTextInput.create(accepte,complete,finish)
-			.wrapInner('&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;&nbsp;').addClass('class').appendTo(classes).css({'margin-right':'1em'});
 		
-		var accepte=function(exvalue , value , target){
-			return value.trim().replace(/ /g,'-');
-		};
-		var finish=function(exvalue , value , target){
-			var value=(!value)?'':value.trim();
-			if(exvalue==value)
-				return;
+		$('<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;&nbsp;</span>')
+			.addClass('class')
+			.smartlyEditable({'finish':finishPlus , 'correcter':correcter})
+			.appendTo(classes);
+			
+		var finish=function(target){
+			var value=target.text().trim();
 			cmd.mgr.execute(cmd.modifyId.create(els[0],value));
 			return;
 		};
@@ -1056,8 +1056,10 @@ extend( AttributeMgr , {
 			var name=els[0].getName()||'';
 			if(name.length==0)
 				name='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-			SmartTextInput.create(accepte,null,finish)
-				.wrapInner(name).addClass('id').appendTo(id);
+			$('<span>'+name+'</span>')
+			.addClass('id')
+			.smartlyEditable({'finish':finish})
+			.appendTo(id);
 		}else
 			$('<span>---</span>').addClass('id').appendTo(id);
 		/*
@@ -1845,7 +1847,8 @@ extend( PropertyEditor , {
 		}
 		var createColorProp=function(name,propName){
 			var ex=properties[propName];
-			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><div class="property-value" style="background-color:'+ex+';"></div></td></tr>');
+			var prop = $('<tr data-propName="'+propName+'" data-type="color"><td><input type="checkbox"></input></td><td><span class="property-name">'+name+'</span></td><td><span>:</span></td><td><input type="text" class="property-value" style="background-color:'+ex+';" value="'+ex+'"></input><div/></td></tr>');
+			/*
 			var colorPicker=prop.find("div.property-value").ColorPicker({"eventName":"click","color":ex,
 				"onSubmit":function(hsb, hex, rgb, el){
 					goEdit();
@@ -1854,7 +1857,31 @@ extend( PropertyEditor , {
 					prop.find("div.property-value").css({"background-color":"#"+hex});
 					ex="#"+hex;
 				},
+			});*/
+			var colorPicker=prop.find("input.property-value")
+			.iris({
+				'target':prop,
+				'change':function(event,ui){
+					colorPicker.css({"background-color":ui.color.toString()});
+					ex=ui.color.toString();
+				},
+			})
+			.bind('click',function(){
+				colorPicker.iris('show');
 			});
+			
+			prop.find('.iris-picker')
+			.css({'height':'200px'});
+			
+			
+			$('<div class="btn btn-primary">Ok</div>')
+			.css({'position':'absolute','bottom':'10px','left':'50px'})
+			.bind('click',function(){
+				goEdit();
+				colorPicker.iris('hide');
+			})
+			.appendTo( prop.find('.iris-picker') );
+			
 			// valid the change the property
 			var goEdit=function(){
 				var nDec=cloneDeclaration(UIState.declaration);
@@ -1959,112 +1986,6 @@ PropertyEditor.create=function(){
 };
 
 /*
- *
- * - complete is a function ( value , target ) 
- *		value is the word currently writed
- *		target is the element <span> ( when complete is called, target is detach and an input text replace it )
- *		exvalue is the word in the span before edit
- * 			return a array of proposition on word
- * 	- accepte is a function ( exvalue , value , target ) 
- *			return the corrected value 
- *			if return is null, remove the element
- *	- finish is a function ( exvalue , value , target ) 
- * 			called at the end
- */
-var SmartTextInput=function(){}
-SmartTextInput.uid=0;
-SmartTextInput.prototype={
-	el:null,
-	init:function(_accepte,_complete,_finish){
-		var sp=$('<span></span>');
-		if(!SmartTextInput.rule)
-			SmartTextInput.rule=$('<span>').attr('id','rule').css({'width':'auto' , 'display':'none'}).appendTo($('body'));
-		var edit=function(e){
-			var target=$(e.target);
-			var exText = target.text().trim();
-			var empty = exText==""||exText=="+";
-			var dataList=null;
-			var input=null;
-			
-			var resizeToContenu=function(){
-				//use a span that got the same style as a ruler
-				SmartTextInput.rule.empty().wrapInner(input.val()+'&nbsp;&nbsp;&nbsp;');
-				input.width(SmartTextInput.rule.width());
-			};
-			
-			var complete=function(){
-				var value=input.val();
-				var options
-				if( !_complete )
-					return;
-				options=_complete.f.call( _complete.o , value , target );
-				if( !dataList )
-					return;
-				dataList.children().remove();
-				if( !options||options.length == 0)
-					return;
-				for( var i=0;i<options.length;i++)
-					$('<option>').wrapInner(options[i]).appendTo(dataList);
-			};
-			var accepte=function(){
-					
-					var value=input.val();
-					
-					
-					input.unbind("keyup",keyupHandler);
-					if( _accepte )
-						value = _accepte.f.call( _accepte.o , exText , value , target );
-						
-					target.empty();
-					if( value != null ){
-						target.wrapInner(value);
-						target.insertBefore(input);
-					}
-					input.remove();
-					if( dataList )
-						dataList.remove();
-					if( _finish )
-						_finish.f.call( _finish.o , exText , value , target );
-			};
-			var keyupHandler =function(e){
-				if(event.which==13){
-					event.preventDefault();
-					accepte();
-					return;
-				}
-				complete();
-			};
-			var keydownHandler =function(e){
-				resizeToContenu();
-			};
-			input=$('<input type="text" style="width:auto;" value="'+(empty?'':exText)+'" ></input>').insertBefore(target).bind("focusout",accepte).focus();
-			if( _complete != null ){
-					var id="dataList"+(SmartTextInput.uid++)
-					dataList=$('<datalist ></datalist>').attr("id",id).insertBefore(target);
-					input.attr("list",id);
-			}
-			input.bind("keyup",keyupHandler);
-			input.bind("keydown",keydownHandler);
-			resizeToContenu();
-			target.detach();
-			
-			//style="min-width:20px;" 
-		};
-		
-		sp.bind("click",edit);
-		this.el=sp;
-	},
-}
-SmartTextInput.create=function( accepte , complete , finish ){
-	var a=new SmartTextInput();
-	var accepte=(!accepte||accepte.f)?accepte:{f:accepte,o:this};
-	var complete=(!complete||complete.f)?complete:{f:complete,o:this};
-	var finish=(!finish||finish.f)?finish:{f:finish,o:this};
-	a.init(accepte,complete,finish);
-	return a.el;
-};
-
-/*
  * an element that display a list of declaration
  * declaration can be raw edited
  * or edited throught the easy editor panel
@@ -2085,7 +2006,7 @@ extend( PropertyStack , {
 		var self=this;
 		
 		var tb=$("<div>").addClass("tool-box").appendTo(el);
-		$('<input type="checkbox" checked="checked"></input><span>display all</span>').appendTo(tb).bind("change",function(e){
+		$('<input type="checkbox" ></input><span>display all</span>').appendTo(tb).bind("change",function(e){
 			self.full( $(e.target).is(':checked') );
 		});
 		$('<input type="checkbox" checked="checked"></input><span>easy edit</span>').appendTo(tb).bind("change",function(e){
@@ -2118,33 +2039,43 @@ extend( PropertyStack , {
 					return "css-class";
 				return "css-tag";
 			}
-			var accepte=function(ex,ne,el){
-				el.removeClass( cond(ex) ).addClass( cond(ne) );
+			var finish=function(target,exvalue){
+				var value=target.text().trim();
+				target.removeClass( cond(exvalue) ).addClass( cond(value) );
 				
-				if( ne=="")
-					return null;
+				if( exvalue.trim()=="" || exvalue.trim()=="+" )
+					$('<span>').wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").smartlyEditable({'finish':finish,'correcter':correcter}).appendTo(target.parent());
 					
-				if( ex=="" || ex=="+" )
-					SmartTextInput.create(accepte,complete).wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").appendTo(contenu.find(".css-selector"));
-				
-				return ne;
+				if( value=="")
+					target.remove();
+					
+				//sort
+				var p=target.parent()
+				var c=p.children();
+				var i=c.length;
+				while(i--)
+					if($(c[i]).hasClass("css-tag"))
+						$(c[i]).detach().prependTo(p);
 			};
 			var complete=function(v,el){
 					
 					
 			};
-			
+			var correcter=function(value){
+				return value.trim().replace(/ /g,'-');
+			};
+		
 			var computeCommonSelector=function(){
 				var sp=$('<span>').addClass("css-selector");
 				if( self.commonElement ){	
 					if( self.commonElement.type )
-						SmartTextInput.create(accepte,complete).wrapInner(self.commonElement.type).addClass("css-condition").addClass("css-tag").appendTo(sp);
+						$('<span>').wrapInner(self.commonElement.type).addClass("css-condition").addClass("css-tag").smartlyEditable({'finish':finish,'correcter':correcter}).appendTo(sp);
 					if( self.commonElement.id )
-						SmartTextInput.create(accepte,complete).wrapInner("#"+self.commonElement.id).addClass("css-condition").addClass("css-id").appendTo(sp);
+						$('<span>').wrapInner("#"+self.commonElement.id).addClass("css-condition").addClass("css-id").smartlyEditable({'finish':finish,'correcter':correcter}).appendTo(sp);
 					for( var i in self.commonElement._classes )
-						SmartTextInput.create(accepte,complete).wrapInner("."+i).addClass("css-condition").addClass("css-class").appendTo(sp);
+						$('<span>').wrapInner("."+i).addClass("css-condition").addClass("css-class").smartlyEditable({'finish':finish,'correcter':correcter}).appendTo(sp);
 				}
-				SmartTextInput.create(accepte,complete).wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").appendTo(sp);
+				$('<span>').wrapInner("&nbsp;&nbsp;+&nbsp;&nbsp;").addClass("css-condition").smartlyEditable({'finish':finish,'correcter':correcter}).appendTo(sp);
 				return sp;
 			}
 			
@@ -2523,7 +2454,18 @@ extend( PropertyStack , {
 		
 		var accepteName=function(){};
 		var accepteValue=function(){};
-		var finishProperty=function(exvalue , value , target){
+		var finishName=function(target,exvalue){
+			var value=target.text();
+			if(exvalue.trim()==""||exvalue.trim()=="+"){
+				$('<span>:</span>').addClass('css-property-separator').appendTo(target.parent());
+				$('<span>').addClass('css-property-value').smartlyEditable({'finish':finishValue}).appendTo(target.parent()).click();
+				$('<span>;</span>').addClass('css-property-end').appendTo(target.parent());
+			}else{
+				finishValue(target);
+			}
+		};
+		var finishValue=function(target){
+			var value=target.text();
 			var HTMLdec=target.parents(".css-declaration");
 			if(!value||value.trim()=="")
 				target.parents(".css-property").remove();
@@ -2531,22 +2473,14 @@ extend( PropertyStack , {
 			var exDeclaration=target.parents(".css-declaration").data("structure");
 			cmd.mgr.execute(cmd.alterCSSDeclaration.create(newDeclaration,exDeclaration));
 		};
-		if( this._editable ||true )
-			ps.find(".css-properties").find(".css-property-name,.css-property-value").each(function(){
-				var sp=$(this);
-				
-				var input=SmartTextInput.create( null , null , finishProperty );
-				
-				input.empty().wrapInner( sp.text() );
-				
-				$(sp.attr('class').split(' ')).each(function() { 
-					if (this !== '') 
-						input.addClass(this+''); 
-				});
-				
-				sp.replaceWith(input);
+		if( this._editable ||true ){
+			ps.find(".css-properties").find(".css-property-name").each(function(){
+				$(this).smartlyEditable({'finish':finishName});
 			});
-		
+			ps.find(".css-properties").find(".css-property-value").each(function(){
+				$(this).smartlyEditable({'finish':finishValue});
+			});
+		}
 		
 		ps.find(".css-declaration").bind("click",function( e ){
 			var dec = $(e.target).hasClass("css-declaration")?$(e.target).data("structure"):$(e.target).parents(".css-declaration").data("structure");
@@ -2599,107 +2533,6 @@ PropertyStack.create=function( container ){
 	a.init( container );
 	return a;
 };
-
-
-function EditablePathParam(){};
-extend( EditablePathParam , AbstractComponent.prototype );
-extend( EditablePathParam , {
-	mapUI:null,
-	element:null,
-	init : function( model , mapUI ){
-		
-		var el = $("<div>").addClass( "block" );
-		
-		var self = this;
-		
-		$('<div id="editPathBn" class="btn icon-btn" >edit</div>').bind("click",function(){
-			self.pathEditable(true);
-		}).appendTo( el );
-		$('<div id="removeNodePathBn" class="btn icon-btn" >rm</div>').bind("click",function(){
-			self.pathNodeRemovable(true);
-		}).appendTo( el );
-		$('<div id="addNodePathBn" class="btn icon-btn" >add</div>').bind("click",function(){
-			self.pathNodeAddable(true);
-		}).appendTo( el );
-		
-		this.el = el;
-		this.model = model;
-		this.mapUI = mapUI;
-		
-	},
-	pathNodeAddable : function( unable , update ){
-		this.el.find("#editPathBn").removeClass( "active" );
-		this.el.find("#removeNodePathBn").removeClass( "active" );
-		this.el.find("#addNodePathBn").addClass( "active" );
-		this.mapUI.pathTraceable(false).pathEditable(false).pathNodeRemovable(false).pathNodeAddable(true,element,update);
-	},
-	pathEditable : function( unable  , update ){
-		this.el.find("#editPathBn").addClass( "active" );
-		this.el.find("#removeNodePathBn").removeClass( "active" );
-		this.el.find("#addNodePathBn").removeClass( "active" );
-		this.mapUI.pathTraceable(false).pathEditable(true,element,update).pathNodeRemovable(false).pathNodeAddable(false);
-	},
-	pathNodeRemovable : function( unable , update ){
-		this.el.find("#editPathBn").removeClass( "active" );
-		this.el.find("#removeNodePathBn").addClass( "active" );
-		this.el.find("#addNodePathBn").removeClass( "active" );
-		this.mapUI.pathTraceable(false).pathEditable(false).pathNodeRemovable(true,element,update).pathNodeAddable(false);
-	},
-	update:function(){
-	
-	},
-} );
-EditablePathParam.create = function( model , mapUI ){
-	var lm = new EditablePathParam();
-	lm.init(  model , mapUI );
-	return lm;
-}
-
-
-function EditionToolBar(){};
-extend( EditionToolBar , AbstractComponent.prototype );
-extend( EditionToolBar , {
-	mapUI:null,
-	element:null,
-	init : function( model , mapUI ){
-		
-		var el = $("<div>").addClass( "block" );
-		
-		var self = this;
-		
-		$('<div id="tracePathBn" class="btn icon-btn" >trace path</div>').bind("click",function(){
-			self.pathTraceable(true);
-		}).appendTo( el );
-		
-		$('<div id="selectionPathBn" class="btn icon-btn" >edit path</div>').bind("click",function(){
-			self.pathSelectionnable(true);
-		}).appendTo( el );
-		
-		this.el = el;
-		this.model = model;
-		this.mapUI = mapUI;
-		
-	},
-	pathTraceable : function( unable , update ){
-		this.el.find(".btn").removeClass( "active" );
-		this.el.find("#tracePathBn").addClass( "active" );
-		this.mapUI.pathEditable(false).pathNodeRemovable(false).pathNodeAddable(false).pathTraceable(true,{f:this.pathEditable,o:this});
-	},
-	pathSelectionnable : function( unable , update ){
-		this.el.find(".btn").removeClass( "active" );
-		this.el.find("#selectionPathBn").addClass( "active" );
-		this.mapUI.pathEditable(false).pathNodeRemovable(false).pathNodeAddable(false).pathTraceable(false).pathSelectionnable(true,{f:this.pathEditable,o:this});
-	},
-	
-	update:function(){
-	
-	},
-} );
-EditionToolBar.create = function( model , mapUI ){
-	var lm = new EditionToolBar();
-	lm.init(  model , mapUI );
-	return lm;
-}
 
 
 function SearchOrgan(){};
@@ -2999,8 +2832,6 @@ scope.popUp = popUp;
 scope.LayerMgr = LayerMgr;
 scope.UIMap = UIMap;
 scope.TimeLine = TimeLine;
-scope.EditablePathParam = EditablePathParam;
-scope.EditionToolBar = EditionToolBar;
 scope.AttributeMgr = AttributeMgr;
 scope.PropertyStack = PropertyStack;
 scope.PropertyEditor = PropertyEditor;
@@ -3008,7 +2839,6 @@ scope.SearchOrgan = SearchOrgan;
 scope.ElementInfo = ElementInfo;
 scope.WorldMap = WorldMap;
 
-
-scope.SmartTextInput = SmartTextInput;
 })( this );
+
 

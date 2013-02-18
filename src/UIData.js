@@ -552,6 +552,22 @@ UIState.init=function(){
  * knows every thing about tags
  */
  //TODO make a dichotomic search
+var Dictionnary={
+	properties:[
+		'fill-color',
+		'fill-opacity',
+		'stroke-color',
+		'stroke-opacity',
+		'stroke-width',
+	],
+	propertiesFn:null,
+	getPropertyComplete:function(){
+		if(!this.propertiesFn)
+			this.propertiesFn=SmartTextInput.createCompleteFn(this.properties);
+		return this.propertiesFn;
+	},
+};
+		
 var TagMgr={
 	_classes:[],
 	_attributes:[],

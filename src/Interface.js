@@ -185,6 +185,9 @@ function init(){
 	ei.getElement().appendTo( $('body') );
 	*/
 	
+	//$('<span id="hellospan" >Hello</span>').appendTo( $('body') ).css({'position':'absolute','top':0,'left':'500px'}).smartlyEditable({completer:['alabama','arkensas','fill']});
+	
+	
 };
 
 scope.init = init;

@@ -15,7 +15,7 @@
 }
 .contenu.visible{
 	height:auto;
-	overflow-y:hidden;
+	/*overflow-y:hidden;*/
 	
 	-webkit-transition: height 1s ease;
 }
