@@ -6,6 +6,7 @@ var extend = function( child , f ){
 };
 
 
+
 /**
  * register element in classes
  * do not manage redundancy
