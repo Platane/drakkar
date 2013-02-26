@@ -2827,7 +2827,6 @@ ElementInfo.create=function(datamap){
 }
 
 //exposure
-scope.state = state;
 scope.popUp = popUp;
 scope.LayerMgr = LayerMgr;
 scope.UIMap = UIMap;
