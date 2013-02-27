@@ -25,6 +25,8 @@
 		<script type="text/javascript" src="external/Iris/iris.js"></script>
 		<script type="text/javascript" src="external/underscore.js"></script>
 		<script type="text/javascript" src="external/backbone.js"></script>
+		<script type="text/javascript" src="external/jquery.scrollTo.js"></script>
+		<script type="text/javascript" src="external/jquery.mousewheel.min.js"></script>
 		
 
 		<script type="text/javascript" src="src/smartTextInput.js"></script>
@@ -33,6 +35,7 @@
 		<script type="text/javascript" src="src/country.js"></script>
 		
 		<script type="text/javascript" src="src/data.js"></script>
+		<script type="text/javascript" src="src/browser.js"></script>
 		
 		<script type="text/javascript" src="src/Command.js"></script>
 		<script type="text/javascript" src="src/Component.js"></script>
@@ -50,6 +53,17 @@
 	</head>
 	
 	<body>
+	
+		<nav id="frame-navigator">
+			<input type="checkbox" checked="checked"></input>
+			<div data-action="goto-search" >s</div>
+			<div data-action="goto-data" >dt</div>
+			<div data-action="goto-decoration" >d</div>
+			<div data-action="goto-presentation" >p</div>
+		</nav>
+		
+		<div id="flow">
+		
 		<div id="frame-header" class="frame">
 			
 		</div>
@@ -93,7 +107,7 @@
 				<div class="row-fluid height1" ></div>
 				<div class="row-fluid height11" >
 					<div class="span7 height12" data-component="Map"></div>
-					<div class="span2 height12" data-component="LayerMgr"></div>
+					<div class="span2 height6" data-component="LayerMgr"></div>
 					<div class="span3 height12" >
 						<div class="row-fluid" >
 							<div class="offset5 span7 height5" data-component="Tool"></div>
@@ -110,74 +124,48 @@
 			</div>
 		</div>
 		
+		<div id="frame-decoration" class="frame fullscreen container-fluid">
+			<div class="row-fluid height10" >
+				<div class="row-fluid height1" ></div>
+				<div class="row-fluid height11" >
+					<div class="span5 height12" data-component="Map"></div>
+					<div class="span2 height6" data-component="LayerMgr"></div>
+					<div class="offset1 span4 height12" data-component="ToolParam" ></div>
+				</div>
+			</div>
+			<div class="row-fluid" >
+				<div class="height2" data-component="AttributeMgr"></div>
+			</div>
+		</div>
+		
+		<div id="frame-presentation" class="frame fullscreen container-fluid">
+			<div class="row-fluid height1" ></div>
+			<div class="row-fluid height10" >
+				<div class="span7 height12" >
+					<div class="row-fluid">
+						<div class="span8 height10" data-component="Map" ></div>
+						<div class="span4 height6" data-component="LayerMgr" ></div>
+					</div>
+				</div>
+				<div class="span5 height12" >
+					<div class="row-fluid height2" ></div>
+					<div class="row-fluid height9 span12" data-component="FinalUserPanel" ></div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="frame-footer" class="frame">
+			
+		</div>
+		
+		
+		</div>
+		
 	</body>
 	
 	
-	<div id="framePool" style="display:none" >
-		<!-- edite raw data  -->
-		<div id="drawable" class="frame" >
-			
-			<div class="height-main row-fluid">
-			
-			<div class="compo span1 height-full"></div>
-			
-			<div class="compo span7 height-full">
-				<div class="composant offset1 span10 height10" data-contain-type="UIMap" ></div>
-				<div class="compo span7 height2" ></div>
-			</div>
-			
-			<div class="compo span4 height-full"></div>
-			
-			</div>
-			
-			<div class="height-bottom compo">
-			</div>
-		</div>
-		
-		
-		<!-- edit property declaration  -->
-		<div id="decorable" class="frame" >
-			
-			<div class="height-main row-fluid">
-			
-			<div class="compo span1 height-full"></div>
-			
-			<div class="compo span7 height-full">
-				<div class="composant span9 height12" data-contain-type="UIMap" ></div> <!-- position: absolute; -->
-				<div class="composant span3 height8" data-contain-type="LayerMgr" ></div>
-			</div>
-			<!-- <input id="myInput" type="text" style="width:auto;"></input> -->
-			<div class="composant offset1 span3 height-full" data-contain-type="PropertyStack" ></div>
-			
-			</div>
-			
-			<div class="row-fluid">
-			<div class="composant height-bottom span12" data-contain-type="AttributeMgr"></div>
-			</div>
-		</div>
-		
-		
-		<!-- search   -->
-		<div id="search" class="frame" >
-			<div class="height12">
-				<div class="height8 row-fluid">
-				
-					<div class="offset1 container-fluid span4 height12">
-						<div class="composant row-fluid span12 height9" data-contain-type="WorldMap"></div>
-						<div>
-						<div id="timeLine" class="composant row-fluid show-grid span12 height3" data-contain-type="TimeLine"></div>
-						</div>
-					</div>
-					
-					<div class="composant span3 height12" data-contain-type="TagForQuery" ></div>
-					
-					<div id="elementInfo" class="composant offset1 span3 height12" data-contain-type="ElementInfo" ></div>
-					
-				</div>
-				<div id="searchOrgan" class="composant height4 row-fluid" data-contain-type="SearchOrgan" ></div>
-			</div>
-		</div>
-		
-	</div>
+	<script type="text/template" id="template-">
+	   
+	</script>
 	
 </html>
