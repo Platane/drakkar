@@ -943,6 +943,178 @@ WorldMap.create = function( ){
 }
 
 
+var WorldMap2=Backbone.View.extend({
+	lfe:null,
+	initialize:function(option){
+		this.initLfe (option.width,option.height);
+		this.initInteraction();
+	},
+	initLfe :function(w,h){
+		var w=w||500,
+			h=h||500;
+		
+		this.$el.children().remove();		//clean the element
+		this.$el.attr('width',w).attr('height',h).css({'width':w+'px','height':h+'px'});		//set the dimension
+		
+		var tmpAppend=false;	
+		if(!this.$el.parent()){				//the element given in param to the leaflet constructor must be in the DOW flow
+			this.$el.appendTo($('body'));	//if not, add it temporaly
+			tmpAppend=true;
+		}
+		this.lfe=new L.Map(this.$el.get(0),{
+			center:new L.LatLng(40,-10),
+			zoom:3,
+			maxZoom:7,
+			maxBounds:new L.LatLngBounds(new L.LatLng(-83.7,-180), new L.LatLng(83.7,180))
+		});		//init the lfe
+		
+		if( tmpAppend )
+			this.$el.detach();
+			
+		this.$el.css({'width':'100%' , 'height':'100%'});
+		
+		var onEachFeature=function(feature, layer){
+			layer.setStyle({
+				opacity:1,
+				weight:0.3
+			});
+		};
+		L.geoJson(countriesGeoJSON,{onEachFeature: onEachFeature}).addTo(this.lfe);
+	},
+	initInteraction:function(){
+		var self=this;
+		var map=this.lfe;
+		var model=this.model;
+		(function(scope,map,model){
+			
+			var target;
+			var anchorM={x:0,y:0};
+			var anchorD={x:0,y:0};
+			var newTop,newBot;
+			var exTop,exBot;
+			var startDrag=function(e){
+				target=e.target;
+				anchorM.x=e.originalEvent.pageX;
+				anchorM.y=e.originalEvent.pageY;
+				
+				map.off('mousemove',onDrag);
+				map.off('mouseup',stopDrag);
+				
+				map.on('mousemove',onDrag);
+				map.on('mouseup',stopDrag);
+				
+				exTop=model.get('zoneTop');
+				exBot=model.get('zoneBot');
+				
+				anchorD=map.project(e.target.getLatLng());
+				e.originalEvent.stopPropagation();
+				e.originalEvent.preventDefault();
+			};
+			var stopDrag=function(e){
+				map.off('mousemove',onDrag);
+				map.off('mouseup',stopDrag);
+				
+				if(newTop&&newBot)
+					model.set({'zoneTop':newTop , 'zoneBot':newBot });
+			};
+			var onDrag=function(e){
+				var dx=(e.originalEvent.pageX-anchorM.x),
+					dy=(e.originalEvent.pageY-anchorM.y);
+				
+				newTop=exTop;
+				newBot=exBot;
+				
+				if(target.i==4){
+					var t=map.project(exTop);
+					t.x+=dx;
+					t.y+=dy;
+					newTop=map.unproject(t);
+					
+					var t=map.project(exBot);
+					t.x+=dx;
+					t.y+=dy;
+					newBot=map.unproject(t);
+				}
+				if(target.i==0){
+					var t=map.project(exTop);
+					t.x+=dx;
+					t.y+=dy;
+					newTop=map.unproject(t);
+				}
+				if(target.i==1){
+					var t=map.project(exTop);
+					t.y+=dy;
+					newTop=map.unproject(t);
+					var t=map.project(exBot);
+					t.x+=dx;
+					newBot=map.unproject(t);
+				}
+				if(target.i==2){
+					var t=map.project(exBot);
+					t.x+=dx;
+					t.y+=dy;
+					newBot=map.unproject(t);
+				}
+				if(target.i==3){
+					var t=map.project(exTop);
+					t.x+=dx;
+					newTop=map.unproject(t);
+					var t=map.project(exBot);
+					t.y+=dy;
+					newBot=map.unproject(t);
+				}
+				
+				ctrlsPoints[0].setLatLng(new L.LatLng(newTop.lat,newTop.lng));
+				ctrlsPoints[1].setLatLng(new L.LatLng(newTop.lat,newBot.lng));
+				ctrlsPoints[2].setLatLng(new L.LatLng(newBot.lat,newBot.lng));
+				ctrlsPoints[3].setLatLng(new L.LatLng(newBot.lat,newTop.lng));
+				ctrlsPoints[4].setLatLng(new L.LatLng(newBot.lat/2+newTop.lat/2,newBot.lng/2+newTop.lng/2));
+				
+				rect.setLatLngs([ctrlsPoints[0].getLatLng(),ctrlsPoints[1].getLatLng(),ctrlsPoints[2].getLatLng(),ctrlsPoints[3].getLatLng(),ctrlsPoints[0].getLatLng()]);
+				
+			};
+			
+			exTop=model.get('zoneTop');
+			exBot=model.get('zoneBot');
+			
+			var ctrlsPoints=[
+				new L.Marker( new L.LatLng(exTop.lat,exTop.lng) ),
+				new L.Marker( new L.LatLng(exTop.lat,exBot.lng) ),
+				new L.Marker( new L.LatLng(exBot.lat,exBot.lng) ),
+				new L.Marker( new L.LatLng(exBot.lat,exTop.lng) ),
+				new L.Marker( new L.LatLng(exBot.lat/2+exTop.lat/2,exBot.lng/2+exTop.lng/2) ),
+			];
+			for(var i=0;i<5;i++)
+				ctrlsPoints[i].i=i;
+				
+			var rect= new L.Rectangle( new L.LatLngBounds( exTop, exBot ) );
+			
+			// add element to the frame
+			rect.addTo(map);
+			for(var i=0;i<ctrlsPoints.length;i++)
+				ctrlsPoints[i].addTo(map);
+			
+			var makeMeEditable=function(enable){
+				map.off('mousemove',onDrag);
+				map.off('mouseup',stopDrag);
+				for(var i=0;i<ctrlsPoints.length;i++)
+					ctrlsPoints[i].off('mousedown',startDrag);
+				if(enable){
+					for(var i=0;i<ctrlsPoints.length;i++)
+						ctrlsPoints[i].on('mousedown',startDrag);
+				}
+				return this;
+			};
+			scope.editable=makeMeEditable;
+		})(this,map,model);
+	},
+	editable:function(enable){return this;},
+	listen:function(unable){
+		return this;
+	},
+});
+
+
 function AttributeMgr(){};
 extend( AttributeMgr , {
 	el : null,
@@ -2836,7 +3008,7 @@ scope.PropertyStack = PropertyStack;
 scope.PropertyEditor = PropertyEditor;
 scope.SearchOrgan = SearchOrgan;
 scope.ElementInfo = ElementInfo;
-scope.WorldMap = WorldMap;
+scope.WorldMap = WorldMap2;
 
 })( this );
 

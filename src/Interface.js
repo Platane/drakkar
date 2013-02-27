@@ -1,55 +1,11 @@
-var extend = function( child , f ){
-	for( var p in f )
-		child.prototype[ p ] = f[ p ];
-	if( !child.prototype.superDad )
-		child.prototype.superDad = f;
-};
-
 ( function( scope ){
 
-/* sort of global object */
 
-
-var hintDisplayer = { display : function( hint ){ console.log("hint : "+hint); } };
-
-/*  */
-
-
-function swapFrame( id ){
-	
-	var currentFrame = $( "#main > div" );
-	if( currentFrame.length > 0 ){
-		//finish
-		currentFrame.detach();
-		currentFrame.appendTo( $("#framePool") );
-	}
-	
-	var targetFrame = $("#framePool").find("#"+id+".frame");
-	
-	targetFrame.appendTo( $("#main") );
-}
-
-
-function initMenuAction(){
-	var menuBn = $(".menu").find( "li" );
-	
-	menuBn.each( function(){
-		var bn = $(this);
-		
-		bn.bind( "click" , function( e ){
-			
-			swapFrame( bn.attr( "data-frame" ) );
-			
-		});
-	});
-	swapFrame( "drawable" );
-	swapFrame( "search" );
-};
 var fillContainer=function(){
 	$("#framePool").find(".frame").each(function(){
-		$(this).find(".composant").each( function(){
+		$(this).find("data-component").each( function(){
 			$(this).children().remove();
-				var componentName = $(this).attr( "data-contain-type" );
+				var componentName = $(this).attr( "data-component" );
 				var component;
 				switch( componentName){
 					case "UIMap" :
@@ -97,96 +53,81 @@ var fillContainer=function(){
 		
 		dataMap.notify();
 };
-			/*
-function resize(){
-	var currentFrameLabel = $( "#main > div" ).attr( "id" );
-	switch( currentFrameLabel ){
-	case "drawable" :
-		
+
+var fillComponent=function(){
 	
-}	*/
+	// the tool models
+	var queryMgr,
+		resultMgr;
+	
+	
+	// search panel
+	(function(){
+	var frame=$('#frame-search');
+	
+	// the model
+	queryMgr=new (Backbone.Model.extend({
+		tags:null,
+		defaults:function(){
+			return {
+				dtstart:1945,
+				dtend:2013,
+				zoneTop:new L.LatLng(35,-20),
+				zoneBot:new L.LatLng(60,30),
+				tags:[],
+			};
+		},
+		initialize:function(attr,option){
+			
+		},
+	}))();
+	
+	// the zone selector
+	var cwm=frame.find('[data-component=WorldMap]');
+	cwm.css({'height':cwm.height()+'px'});					//   /!\ no longueur responsive
+	
+	var wm=new WorldMap({model:queryMgr, width:cwm.width() , height:cwm.height()})
+	.listen(true)
+	.editable(true);
+	
+	cwm
+	.empty()
+	.append(wm.$el);
+	
+	// the go button
+	var cgo=frame.find('[data-component=Go]');
+	cgo
+	.on('click.lauchRequest' , function(){
+		
+		//resultMgr.handler();
+		
+	})
+	.on('click.gotoResult' , function(){
+		
+		frameNavigator.setFrame('result');
+		
+	})
+	
+	})();
+};
 
 function init(){
 	
 	//define the model
+	/*
 	var dataMap = DataMap.create();
 	window.dataMap = dataMap;
 	mCSS.init( " polygon.OFSE-member{ fill : #8952ae ; fill-opacity : 0.5 ; } polygon{fill-color:#17aef3;fill-opacity:0.5;strocke-width:1;strocke-color:#444444;strocke-opacity:1;} .reserved-layer-selected { strocke-color : #aaaaaa; } .reserved-selected { strocke-color : #ffffff; } .reserved-hidden { fill-color : #ffffff; }");
 	
 	var l = DataLayer.create("layer1");
-	/*
-	l.addElement( DataDot.create(new L.latLng(0,0)) );
-	l.addElement( DataDot.create(new L.latLng(1500,0)) );
-	l.addElement( DataDot.create(new L.latLng(1500,100)) );
-	l.addElement( DataDot.create(new L.latLng(100,520)) );
-	*/
-	//var dataPath = DataPath.create( [ new L.latLng(0,0) , new L.latLng(800,0) , new L.latLng(900,800) , new L.latLng(0,800) ] , {"reserved-selected":true} , {} )
 	l.addElement( DataPath.create( [ new L.latLng(0,0) , new L.latLng(10,0) , new L.latLng(10,8) , new L.latLng(0,8) ] , null,{ "country":true , "OFSE-member":true , "potassum-exporter":true} ) );
 	dataMap.addLayer(l);
-	
+	*/
 	//uimap.pathEditable(true,dataPath);
 	
 	// fill the container
 	
-	fillContainer();
-	initMenuAction();
-	UIState.init();
-	/*
-	//linker
-	(function(uimap,uistate){
-		var lastTool=null;
-		var cancelLastTool=null;
-		uistate.registerListener("select-tool", {o:this,f:function(){ 
-			if( cancelLastTool ){
-				cancelLastTool.f.call( cancelLastTool.o );
-				cancelLastTool=null;
-			}
-			switch( uistate.tool ){
-				case uistate.toolList.edit :
-				
-				(function(){
-					uimap.pathEditable( true );
-					cancelLastTool={o:null,f:null};
-					cancelLastTool.o=this;
-					cancelLastTool.f = function(){
-						uimap.pathEditable( false );
-						//uistate.removeListener("select-element" , key );
-					};
-				})();
-				break;
-			}
-			lastTool=uistate.tool;
-		}});
-	})(	uiMap , UIState );
-	
-	//init editing tool bar
-	var el = $("#edition-toolBarclass");
-	el.find( "[data-action=path-edition]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.edit); } );
-	el.find( "[data-action=path-edition2]" ).bind("click" , function(){ UIState.setTool(UIState.toolList.select); } );
-	
-	el.find( "[data-action=path-edition3]" ).bind("click" , function(){ cmd.mgr.undo(); } );
-	el.find( "[data-action=path-edition4]" ).bind("click" , function(){ cmd.mgr.redo(); } );
-	
-	TagMgr.init(dataMap);
-	UIState.init();
-	AttributeMgr.create( UIState ).getElement().appendTo( "#block-property" );
-	
-	/*
-	var ps = PropertyStack.create( );
-	ps.getElement().appendTo("body").css({"display":"inline-block"});
-	ps.editable(true).easyEditable(true).full(true);
-	
-	
-	var organ=SearchOrgan.create();
-	organ.getElement().appendTo( $('body') );
-	organ.request();
-	
-	var ei = ElementInfo.create();
-	ei.getElement().appendTo( $('body') );
-	*/
-	
-	//$('<span id="hellospan" >Hello</span>').appendTo( $('body') ).css({'position':'absolute','top':0,'left':'500px'}).smartlyEditable({completer:['alabama','arkensas','fill']});
-	
+	fillComponent();
 	
 };
 

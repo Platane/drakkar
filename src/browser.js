@@ -1,14 +1,4 @@
-if(!window.requestAnimFrame)
-window.requestAnimFrame=(function(callback){
-		return window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.oRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-		function(callback){
-			window.setTimeout(callback, 1000 / 60 );
-		};
-})();
+
 
 // Data
 var frameNavigator = new (Backbone.Model.extend({
@@ -17,12 +7,29 @@ var frameNavigator = new (Backbone.Model.extend({
         frame:"header",
       };
     },
+	goto:null,
 	setFrame:function(f) {
 		this.set({'frame':f});
 		this.trigger('goto');
 	},
 	instanciate:function(){},
 }))();
+frameNavigator.goto=frameNavigator.setFrame; // alias
+
+
+
+// dependancy
+if(!window.requestAnimFrame)
+	window.requestAnimFrame=(function(callback){
+			return window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame ||
+			window.oRequestAnimationFrame ||
+			window.msRequestAnimationFrame ||
+			function(callback){
+				window.setTimeout(callback, 1000 / 60 );
+			};
+	})();
 
 var Scrollor = function( model , flow ){
 	this.model=model;
@@ -78,7 +85,6 @@ Scrollor.prototype={
 			this.run=false;
 		}else{
 			var alpha=this.ease( t/this.delay );
-			console.log(t/this.delay+"  "+alpha);
 			sc=alpha*this.to+(1-alpha)*this.from;
 		}
 		sc=Math.round(sc);
@@ -122,7 +128,6 @@ Scrollor.prototype={
 			.off('mouseenter.magnetism mouseup.magnetism');
 	},
 }
-
 $(document).ready(function(){
 	var sc = new Scrollor( frameNavigator , $('#flow') );
 	
@@ -134,13 +139,54 @@ $(document).ready(function(){
 	
 	nav.find('[type=checkbox]').on('change',function(e){ sc.unableMagnetism( $(e.target).is(':checked') ); } )
 	.change();
-	
-	
-	$("#guide").find(".close").on('click',function(){
-		$("#guide").find(".alert").hide();
-	}).click();
-	$('#guide-portrait').on('click',function(){
-		$("#guide").find(".alert").show();
-	});
-	
 });
+
+
+
+// hint displayer
+
+
+var hintdisplayer = {
+	alert:null,
+	initialize:function(){
+		this.alert=$("#guide").find(".alert");
+		this.alert.find('.close').on('click',function(e){
+			$(e.target).parents(".alert").hide();
+		});
+	},
+	/**
+	 * @param option set of param
+	 * option is a string -> write the string
+	 * option.title
+	 * option.body
+	 * option.$el  -> a jQuery element
+	 * option.status ->  error || success || info modify the style of the pop up
+	 */
+	 
+	pop:function( option ){
+		var c=this.alert.children('.close').detach();
+		this.alert.empty().append(c);
+		if( typeof( option ) == "string" ){
+			this.alert
+			.append( $('<span>'+option+'</span>') )
+		}else
+		if( option.$el ){
+			this.alert
+			.append( $el )
+		}else{
+			if( option.title )
+				this.alert.append( $('<h4>'+option.title+'</h4>') );
+			if( option.body )
+				this.alert.append( $('<span>'+option.body+'</span>') )
+		}
+		this.alert.removeClass('alert-error alert-success alert-info');
+		if( option.status && ( option.status=='error' || option.status=='success' || option.status=='info') )
+			this.alert.addClass( 'alert-'+option.status );
+		this.alert.show();
+	},
+};
+$(document).ready(function(){
+	hintdisplayer.initialize();
+	hintdisplayer.pop({title:'hello' , 'body':'i will be your guide' });
+});
+	
