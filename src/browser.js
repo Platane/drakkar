@@ -19,7 +19,7 @@ var Scrollor = function( model , flow ){
 	this.model.on( 'goto' , this.changeFrame ,this );
 };
 Scrollor.prototype={
-	power:0.34,		//% of window height
+	power:0.24,		//% of window height
 	wait:670,		//ms
 	model:null,
 	flow:null,
@@ -83,5 +83,12 @@ $(document).ready(function(){
 	nav.find('[type=checkbox]').on('change',function(e){ sc.unableMagnetism( $(e.target).is(':checked') ); } )
 	.change();
 	
+	
+	$("#guide").find(".close").on('click',function(){
+		$("#guide").find(".alert").hide();
+	}).click();
+	$('#guide-portrait').on('click',function(){
+		$("#guide").find(".alert").show();
+	});
 	
 });

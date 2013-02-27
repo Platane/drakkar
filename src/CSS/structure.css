@@ -61,6 +61,7 @@
 
 
 
+
 nav{
 	position:fixed;
 	top:20%;
@@ -70,7 +71,26 @@ nav{
 	padding:5px;
 	background-color:#f1f1f1;
 }
-
+#guide .alert{
+	margin-top:10px;
+	display:inline-block;
+	float:right;
+	max-width:70%;
+}
+#guide{
+	position:fixed;
+	top:1%;
+	right:20px;
+}
+#guide-portrait{
+	height:68px;
+	width:68px;
+	float:right;
+	background-color:#ccc;
+	display:inline-block;
+	margin-left:30px;
+	cursor:pointer;
+}
 
 .container-fluid{
 	max-width:1100px;
