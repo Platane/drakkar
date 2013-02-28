@@ -117,6 +117,28 @@ nav{
 	height : 400px;
 	background-color:#f3f3f3;
 }
+#frame-result{
+	transition:margin-bottom , height 0.6s ease 0.7s;
+	-webkit-transition:margin-bottom , height 0.6s ease 0.7s;
+	-moz-transition:margin-bottom , height 0.6s ease 0.7s;
+	overflow-y:hidden;
+}
+#frame-result.hidden{
+	height:0;
+	margin-bottom:0;
+}
+#frame-result #list-result{
+	overflow-y:hidden;
+	overflow-x:auto;
+	white-space:nowrap;
+}
+#frame-result .result{
+	display:inline-block;
+	width:400px;
+	height:90%;
+	border:solid 2px #777;
+}
+
 .fullscreen{
 	height:100%;
 }
@@ -126,6 +148,7 @@ nav{
 .frame-blank-top-compl{
 	height:90%;
 }
+
 
 html{
 	/*overflow-y:hidden;*/

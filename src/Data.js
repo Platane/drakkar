@@ -46,6 +46,9 @@ var AbstractDataElement = Backbone.Model.extend({
 		delete cs[c];
 		this.set({"classes":cs});
     },
+	clone:function(){
+		return new AbstractDataElement({'name':this.get('name') , 'classes':_.clone( this.get('classes') ) , 'attributes':_.clone( this.get('attributes') ) } );
+	},
 });
 AbstractDataElement.count=0;
 
@@ -55,12 +58,29 @@ var DataMap = AbstractDataElement.extend({
 	defaults: _.extend({
       
     }, AbstractDataElement.prototype.defaults() ),
-	
 	initialize: function() {
-		Package.__super__.initialize.call(this);
+		DataMap.__super__.initialize.call(this);
 		this.children=new Backbone.Collection();
 		this.children.model=DataPackage;
 		this.type='map';
+	},
+	addPackage:function(datapackage){
+		this.children.add(datapackage);
+	},
+	removePackage:function(p){
+		if( typeof(p)=="string" )
+			if( p.substr(0,3)=="obj" ){
+				p=this.children.find( function(a){return a.getStamp()==p;}); 
+			}else{
+				console.log('deleting an element using backbone cid is not recommanded, because of the delaguator class midle data');
+				p=this.children.get(p);
+			}
+		else
+			p=this.children.get(p);
+		if(p){
+			this.children.remove(p);
+			p.destroy();
+		}
 	},
 });
 
@@ -104,6 +124,22 @@ var DataPackage = AbstractDataElement.extend({
 			el.destroy();
 		}
 	},
+	clone:function(cloneStamp){
+		var c=new DataPackage({
+			'name':this.get('name') , 
+			'classes':_.clone( this.get('classes') ) , 
+			'attributes':_.clone( this.get('attributes') ) 
+		});
+		var cl=[];
+		this.children.each(function(e){
+			cl.push(e.clone(cloneStamp));
+		});
+		c.children.reset(cl);
+		if(cloneStamp!=null&&cloneStamp)
+			c.stamp=this.stamp;
+		return c;
+		
+	},
 });
 
 var DataPolygon = AbstractDataElement.extend({
@@ -116,6 +152,17 @@ var DataPolygon = AbstractDataElement.extend({
 	initialize: function() {
 		DataPolygon.__super__.initialize.call(this);
 		this.type='polygon';
+	},
+	clone:function(cloneStamp){
+		var c=new DataPackage({
+			'name':this.get('name') ,
+			'classes':_.clone( this.get('classes') ) ,
+			'attributes':_.clone( this.get('attributes') ) ,
+			'struct':L.cloneLatLngArray(this.get('struct') )
+			});
+		if(cloneStamp!=null&&cloneStamp)
+			c.stamp=this.stamp;
+		return c;
 	},
 });
 
@@ -666,53 +713,9 @@ var map,map2;
 
 var mcss= new DatamCSS(null,{'mcss':'a#b.c{strocke-width:4;}e.f{fill:#451231;}'});
 
-window.onload=function(){
+$(document).ready(function(){
 
 if(!Backbone.$)Backbone.$=window.jQuery;
-
-var PackageMgr = Backbone.View.extend({
- 
-initialize: function() {
-	this.model=this.model.children;
-	this.listenTo(this.model, "add", this.addOne);
-    this.el=$( $('#panel-pack-template').html());
-	this.addAll();
-  },
-  
-  addOne:function(pack){
-	new PackageItem({model:pack}).el.appendTo( this.el.find('table') );
-  },
-  
-  addAll: function() {
-     this.model.each(this.addOne, this);
-  },
-  
-  render: function() {
-      
-  },
-  
-});
-
-var PackageItem = Backbone.View.extend({
-	
-  initialize: function() {
-    this.listenTo(this.model, "change:name", this.render);
-    this.listenTo(this.model, "destroy", this.remove);
-	this.el=$( $('#item-pack-template').html());
-	this.render();
-  },
-
-  remove:function(){
-	this.el.remove();
-  },
-
-  render: function() {
-	this.el.find('.name').html(this.model.get('name'));
-   return this;
-  },
-
-});
-
 
 
 
@@ -823,10 +826,139 @@ var AdaptLeafletPolygon = AbstractAdaptLeafletElement.extend({
 
 
 
-window.PackageMgr = PackageMgr;
+
+var ViewPackages = Backbone.View.extend({
+  tagName:'div',
+  toolmodel:null,
+  initialize: function(option) {
+	this.toolmodel=option.toolmodel;
+	this.listenTo(this.model.children, "add", this.addOne);
+    this.$el.html( $('#panel-package-template').html() );
+	this.addAll();
+  },
+  addOne:function(pack){
+	new ViewPackage({model:pack},{toolmodel:this.toolmodel}).$el.appendTo( this.$el.find('table') );
+  },
+  addAll: function() {
+     this.model.children.each(this.addOne, this);
+  },
+  render: function() {
+      
+  },
+  
+});
+
+var ViewPackage = Backbone.View.extend({
+  tagName:'div',
+  toolmodel:null,
+  initialize: function(option) {
+    this.toolmodel=option.toolmodel;
+	
+	this.listenTo(this.model, "change", this.render);
+    this.listenTo(this.model, "destroy", this.remove);
+    //this.listenTo(this.toolmodel, "change:packageHidden", this.render);
+	
+	this.$el.html( $('#item-package-template').html() );
+	this.render();
+  },
+  remove:function(){
+	this.$el.remove();
+  },
+  render: function() {
+	this.$el.find('.name').html(this.model.get('name'));
+    return this;
+  },
+
+});
 
 
+///////////////////////////////////
+////  result displayer
 
+var ViewResults = Backbone.View.extend({
+  initialize: function() {
+	this.listenTo(this.model.results, "reset", this.render);
+	this.addAll();
+  },
+  addOne:function(result){
+	new ViewResult({model:result,resultsmgr:this.model}).$el.appendTo( this.$el.find('#list-result') );
+  },
+  addAll: function() {
+     this.model.results.each(this.addOne, this );
+  },
+  removeAll:function(){
+	this.$el.find('#list-result').children().remove();
+  },
+  render: function() {
+      this.removeAll();
+	  this.addAll();
+  },
+});
+
+var ViewResult = Backbone.View.extend({
+  tagName:'div',
+  className:'result',
+  resultsmgr:null,
+  initialize: function(option) {
+	this.resultsmgr=option.resultsmgr;
+    this.$el.html( $('#item-result-template').html() );
+	this.render();
+  },
+  events: {
+    "click"                : "select",
+  },
+  select:function(){
+	 this.resultsmgr.set({'selected':this.model});
+  },
+  remove:function(){
+	this.$el.remove();
+  },
+  render: function() {
+	this.$el.find('[data-contain=name]').html(this.model.get('name'));
+	this.$el.find('[data-contain=author]').html(this.model.get('author'));
+   return this;
+  },
+});
+
+var ViewResultInfo = Backbone.View.extend({
+  tagName:'div',
+  initialize: function(option) {
+	this.listenTo(this.model, "change:selected", this.render);
+	this.render();
+  },
+  events: {
+    "click .btn"                : "add",
+  },
+  add:function(){
+	 this.$el.find('.btn').hide();
+	 
+	 var datamap=this.model.datamap;
+	 var datapackage=this.model.get('selected').datapackage.clone();
+	 cmd.execute( cmd.AddPackage.create(datamap,datapackage) );
+  },
+  render: function() {
+	this.$el.empty();
+	var r=this.model.get('selected');
+	if(!r)
+		return null;
+	this.$el.html( $('#item-result-info-template').html() );
+	this.$el.find('[data-contain=name]').html(r.get('name'));
+	this.$el.find('[data-contain=author]').html(r.get('author'));
+	this.$el.find('[data-contain=description]').html(r.get('description'));
+	this.$el.find('img').attr('src','http://www.gravatar.com/avatar/'+r.get('hashMail')+'?s=60&d=mm');
+	this.$el.find('.btn').show();
+	
+    return this;
+  },
+});
+
+
+window.ViewResults = ViewResults;
+window.ViewPackages = ViewPackages;
+window.ViewResultInfo = ViewResultInfo;
+
+
+/*
 map=new AdaptLeafletMap({'model':middle});
 map.$el.appendTo( $('body') )
 .css({'display':'inline-block'});
@@ -844,7 +976,7 @@ new L.Map(el.get(0));
 el.appendTo($('body'));
 */
 
-}
+});
 
 
 

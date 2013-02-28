@@ -992,3 +992,178 @@ scope.mgr = CmdMgr.create();
 
 })( cmd );
 
+
+
+////compact cmd
+cmd=(function(){
+
+var AbstractCmd = function(){};
+AbstractCmd.prototype = {
+	execute : function( ){
+		return true;
+	},
+	undo : function( ){
+		return true;
+	},
+	redo : function( ){
+		return this.execute();
+	},
+	toString : function(){ return "Abstract Commande";},
+};
+
+/*
+ * execute in one round severals cmds 
+ */
+var CmdMultiple = function(){};
+_.extend( CmdMultiple.prototype , AbstractCmd.prototype );
+_.extend( CmdMultiple.prototype , {	
+	_cmds : null,
+	initWithCmds : function( t ){
+		this._cmds = t;
+	},
+	execute : function( ){
+		for( var i=0;i<this._cmds.length;i++ )
+			this._cmds[ i ].execute();
+	},
+	undo : function( ){
+		for( var i=this._cmds.length-1;i>=0;i-- )
+			this._cmds[ i ].undo();
+	},
+	redo : function( ){
+		for( var i=0;i<this._cmds.length;i++ )
+			this._cmds[ i ].redo();
+	}
+} );
+CmdMultiple.create = function( ){
+	var c = new CmdMultiple();
+	c.initWithCmds( arguments );
+	return c;
+};
+CmdMultiple.createWithTab = function( t ){
+	var c = new CmdMultiple();
+	c.initWithCmds( t );
+	return c;
+};
+
+
+var CmdInverse = function( cmd ){
+	var i=function(){};
+	for( var prop in cmd.prototype )
+		i.prototype[ prop ]=cmd.prototype[ prop ];
+	i.prototype[ 'execute' ]=cmd.prototype[ 'undo' ];
+	i.prototype[ 'undo' ]=cmd.prototype[ 'execute' ]; 
+	return i;
+};
+
+var AddPackage=function(){};
+_.extend( AddPackage.prototype , AbstractCmd.prototype );
+_.extend( AddPackage.prototype , {
+	datamap:null,
+	datapackage:null,
+	init:function( datamap , datapackage ){
+		this.datamap=datamap;
+		this.datapackage=datapackage;
+	},
+	execute : function( ){
+		this.datamap.addPackage( this.datapackage );
+	},
+	undo : function( ){
+		this.datamap.removePackage( this.datapackage );
+	},
+});
+AddPackage.create=function( datamap , datapackage ){
+	var c = new AddPackage();
+	c.init( datamap , datapackage );
+	return c;
+};
+
+var RemovePackage=CmdInverse( AddPackage );
+RemovePackage.create=function( datamap , datapackage ){
+	var c = new RemovePackage();
+	c.init( datamap , datapackage );
+	return c;
+};
+
+var Set=function(){};
+_.extend( Set.prototype , AbstractCmd.prototype );
+_.extend( Set.prototype , {
+	model:null,
+	o:null,
+	exo:null,
+	init:function( model , key , value ){
+		this.model=model;
+		if( typeof(key)=="object" && value == null )
+			this.o=key;
+		else{
+			this.o={};
+			this.o[ key ]=value;
+		}
+		this.exo={};
+		for(var key in this.o )
+			this.exo[key]=this.model.get(key);
+	},
+	execute : function( ){
+		this.model.set(this.o);
+	},
+	undo : function( ){
+		this.model.set(this.exo);
+	},
+});
+/**
+ * @param {model}model  {object}set of key / value    |  {model}model  {string} key   {object} value
+ */
+Set.create=function( model , key , value ){
+	var c = new Set();
+	c.init( model , key , value );
+	return c;
+};
+
+
+var CmdMgr = function(){};
+CmdMgr.prototype = {
+	_undoable : null,
+	_redoable : null,
+	init : function(){
+		this._undoable = Stack.createWithCapacity( 50 );
+		this._redoable = Stack.createWithCapacity( 50 );
+	},
+	execute : function( cmd ){
+		cmd.execute();
+		this._undoable.push( cmd );
+	},
+	undo : function( ){
+		var cmd = this._undoable.pop();
+		if( !cmd )
+			return;
+		cmd.undo();
+		this._redoable.push( cmd );
+	},
+	redo : function( ){
+		var cmd = this._redoable.pop();
+		if( !cmd )
+			return;	
+		cmd.redo();
+		this._undoable.push( cmd );
+	},
+};
+CmdMgr.create = function(){
+	var m = new CmdMgr();
+	m.init();
+	return m;
+};
+
+var mgr=CmdMgr.create();
+
+return{
+	'Multi'				:	CmdMultiple,
+	'AddPackage'		:	AddPackage,
+	'RemovePackage'		:	RemovePackage,
+	'Set'				:	Set,
+	
+	'execute'			:	function(cmd){mgr.execute(cmd);},
+	'undo'				:	function(){mgr.undo();},
+	'redo'				:	function(){mgr.redo();},
+};
+
+})();
+

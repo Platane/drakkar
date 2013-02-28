@@ -107,7 +107,7 @@
 			</div>
 		</div>
 		
-		<div id="frame-result" class="frame height10 container-fluid">
+		<div id="frame-result" class="frame height10 container-fluid hidden">
 			<div class="row-fluid frame-blank-top" ></div>
 			<div class="row-fluid frame-blank-top-compl" >
 				<div class="row-fluid height8" >
@@ -115,7 +115,9 @@
 					<div class="height11" data-component="PackageInfo"></div>
 				</div>
 				<div class="row-fluid height4" >
-					<div class="offset1 span10 height12" data-component="Result" ></div>
+					<div class="offset1 span10 height12" data-component="Results" >
+						<div id="list-result" ></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -127,7 +129,7 @@
 					<div class="row-fluid height1" ></div>
 					<div class="row-fluid height11" >
 						<div class="span7 height12" data-component="Map"></div>
-						<div class="span2 height6" data-component="LayerMgr"></div>
+						<div class="span2 height6" data-component="ViewPackages"></div>
 						<div class="span3 height12" >
 							<div class="row-fluid" >
 								<div class="offset5 span7 height5" data-component="Tool"></div>
@@ -190,9 +192,28 @@
 		
 	</body>
 	
-	
-	<script type="text/template" id="template-">
-	   
+	<script type="text/template" id="item-result-info-template">
+		<div data-contain="map"></div>
+		<h1 data-contain="name"></h1>
+		<h5><span>@</span><span data-contain="author"></span></h5>
+		<a href="http://gravatar.com" target="_blank" ><img src=""></img></a>
+		<span data-contain="description"></span>
+		<div class="btn">add</div>
+	</script>
+	<script type="text/template" id="item-result-template">
+			<h4 data-contain="name"></h4>
+			<span>@</span><span data-contain="author"></span>
+	</script>
+	<script type="text/template" id="panel-package-template">
+			<table>
+			</table>
+	</script>
+	<script type="text/template" id="item-package-template">
+			<tr>
+		      <td><span class="name" /></td>
+		      <td><a class="hide"></a></td>
+		      <td><a class="destroy">d</a></td>
+		    </tr>
 	</script>
 	
 </html>
