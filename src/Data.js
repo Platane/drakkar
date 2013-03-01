@@ -33,18 +33,22 @@ var AbstractDataElement = Backbone.Model.extend({
 		return this.stamp;
 	},
     getParent:function(){
-		return null;
+		return this.parent;
 	},
 	addClass: function(c) {
 		var cs=this.get("classes");
 		cs[c]=true;
 		this.set({"classes":cs});
+		this.trigger('change');
+		this.trigger('change:classes');
     },
 	removeClass: function(c) {
 		var cs=this.get("classes");
 		cs[c]=null;
 		delete cs[c];
 		this.set({"classes":cs});
+		this.trigger('change');
+		this.trigger('change:classes');
     },
 	clone:function(){
 		return new AbstractDataElement({'name':this.get('name') , 'classes':_.clone( this.get('classes') ) , 'attributes':_.clone( this.get('attributes') ) } );
@@ -66,6 +70,7 @@ var DataMap = AbstractDataElement.extend({
 	},
 	addPackage:function(datapackage){
 		this.children.add(datapackage);
+		datapackage.parent=this;
 	},
 	removePackage:function(p){
 		if( typeof(p)=="string" )
@@ -145,7 +150,7 @@ var DataPackage = AbstractDataElement.extend({
 var DataPolygon = AbstractDataElement.extend({
 	defaults: _.extend(
 	{
-      struct:[],
+      structure:[],
     }, 
 	AbstractDataElement.prototype.defaults()
 	),	
@@ -154,11 +159,11 @@ var DataPolygon = AbstractDataElement.extend({
 		this.type='polygon';
 	},
 	clone:function(cloneStamp){
-		var c=new DataPackage({
+		var c=new DataPolygon({
 			'name':this.get('name') ,
 			'classes':_.clone( this.get('classes') ) ,
 			'attributes':_.clone( this.get('attributes') ) ,
-			'struct':L.cloneLatLngArray(this.get('struct') )
+			'structure':L.cloneLatLngArray(this.get('structure') )
 			});
 		if(cloneStamp!=null&&cloneStamp)
 			c.stamp=this.stamp;
@@ -257,7 +262,88 @@ var MiddleDataElement = MiddleData.extend({
 
 
 
-
+var MiddleDataMap=Backbone.Model.extend({
+		elementSelected:null,		//array of dataelement
+		packageHidden:null,			//array of datapackage
+		defaults:function(){
+			return {
+			};
+		},
+		initialize:function(attr,option){
+			this.elementSelected=[];
+			this.packageHidden=[];
+		},
+		
+		isElementSelected:function(dataelement){
+			return _.find( this.elementSelected ,function(e){return dataelement.getStamp()==e.getStamp();}) == null;
+		},
+		addSelectedElement:function(dataelement,option){
+			option=option||{};
+			if( this.isElementSelected(dataelement) )		//already in
+				return;
+			this.elementSelected.push( dataelement );
+			if(!option.silent){
+				this.trigger('change:elementSelected');
+				this.trigger('change');
+			}
+		},
+		removeSelectedElement:function(dataelement,option){
+			option=option||{};
+			var index=0;
+			if(_.find( this.elementSelected ,function(e,i){index=i;return dataelement.getStamp()==e.getStamp();}) == null )
+				return;
+			this.elementSelected.splice(index,1);
+			if(!option.silent){
+				this.trigger('change:elementSelected');
+				this.trigger('change');
+			}
+		},
+		removeAllSelectedElement:function(option){
+			option=option||{};
+			this.elementSelected=[];
+			if(!option.silent){
+				this.trigger('change:elementSelected');
+				this.trigger('change');
+			}
+		},
+	
+		isPackageHidden:function(datapackage,option){
+			return _.find( this.packageHidden ,function(e){return datapackage.getStamp()==e.getStamp();}) != null;
+		},
+		hidePackage:function(datapackage,option){
+			option=option||{};
+			if( this.isPackageHidden(datapackage) )		//already in
+				return;
+			this.packageHidden.push(datapackage);
+			if(!option.silent){
+				this.trigger('change:packageHidden');
+				this.trigger('change');
+			}
+		},
+		showPackage:function(datapackage,option){
+			option=option||{};
+			var index=0;
+			if(_.find( this.packageHidden ,function(e,i){index=i;return datapackage.getStamp()==e.getStamp();}) == null )
+				return;
+			this.packageHidden.splice(index,1);
+			if(!option.silent){
+				this.trigger('change:packageHidden');
+				this.trigger('change');
+			}
+		},
+		toggleVisibility:function(datapackage,option){
+			option=option||{};
+			var index=0;
+			if(_.find( this.packageHidden ,function(e,i){index=i;return datapackage.getStamp()==e.getStamp();}) == null )
+				this.packageHidden.push(datapackage);
+			else
+				this.packageHidden.splice(index,1);
+			if(!option.silent){
+				this.trigger('change:packageHidden');
+				this.trigger('change');
+			}
+		},
+});
 
 ///////////////////////
 // css wraper  //////////
@@ -703,8 +789,8 @@ extend( AbstractStyleHolder , {
 
 
 var pack=new DataPackage();
-pack.addElement( new DataPolygon({'name':'maki' , 'struct':[new L.LatLng(35.650072,61.210817),new L.LatLng(35.270664,62.230651),new L.LatLng(35.404041,62.984662),new L.LatLng(35.857166,63.193538),new L.LatLng(36.007957,63.982896),new L.LatLng(36.312073,64.546479),new L.LatLng(37.111818,64.746105),new L.LatLng(37.305217,65.588948),new L.LatLng(37.661164,65.745631),new L.LatLng(37.39379,66.217385),new L.LatLng(37.362784,66.518607),new L.LatLng(37.356144,67.075782),new L.LatLng(37.144994,67.83),new L.LatLng(37.023115,68.135562),new L.LatLng(37.344336,68.859446),new L.LatLng(37.151144,69.196273),new L.LatLng(37.608997,69.518785),new L.LatLng(37.588223,70.116578),new L.LatLng(37.735165,70.270574),new L.LatLng(38.138396,70.376304),new L.LatLng(38.486282,70.806821),new L.LatLng(38.258905,71.348131),new L.LatLng(37.953265,71.239404),new L.LatLng(37.905774,71.541918),new L.LatLng(37.065645,71.448693),new L.LatLng(36.738171,71.844638),new L.LatLng(36.948288,72.193041),new L.LatLng(37.047558,72.63689),new L.LatLng(37.495257,73.260056),new L.LatLng(37.421566,73.948696),new L.LatLng(37.41999,74.980002),new L.LatLng(37.133031,75.158028),new L.LatLng(37.020841,74.575893),new L.LatLng(36.836176,74.067552),new L.LatLng(36.720007,72.920025),new L.LatLng(36.509942,71.846292),new L.LatLng(36.074388,71.262348),new L.LatLng(35.650563,71.498768),new L.LatLng(35.153203,71.613076),new L.LatLng(34.733126,71.115019),new L.LatLng(34.348911,71.156773),new L.LatLng(33.988856,70.881803),new L.LatLng(34.02012,69.930543),new L.LatLng(33.358533,70.323594),new L.LatLng(33.105499,69.687147),new L.LatLng(32.501944,69.262522),new L.LatLng(31.901412,69.317764),new L.LatLng(31.620189,68.926677),new L.LatLng(31.71331,68.556932),new L.LatLng(31.58293,67.792689),new L.LatLng(31.303154,67.683394),new L.LatLng(31.304911,66.938891),new L.LatLng(30.738899,66.381458),new L.LatLng(29.887943,66.346473),new L.LatLng(29.472181,65.046862),new L.LatLng(29.560031,64.350419),new L.LatLng(29.340819,64.148002),new L.LatLng(29.468331,63.550261),new L.LatLng(29.318572,62.549857),new L.LatLng(29.829239,60.874248),new L.LatLng(30.73585,61.781222),new L.LatLng(31.379506,61.699314),new L.LatLng(31.548075,60.941945),new L.LatLng(32.18292,60.863655),new L.LatLng(32.981269,60.536078),new L.LatLng(33.528832,60.9637),new L.LatLng(33.676446,60.52843),new L.LatLng(34.404102,60.803193),new L.LatLng(35.650072,61.210817)] } ));
-pack.addElement( new DataPolygon({'name':'makal', 'struct':[new L.LatLng(45.650072,61.210817),new L.LatLng(45.270664,62.230651),new L.LatLng(45.404041,62.984662)] }) );
+pack.addElement( new DataPolygon({'name':'maki' , 'structure':[new L.LatLng(35.650072,61.210817),new L.LatLng(35.270664,62.230651),new L.LatLng(35.404041,62.984662),new L.LatLng(35.857166,63.193538),new L.LatLng(36.007957,63.982896),new L.LatLng(36.312073,64.546479),new L.LatLng(37.111818,64.746105),new L.LatLng(37.305217,65.588948),new L.LatLng(37.661164,65.745631),new L.LatLng(37.39379,66.217385),new L.LatLng(37.362784,66.518607),new L.LatLng(37.356144,67.075782),new L.LatLng(37.144994,67.83),new L.LatLng(37.023115,68.135562),new L.LatLng(37.344336,68.859446),new L.LatLng(37.151144,69.196273),new L.LatLng(37.608997,69.518785),new L.LatLng(37.588223,70.116578),new L.LatLng(37.735165,70.270574),new L.LatLng(38.138396,70.376304),new L.LatLng(38.486282,70.806821),new L.LatLng(38.258905,71.348131),new L.LatLng(37.953265,71.239404),new L.LatLng(37.905774,71.541918),new L.LatLng(37.065645,71.448693),new L.LatLng(36.738171,71.844638),new L.LatLng(36.948288,72.193041),new L.LatLng(37.047558,72.63689),new L.LatLng(37.495257,73.260056),new L.LatLng(37.421566,73.948696),new L.LatLng(37.41999,74.980002),new L.LatLng(37.133031,75.158028),new L.LatLng(37.020841,74.575893),new L.LatLng(36.836176,74.067552),new L.LatLng(36.720007,72.920025),new L.LatLng(36.509942,71.846292),new L.LatLng(36.074388,71.262348),new L.LatLng(35.650563,71.498768),new L.LatLng(35.153203,71.613076),new L.LatLng(34.733126,71.115019),new L.LatLng(34.348911,71.156773),new L.LatLng(33.988856,70.881803),new L.LatLng(34.02012,69.930543),new L.LatLng(33.358533,70.323594),new L.LatLng(33.105499,69.687147),new L.LatLng(32.501944,69.262522),new L.LatLng(31.901412,69.317764),new L.LatLng(31.620189,68.926677),new L.LatLng(31.71331,68.556932),new L.LatLng(31.58293,67.792689),new L.LatLng(31.303154,67.683394),new L.LatLng(31.304911,66.938891),new L.LatLng(30.738899,66.381458),new L.LatLng(29.887943,66.346473),new L.LatLng(29.472181,65.046862),new L.LatLng(29.560031,64.350419),new L.LatLng(29.340819,64.148002),new L.LatLng(29.468331,63.550261),new L.LatLng(29.318572,62.549857),new L.LatLng(29.829239,60.874248),new L.LatLng(30.73585,61.781222),new L.LatLng(31.379506,61.699314),new L.LatLng(31.548075,60.941945),new L.LatLng(32.18292,60.863655),new L.LatLng(32.981269,60.536078),new L.LatLng(33.528832,60.9637),new L.LatLng(33.676446,60.52843),new L.LatLng(34.404102,60.803193),new L.LatLng(35.650072,61.210817)] } ));
+pack.addElement( new DataPolygon({'name':'makal', 'structure':[new L.LatLng(45.650072,61.210817),new L.LatLng(45.270664,62.230651),new L.LatLng(45.404041,62.984662)] }) );
 
 var middle=new MiddleDataPackage({'model':pack});
 
@@ -719,19 +805,30 @@ if(!Backbone.$)Backbone.$=window.jQuery;
 
 
 
+var ViewLeafletMap= (function(){
+
+
 var AdaptLeafletMap = Backbone.View.extend({
 	lfe:null, //the leaflet element
 	
 	tagName:'div',
 	
-	initialize: function() {
+	middledata:null,
+	mcssdata:null,
+	
+	//children:null,		//keep track of the children because leaflet doenst do so, and then its difficult t odelete something
+	
+	getLeafletAdapt:function(dataelement){
 		
-		//this.model=new MiddleDataPackage({'model':this.model});
+	},
+	initialize: function(option) {
+		this.middledata=option.middledata;
+		this.mcssdata=option.mcssdata;
 		
 		this.listenTo(this.model.children, "add", this.addOne);
 		this.listenTo(this.model.children, "remove", this.removeOne);
 		
-		this.initLfe();
+		this.initLfe(option.width,option.height);
 	},
 	initLfe :function(w,h){
 		var w=w||500,
@@ -761,21 +858,190 @@ var AdaptLeafletMap = Backbone.View.extend({
 	},
 	addOne:function(dataElement){
 		var type=dataElement.type;
-		var adaptLeafletElement;
+		var al;
 		switch(type){	// set up the adaptLeafletElement according to the type of the dataElement added
 			case 'polygon':
-				adaptLeafletElement = new AdaptLeafletPolygon({'model':dataElement});
+				al = new AdaptLeafletPolygon({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata});
+				this.lfe.addLayer(al.lfe);
+			break;
+			case 'package':
+				dataElement.children.each(this.addOne,this);
 			break;
 			default: throw 'unkonw type';
 		}
-		
-		this.lfe.addLayer( adaptLeafletElement.lfe );	// add the element to mine leaflet element
 	},
 	addAll:function(){
 		this.model.children.each(this.addOne,this);
 	},
+	removeOne:function(){
+		
+	},
 });
 
+
+var AdaptLeafletElement = function(){
+	this.initialize.apply(this,arguments);
+};
+_.extend( AdaptLeafletElement.prototype,{
+	
+	//models
+	data:null,
+	middledata:null,
+	mcssdata:null,
+	
+	lfe:null,
+	
+	dirty:false,
+	
+	selected:false,
+	
+	stylechain:null,  	//can be hold by the dataelement
+	
+	initialize:function(option){
+		this.data=option.data;
+		this.middledata=option.middledata;
+		this.mcssdata=option.mcssdata;
+		
+		this.data.on({
+			"change:structure" 			: $.proxy(this.changeStructure,this),
+			"change:attributes" 		: $.proxy(this.changeStyle,this),
+			"change:name" 				: $.proxy(this.changeStyle,this),
+			"change:classes" 			: $.proxy(this.changeStyle,this),
+		});
+		
+		this.middledata.on({
+			"change:elementSelected"	: $.proxy(this.changeSelected,this),
+		});
+		
+		this.mcssdata.on({
+			"change"					: $.proxy(this.changeStyle,this),
+		});
+	},
+	needRedraw:function(){
+		this.dirty=true;
+		this.lfe.redraw();
+	},
+	changeStructure:function(){
+		
+	},
+	changeSelected:function(){
+		if(this.middledata.isElementSelected(this.data)==this.selected)
+			return;
+		this.selected=!this.selected;
+		this.needRedraw();
+	},
+	changeStyle:function(){
+		this.stylechain=this.mcssdata.computeChain(this.data);
+		var style=this._mergeStyleChain(this.stylechain,this.middledata);
+		var llstyle=this._interpretStyle(style);
+		this.lfe.setStyle(llstyle);
+	},
+	
+	_interpretStyle:function( mergedStyle ){
+		/* assuming there is no collision in the mergedStyle */
+		var JSONstyle = {};
+		for( var p in mergedStyle ){
+			var value = mergedStyle[ p ];
+			switch( p ){
+				case "strocke-width" :
+					/* TODO : throw error if the style is not applicable to this item */
+					JSONstyle.strocke = true;
+					JSONstyle.weight = value;
+					if( !JSONstyle.color )
+						JSONstyle.color = "#000000";
+					if( !JSONstyle.opacity )
+						JSONstyle.opacity = "1";
+				break;
+				case "strocke-opacity" :
+					JSONstyle.strocke = true;
+					JSONstyle.opacity = value;
+					if( !JSONstyle.color )
+						JSONstyle.color = "#000000";
+					if( !JSONstyle.weight )
+						JSONstyle.weight = 1;
+				break;
+				case "strocke-color" :
+					JSONstyle.strocke = true;
+					JSONstyle.color = value;
+					if( !JSONstyle.opacity )
+						JSONstyle.opacity = "1";
+					if( !JSONstyle.weight )
+						JSONstyle.weight = 1;
+				break;
+				
+				case "fill-opacity" :
+					JSONstyle.fill = true;
+					JSONstyle.fillOpacity = value;
+					if( !JSONstyle.fillColor )
+						JSONstyle.fillColor = "#000000";
+				break;
+				case "fill-color" :
+					JSONstyle.fill = true;
+					JSONstyle.fillColor = value;
+					if( !JSONstyle.fillOpacity )
+						JSONstyle.fillOpacity = 1;
+				break;
+				default : 
+					throw 'unknow property "'+p+'" ';
+			}
+		}
+		return JSONstyle;
+	},
+	_mergeStyleChain:function( stylechain , middledata ){
+		var style = {};
+		var dec;
+		for( var i = 0 ; i < stylechain.length ; i ++ ){
+			dec = stylechain[i].declaration;
+			if( true ){		// condition on middledata ( on the zoom for example
+				var p=dec.get('properties');
+				for( var j in p )
+					style[ j ] = p[j];
+			}
+		}
+		return style;
+	},
+});
+
+
+var AdaptLeafletPolygon = function(){
+	this.initialize.apply(this,arguments);
+};
+_.extend( AdaptLeafletPolygon.prototype,AdaptLeafletPolygon.prototype);
+_.extend( AdaptLeafletPolygon.prototype,{
+	initialize:function(option){
+		AdaptLeafletElement.prototype.initialize.call(this,option);
+		
+		this.lfe = new L.LayerGroup();
+		this.lfe.addLayer( new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) ) );
+		var s=L.cloneLatLngArray(this.data.get('structure'));
+		for(var i=0;i<s.length;i++)
+			this.lfe.addLayer( new L.Marker( s[i] ) );
+	},
+	changeStructure:function(){
+		this.lfe.setLatLngs( L.cloneLatLngArray(this.data.get('structure')) );
+		this.needRedraw();
+	},
+});
+
+/*
+noneed
+var AdaptLeafletPackage = function(){
+	this.initialize(arguments);
+};
+_.extend( AdaptLeafletPackage.prototype,{
+	datapackage:null,
+	middledata:null,
+	lfe:null,
+	initialize:function(option){
+		this.datapackage=option.datapackage;
+		this.middledata=option.middledata;
+		
+		this.listenTo(this.model.children, "add", this.addOne);
+		this.listenTo(this.model.children, "remove", this.removeOne);
+	},
+});
+*/
+/*
 var AbstractAdaptLeafletElement = Backbone.View.extend({
 	model : null,
 	_event : null,
@@ -821,23 +1087,27 @@ var AdaptLeafletPolygon = AbstractAdaptLeafletElement.extend({
 		this.lfe=l;
 	},
 });
+*/
+return AdaptLeafletMap;
 
-
-
-
+})();
 
 
 var ViewPackages = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
+  middledatamap:null,
   initialize: function(option) {
+  
 	this.toolmodel=option.toolmodel;
+	this.middledatamap=option.middledatamap;
+	
 	this.listenTo(this.model.children, "add", this.addOne);
     this.$el.html( $('#panel-package-template').html() );
 	this.addAll();
   },
   addOne:function(pack){
-	new ViewPackage({model:pack},{toolmodel:this.toolmodel}).$el.appendTo( this.$el.find('table') );
+	new ViewPackage({model:pack,toolmodel:this.toolmodel,middledatamap:this.middledatamap}).$el.appendTo( this.$el.find('table') );
   },
   addAll: function() {
      this.model.children.each(this.addOne, this);
@@ -849,28 +1119,69 @@ var ViewPackages = Backbone.View.extend({
 });
 
 var ViewPackage = Backbone.View.extend({
-  tagName:'div',
+  tagName:'tr',
+  className:'item-package',
   toolmodel:null,
+  middledatamap:null,
+  
+  events: {
+    "click [data-contain=visible]"          	  : "toggleVisibility",
+    "click [data-contain=trash]"       		      : "trash",
+    "click [data-contain=pop]"       		      : "pop",
+  },
   initialize: function(option) {
     this.toolmodel=option.toolmodel;
+    this.middledatamap=option.middledatamap;
 	
-	this.listenTo(this.model, "change", this.render);
+	this.listenTo(this.model, "change:name", this.render);
     this.listenTo(this.model, "destroy", this.remove);
-    //this.listenTo(this.toolmodel, "change:packageHidden", this.render);
+    this.listenTo(this.middledatamap , "change", this.render);
 	
 	this.$el.html( $('#item-package-template').html() );
 	this.render();
   },
+  
+  pop:function(){
+	var e=this.$el.find('[data-contain=pop]');
+	if(!e.data('popover'))
+		e.popover({
+			'animation' : true,
+			'placement' : 'right',
+			'html'		: new ViewPackageInfo({model:this.model,container:e}).$el,
+		});
+	e.popover('show');
+  },
+  toggleVisibility:function(){
+	this.middledatamap.toggleVisibility(this.model);
+  },
+  trash:function(){
+	cmd.execute( cmd.RemovePackage.create(this.model.getParent(),this.model) );
+  },
+  
+  
   remove:function(){
 	this.$el.remove();
   },
+  visibilityChange:function(){
+	if( this.middledatamap.isPackageHidden(this.model) )
+		this.$el.find('[data-contain=visible]').removeClass('icon-eye-open').addClass('icon-eye-close');
+	else
+		this.$el.find('[data-contain=visible]').removeClass('icon-eye-close').addClass('icon-eye-open');
+  },
   render: function() {
-	this.$el.find('.name').html(this.model.get('name'));
+	this.$el.find('[data-contain=name]').html(this.model.get('name'));
+	this.visibilityChange();
     return this;
   },
 
 });
 
+var ViewPackageInfo = Backbone.View.extend({
+	initialize: function(option) {
+		this.$el.html( $('#item-package-info-template').html() );
+		this.render();
+	 },
+});
 
 ///////////////////////////////////
 ////  result displayer
@@ -956,6 +1267,7 @@ var ViewResultInfo = Backbone.View.extend({
 window.ViewResults = ViewResults;
 window.ViewPackages = ViewPackages;
 window.ViewResultInfo = ViewResultInfo;
+window.ViewLeafletMap = ViewLeafletMap;
 
 
 /*

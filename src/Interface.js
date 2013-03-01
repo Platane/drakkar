@@ -56,6 +56,7 @@ var fillContainer=function(){
 
 
 var datamap=new DataMap();
+var mcssdata=new DatamCSS(null,{'mcss':'a#b.c{strocke-width:4;}e.f{fill:#451231;}'});
 
 var fillComponent=function(){
 	
@@ -151,7 +152,7 @@ var fillComponent=function(){
 						var attributes=el.attributes;
 						var name=el.id;
 						
-						de=new DataPolygon( {'struct':points , 'name':name , 'classes':classes , 'attributes':attributes } );
+						de=new DataPolygon( {'structure':points , 'name':name , 'classes':classes , 'attributes':attributes } );
 					break;
 				}
 				dl.addElement(de);
@@ -221,47 +222,22 @@ var fillComponent=function(){
 	var frame=$('#frame-data');
 	
 	// the model
-	dataMgr=new (Backbone.Model.extend({
-		results:null,
-		datamap:null,
-		defaults:function(){
-			return {
-				elementSelected:[],
-				packageHidden:[],
-			};
-		},
-		initialize:function(attr,option){
-			this.datamap=option.datamap||datamp;
-		},
-		
-		isElementSelected:function(dataelement){
-			return _.find( this.get('elementSelected') ,function(e){return dataelement.getStamp()==e.getStamp();}) == null;
-		},
-		addSelectedElement:function(dataelement){
-			if( this.selected(dataelement) )
-				return;
-			var se=this.get('elementSelected');
-			se.push(dataelement);
-			this.set({'elementSelected':se});
-		},
-		removeSelectedElement:function(dataelement){
-			var se=this.get('elementSelected');
-			var index=_.find( se ,function(e){return dataelement.getStamp()==e.getStamp();});
-			if(index==null)
-				return;
-			se.splice(index,1);
-			this.set({'elementSelected':se});
-		},
-		removeAllSelectedElement:function(){
-			this.set({'elementSelected':[]});
-		},
-	}))(null,{datamap:datamap});
+	var mdp=new MiddleDataMap();
+	
+	dataMgr=new (Backbone.Model.extend({}))();
 	
 	
 	var cpi=frame.find('[data-component=ViewPackages]');
 	cpi
 	.empty()
-	.append( new ViewPackages({model:datamap},{toolmodel:dataMgr}).$el );
+	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	
+	var cm=frame.find('[data-component=Map]');
+	cm
+	.empty()
+	.append( new ViewLeafletMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() }).$el );
+	
+	
 	
 	})();
 	

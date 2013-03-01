@@ -190,6 +190,9 @@
 		
 		</div>
 		
+		<div>
+			<a id="myanchor">ae</a>
+		</div>
 	</body>
 	
 	<script type="text/template" id="item-result-info-template">
@@ -209,11 +212,13 @@
 			</table>
 	</script>
 	<script type="text/template" id="item-package-template">
-			<tr>
-		      <td><span class="name" /></td>
-		      <td><a class="hide"></a></td>
-		      <td><a class="destroy">d</a></td>
-		    </tr>
+		      <td><a class="icon-eye-open" data-contain="visible" ></a></td>
+			  <td><span data-contain="name" /></td>
+		      <td><a data-contain="trash" class="icon-trash"></a></td>
+		      <td><a data-contain="pop" class="icon-chevron-right"></a></td>
+	</script>
+	<script type="text/template" id="item-package-info-template">
+		      <h1> Hello </h1>
 	</script>
 	
 </html>
