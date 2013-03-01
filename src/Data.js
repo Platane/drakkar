@@ -137,13 +137,22 @@ var DataPackage = AbstractDataElement.extend({
 		});
 		var cl=[];
 		this.children.each(function(e){
-			cl.push(e.clone(cloneStamp));
+			var de=e.clone(cloneStamp)
+			cl.push(de);
+			de.parent=c;
 		});
 		c.children.reset(cl);
 		if(cloneStamp!=null&&cloneStamp)
 			c.stamp=this.stamp;
 		return c;
 		
+	},
+	destroy:function(){
+		this.children.each(function(de){
+			de.destroy();
+		});	
+		this.children.reset([],{silent:true});
+		AbstractDataElement.prototype.destroy.call(this);
 	},
 });
 
@@ -598,6 +607,7 @@ Declaration.count=0;
 var Sheet = Backbone.Collection.extend({
 	model:Declaration,
 	initialize:function(models,options){
+		options=options||{};
 		if(options.mcss)
 			this.parse(options.mcss);
 	},
@@ -690,115 +700,6 @@ return Sheet;
 })();
  
 
-/**  @class Element that know how to compute the style chain to apply render effect.
- *
- */
-var AbstractStyleHolder = function(){};
-extend( AbstractStyleHolder , {
-	_styleChain : null,			// ordoned set of property ( some of these can be dynamic )
-	_style : null,				// set of property 
-	_styleDirty : true,			// set of property style need to be update from the style Chain
-	_chainDirty : true,			// set of property style need to be update from the style Chain
-	init:function(){
-		this._styleChain=[];
-		this._style={};
-	},
-	globalAttrChanged:function(){
-		this._styleDirty=true;
-	},
-	_interpretStyle:function( mergedStyle ){
-		/* assuming there is no collision in the mergedStyle */
-		var JSONstyle = {};
-		for( var p in mergedStyle ){
-			var value = mergedStyle[ p ];
-			switch( p ){
-				case "strocke-width" :
-					/* TODO : throw error if the style is not applicable to this item */
-					JSONstyle.strocke = true;
-					JSONstyle.weight = value;
-					if( !JSONstyle.color )
-						JSONstyle.color = "#000000";
-					if( !JSONstyle.opacity )
-						JSONstyle.opacity = "1";
-				break;
-				case "strocke-opacity" :
-					JSONstyle.strocke = true;
-					JSONstyle.opacity = value;
-					if( !JSONstyle.color )
-						JSONstyle.color = "#000000";
-					if( !JSONstyle.weight )
-						JSONstyle.weight = 1;
-				break;
-				case "strocke-color" :
-					JSONstyle.strocke = true;
-					JSONstyle.color = value;
-					if( !JSONstyle.opacity )
-						JSONstyle.opacity = "1";
-					if( !JSONstyle.weight )
-						JSONstyle.weight = 1;
-				break;
-				
-				case "fill-opacity" :
-					JSONstyle.fill = true;
-					JSONstyle.fillOpacity = value;
-					if( !JSONstyle.fillColor )
-						JSONstyle.fillColor = "#000000";
-				break;
-				case "fill-color" :
-					JSONstyle.fill = true;
-					JSONstyle.fillColor = value;
-					if( !JSONstyle.fillOpacity )
-						JSONstyle.fillOpacity = 1;
-				break;
-				default : 
-					throw 'unknow property "'+p+'" ';
-			}
-		}
-		return JSONstyle;
-	},
-	_mergeStyleChain:function( globalAttr ){
-		var style = {};
-		var dec;
-		for( var i = 0 ; i < this._styleChain.length ; i ++ ){
-			dec = this._styleChain[i];
-			if( (dec.dynCondition && dec.dynCondition( globalAttr )) || !dec.dynCondition )
-				for( var j in dec.props )
-					style[ j ] = dec.props[j];
-		}
-		return style;
-	},
-	clone:function(){
-		var c = new AbstractStyleHolder();
-		var superDad = null;
-		if( superDad != null ){
-			var cP = superDad.prototype.clone.call( this );
-			for(var i in cP)
-				c[i]=cP[i];
-		}
-		if( this._styleChain ){
-			c._styleChain = new Array(this._styleChain.length);
-			for(var i=0;i<this._styleChain.length;i++)
-				c._styleChain[i] = this._styleChain[i];
-		}
-		c._styleDirty = true;
-		return c;
-	},
-});
-
-
-
-
-var pack=new DataPackage();
-pack.addElement( new DataPolygon({'name':'maki' , 'structure':[new L.LatLng(35.650072,61.210817),new L.LatLng(35.270664,62.230651),new L.LatLng(35.404041,62.984662),new L.LatLng(35.857166,63.193538),new L.LatLng(36.007957,63.982896),new L.LatLng(36.312073,64.546479),new L.LatLng(37.111818,64.746105),new L.LatLng(37.305217,65.588948),new L.LatLng(37.661164,65.745631),new L.LatLng(37.39379,66.217385),new L.LatLng(37.362784,66.518607),new L.LatLng(37.356144,67.075782),new L.LatLng(37.144994,67.83),new L.LatLng(37.023115,68.135562),new L.LatLng(37.344336,68.859446),new L.LatLng(37.151144,69.196273),new L.LatLng(37.608997,69.518785),new L.LatLng(37.588223,70.116578),new L.LatLng(37.735165,70.270574),new L.LatLng(38.138396,70.376304),new L.LatLng(38.486282,70.806821),new L.LatLng(38.258905,71.348131),new L.LatLng(37.953265,71.239404),new L.LatLng(37.905774,71.541918),new L.LatLng(37.065645,71.448693),new L.LatLng(36.738171,71.844638),new L.LatLng(36.948288,72.193041),new L.LatLng(37.047558,72.63689),new L.LatLng(37.495257,73.260056),new L.LatLng(37.421566,73.948696),new L.LatLng(37.41999,74.980002),new L.LatLng(37.133031,75.158028),new L.LatLng(37.020841,74.575893),new L.LatLng(36.836176,74.067552),new L.LatLng(36.720007,72.920025),new L.LatLng(36.509942,71.846292),new L.LatLng(36.074388,71.262348),new L.LatLng(35.650563,71.498768),new L.LatLng(35.153203,71.613076),new L.LatLng(34.733126,71.115019),new L.LatLng(34.348911,71.156773),new L.LatLng(33.988856,70.881803),new L.LatLng(34.02012,69.930543),new L.LatLng(33.358533,70.323594),new L.LatLng(33.105499,69.687147),new L.LatLng(32.501944,69.262522),new L.LatLng(31.901412,69.317764),new L.LatLng(31.620189,68.926677),new L.LatLng(31.71331,68.556932),new L.LatLng(31.58293,67.792689),new L.LatLng(31.303154,67.683394),new L.LatLng(31.304911,66.938891),new L.LatLng(30.738899,66.381458),new L.LatLng(29.887943,66.346473),new L.LatLng(29.472181,65.046862),new L.LatLng(29.560031,64.350419),new L.LatLng(29.340819,64.148002),new L.LatLng(29.468331,63.550261),new L.LatLng(29.318572,62.549857),new L.LatLng(29.829239,60.874248),new L.LatLng(30.73585,61.781222),new L.LatLng(31.379506,61.699314),new L.LatLng(31.548075,60.941945),new L.LatLng(32.18292,60.863655),new L.LatLng(32.981269,60.536078),new L.LatLng(33.528832,60.9637),new L.LatLng(33.676446,60.52843),new L.LatLng(34.404102,60.803193),new L.LatLng(35.650072,61.210817)] } ));
-pack.addElement( new DataPolygon({'name':'makal', 'structure':[new L.LatLng(45.650072,61.210817),new L.LatLng(45.270664,62.230651),new L.LatLng(45.404041,62.984662)] }) );
-
-var middle=new MiddleDataPackage({'model':pack});
-
-
-var map,map2;
-
-var mcss= new DatamCSS(null,{'mcss':'a#b.c{strocke-width:4;}e.f{fill:#451231;}'});
-
 $(document).ready(function(){
 
 if(!Backbone.$)Backbone.$=window.jQuery;
@@ -816,23 +717,38 @@ var AdaptLeafletMap = Backbone.View.extend({
 	middledata:null,
 	mcssdata:null,
 	
+	
+	stockedHiddenElement:null,
+	
+	children:null,
+	
 	//children:null,		//keep track of the children because leaflet doenst do so, and then its difficult t odelete something
 	
 	getLeafletAdapt:function(dataelement){
 		
 	},
-	initialize: function(option) {
-		this.middledata=option.middledata;
-		this.mcssdata=option.mcssdata;
+	initialize: function(options) {
+		options=options||{};
+		this.middledata=options.middledata;
+		this.mcssdata=options.mcssdata;
 		
 		this.listenTo(this.model.children, "add", this.addOne);
 		this.listenTo(this.model.children, "remove", this.removeOne);
 		
-		this.initLfe(option.width,option.height);
+		
+		this.stockedHiddenElement=[];
+		this.children=[];
+		
+		this.initLfe(options);
 	},
-	initLfe :function(w,h){
-		var w=w||500,
-			h=h||500;
+	initLfe :function(options){
+		
+		var zoomControl			=	options.zoomControl==null	?		true :	options.zoomControl,
+			attributionControl	=	options.attributionControl==null	?		true :	options.attributionControl;
+		
+		
+		var w=options.width||500,
+			h=options.height||500;
 		
 		this.$el.children().remove();		//clean the element
 		this.$el.attr('width',w).attr('height',h).css({'width':w+'px','height':h+'px'});		//set the dimension
@@ -843,7 +759,10 @@ var AdaptLeafletMap = Backbone.View.extend({
 			tmpAppend=true;
 		}
 		
-		this.lfe=new L.Map(this.$el.get(0));		//init the lfe
+		this.lfe=new L.Map(this.$el.get(0),{
+			zoomControl:zoomControl,
+			attributionControl:attributionControl,
+		});		//init the lfe
 		
 		if( tmpAppend )
 			this.$el.detach();
@@ -861,21 +780,107 @@ var AdaptLeafletMap = Backbone.View.extend({
 		var al;
 		switch(type){	// set up the adaptLeafletElement according to the type of the dataElement added
 			case 'polygon':
-				al = new AdaptLeafletPolygon({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata});
-				this.lfe.addLayer(al.lfe);
+				al = new AdaptLeafletPolygon({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parentlfe' : this.lfe});
 			break;
 			case 'package':
-				dataElement.children.each(this.addOne,this);
+				al = new AdaptLeafletPackage({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parentlfe' : this.lfe});
 			break;
 			default: throw 'unkonw type';
 		}
+		this.lfe.addLayer(al.lfe);
+		this.children.push( al );
 	},
 	addAll:function(){
 		this.model.children.each(this.addOne,this);
 	},
-	removeOne:function(){
+	removeOne:function(data){
+		var index=0;
+		var al=_.find( this.children , function( al , i ){
+			index=i;
+			return al.data.getStamp() == data.getStamp();
+		});
+		this.lfe.removeLayer(al.lfe);
+		this.children.splice(index,1);
+	},
+	
+	fitToWorld2:function(){
+		
+		var b=this.computeWorldBound();
+		// enlarger
+		var marge= Math.max( b.getNorthWest().lat - b.getSouthEast().lat , b.getNorthWest().lng - b.getSouthEast().lng ) * 0.4;
+		
+		b=new L.LatLngBounds( new L.LatLng(b.getNorthEast().lat+marge , b.getNorthEast().lng+marge) , new L.LatLng(b.getSouthWest().lat-marge , b.getSouthWest().lng-marge) );
+		
+		this.lfe.setView( b.getNorthWest() , 3.5 );
+	},
+	
+	//since i can get the leaflet function work, i write my own
+	computeWorldBound:function(){
+		if(this.children.length==0)
+			return new L.LatLngBounds( new L.LatLng(-0.1,-0.1) , new L.LatLng(0.1,0.1) );
+		var bound = this.children[0].computeWorldBound();
+		for(var i=1;i<this.children.length;i++)
+			bound=bound.extend( this.children[i].computeWorldBound() );
+		return bound;
+	},
+	
+});
+
+var AdaptLeafletPackage = function(){
+	this.initialize.apply(this,arguments);
+};
+_.extend( AdaptLeafletPackage.prototype,{
+	
+	//models
+	model:null,		//alias
+	data:null,
+	middledata:null,
+	mcssdata:null,
+	
+	lfe:null,
+	parentlfe:null,
+	
+	hidden:false,
+	
+	children:null,
+	
+	initialize:function(option){
+		this.data=option.data;
+		this.model=this.data		//alias
+		this.middledata=option.middledata;
+		this.mcssdata=option.mcssdata;
+		
+		this.parentlfe=option.parentlfe;
+		
+		this.data.children.on({
+			"add"			:	$.proxy(this.addOne,this),
+			"remove"		:	$.proxy(this.removeOne,this),
+		});
+		if( this.middledata )
+			this.middledata.on( "change:packageHidden" , $.proxy(this.changeHidden,this) );
+		
+		this.lfe=new L.LayerGroup();
+		this.children=[];
+		this.addAll();
+		
+		
 		
 	},
+	addOne: AdaptLeafletMap.prototype.addOne,
+	addAll: AdaptLeafletMap.prototype.addAll,
+	removeOne: AdaptLeafletMap.prototype.removeOne,
+	changeHidden:function(){
+		if( this.hidden==this.middledata.isPackageHidden( this.data ))
+			return;
+		this.hidden=!this.hidden;
+		if(this.hidden)
+			this.parentlfe.removeLayer(this.lfe);
+		else
+			this.parentlfe.addLayer(this.lfe);
+	},
+	
+	computeWorldBound: AdaptLeafletMap.prototype.computeWorldBound,
+
 });
 
 
@@ -902,13 +907,24 @@ _.extend( AdaptLeafletElement.prototype,{
 		this.middledata=option.middledata;
 		this.mcssdata=option.mcssdata;
 		
+		/*
+		// not working
 		this.data.on({
 			"change:structure" 			: $.proxy(this.changeStructure,this),
 			"change:attributes" 		: $.proxy(this.changeStyle,this),
 			"change:name" 				: $.proxy(this.changeStyle,this),
 			"change:classes" 			: $.proxy(this.changeStyle,this),
+			"destroy"					: $.proxy(this.remove,this),
 		});
-		
+		*/
+		this.data
+		.on("change:structure", 	this.changeStructure,this )
+		.on("change:attributes", 	this.changeStyle,this )
+		.on("change:name", 			this.changeStyle,this )
+		.on("change:classes", 		this.changeStyle,this )
+		.on("destroy", 				this.remove,this )
+		;
+		if( this.middledata )
 		this.middledata.on({
 			"change:elementSelected"	: $.proxy(this.changeSelected,this),
 		});
@@ -936,7 +952,9 @@ _.extend( AdaptLeafletElement.prototype,{
 		var llstyle=this._interpretStyle(style);
 		this.lfe.setStyle(llstyle);
 	},
-	
+	remove:function(){
+		// ..
+	},
 	_interpretStyle:function( mergedStyle ){
 		/* assuming there is no collision in the mergedStyle */
 		var JSONstyle = {};
@@ -1006,7 +1024,7 @@ _.extend( AdaptLeafletElement.prototype,{
 var AdaptLeafletPolygon = function(){
 	this.initialize.apply(this,arguments);
 };
-_.extend( AdaptLeafletPolygon.prototype,AdaptLeafletPolygon.prototype);
+_.extend( AdaptLeafletPolygon.prototype,AdaptLeafletElement.prototype);
 _.extend( AdaptLeafletPolygon.prototype,{
 	initialize:function(option){
 		AdaptLeafletElement.prototype.initialize.call(this,option);
@@ -1014,12 +1032,21 @@ _.extend( AdaptLeafletPolygon.prototype,{
 		this.lfe = new L.LayerGroup();
 		this.lfe.addLayer( new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) ) );
 		var s=L.cloneLatLngArray(this.data.get('structure'));
-		for(var i=0;i<s.length;i++)
-			this.lfe.addLayer( new L.Marker( s[i] ) );
+		for(var i=0;i<s.length;i++){
+			var p=new L.Marker( s[i] );
+			this.lfe.addLayer( p );
+		}
+		this.lfe=new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) );
 	},
 	changeStructure:function(){
 		this.lfe.setLatLngs( L.cloneLatLngArray(this.data.get('structure')) );
 		this.needRedraw();
+	},
+	computeWorldBound:function(){
+		var s=this.data.get('structure');
+		var bound=new L.LatLngBounds( new L.LatLng(s[0].lat,s[0].lng) , new L.LatLng(s[0].lat,s[0].lng) );
+		_.each(s,function(p){ bound=bound.extend(p); });
+		return bound;
 	},
 });
 
@@ -1210,8 +1237,9 @@ var ViewResult = Backbone.View.extend({
   tagName:'div',
   className:'result',
   resultsmgr:null,
-  initialize: function(option) {
-	this.resultsmgr=option.resultsmgr;
+  initialize: function(options) {
+	options=options||{};
+	this.resultsmgr=options.resultsmgr;
     this.$el.html( $('#item-result-template').html() );
 	this.render();
   },
@@ -1227,13 +1255,15 @@ var ViewResult = Backbone.View.extend({
   render: function() {
 	this.$el.find('[data-contain=name]').html(this.model.get('name'));
 	this.$el.find('[data-contain=author]').html(this.model.get('author'));
-   return this;
+    return this;
   },
 });
 
 var ViewResultInfo = Backbone.View.extend({
   tagName:'div',
-  initialize: function(option) {
+  mcssdata:null,
+  initialize: function(options) {
+	this.mcssdata=options.mcssdata||new DatamCSS();
 	this.listenTo(this.model, "change:selected", this.render);
 	this.render();
   },
@@ -1252,12 +1282,31 @@ var ViewResultInfo = Backbone.View.extend({
 	var r=this.model.get('selected');
 	if(!r)
 		return null;
+	
+	
+	
+	
 	this.$el.html( $('#item-result-info-template').html() );
 	this.$el.find('[data-contain=name]').html(r.get('name'));
 	this.$el.find('[data-contain=author]').html(r.get('author'));
 	this.$el.find('[data-contain=description]').html(r.get('description'));
 	this.$el.find('img').attr('src','http://www.gravatar.com/avatar/'+r.get('hashMail')+'?s=60&d=mm');
 	this.$el.find('.btn').show();
+	
+	var cm=this.$el.find('[data-contain=map]');
+	var map=new ViewLeafletMap({ 
+		'model':r.datamap ,
+		'mcssdata':this.mcssdata ,
+		'width':cm.width() ,
+		'height':cm.height(),
+		'zoomControl':false,
+		'attributionControl':false,
+		});
+	cm
+	.empty()
+	.append( map.$el );
+	
+	window[ 'map'+r.get('name') ]=map;
 	
     return this;
   },

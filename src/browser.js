@@ -94,17 +94,17 @@ Scrollor.prototype={
 		window.scrollTo(0,sc);
 		
 		if( this.run )
-			window.requestAnimationFrame($.proxy(this.animate,this));
+			window.requestAnimFrame($.proxy(this.animate,this));
 	},
 	checkScroll:function(){
 		if( this.timeout )
 			window.clearTimeout(this.timeout);
-		var power = this.power;
+		var power = Math.min( 200, window.innerHeight * this.power );
 		$(".frame").each(function(){
 			var f=$(this);
 			if( f.hasClass('hidden') || f.attr('id') == "frame-header" || f.attr('id') == "frame-footer" )
 				return;
-			if( Math.abs( f.position().top + window.innerHeight*0.04 - window.scrollY ) < window.innerHeight * power ){
+			if( Math.abs( f.position().top + window.innerHeight*0.04 - window.scrollY ) < power ){
 				var frame=f.attr('id').substr(6);
 				frameNavigator.setFrame(frame);
 			}
