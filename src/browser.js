@@ -188,5 +188,9 @@ var hintdisplayer = {
 $(document).ready(function(){
 	hintdisplayer.initialize();
 	hintdisplayer.pop({title:'hello' , 'body':'i will be your guide' });
+	
+	$("#guide").click(function(){ 
+		window.mapallemagne.children[0 ].children[0].lfe._layers[341].redraw();
+	});
 });
 	

@@ -778,6 +778,9 @@ UIMap.create = function( datamap , width , height ){
 	return m;
 }
 
+
+
+
 function WorldMap(){};
 extend( WorldMap , AbstractComponent.prototype );
 extend( WorldMap , {

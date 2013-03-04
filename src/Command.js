@@ -1118,6 +1118,201 @@ Set.create=function( model , key , value ){
 	return c;
 };
 
+var AddClass=function(){};
+_.extend( AddClass.prototype , AbstractCmd.prototype );
+_.extend( AddClass.prototype , {
+	dataelement:null,
+	className:null,
+	init:function( dataelement , className ){
+		this.dataelement=dataelement;
+		this.className=className;
+	},
+	execute : function( ){
+		this.dataelement.addClass( this.className );
+	},
+	undo : function( ){
+		this.dataelement.removeClass( this.className );
+	},
+});
+AddClass.create=function( dataelement , className ){
+	var c = new AddClass();
+	c.init( dataelement , className );
+	return c;
+};
+
+var RemoveClass=CmdInverse( AddClass );
+RemoveClass.create=function( dataelement , className ){
+	var c = new RemoveClass();
+	c.init( dataelement , className );
+	return c;
+};
+
+var ModifyClass=function(){};
+_.extend( ModifyClass.prototype , AbstractCmd.prototype );
+_.extend( ModifyClass.prototype , {
+	dataelement:null,
+	exClassName:null,
+	newClassName:null,
+	init:function( dataelement , exClassName , newClassName ){
+		this.dataelement=dataelement;
+		this.exClassName=exClassName;
+		this.newClassName=newClassName;
+	},
+	execute : function( ){
+		this.dataelement.removeClass( this.exClassName , {silent:true} );
+		this.dataelement.addClass( this.newClassName );
+	},
+	undo : function( ){
+		this.dataelement.removeClass( this.newClassName , {silent:true} );
+		this.dataelement.addClass( this.exClassName );
+	},
+});
+ModifyClass.create=function( dataelement , exClassName , newClassName ){
+	var c = new ModifyClass();
+	c.init( dataelement , exClassName , newClassName );
+	return c;
+};
+
+
+var SetProperty=function(){};
+_.extend( SetProperty.prototype , AbstractCmd.prototype );
+_.extend( SetProperty.prototype , {
+	declaration:null,
+	key:null,
+	value:null,
+	exValue:null,
+	init:function( declaration , key , value ){
+		this.declaration=declaration;
+		this.key=key;
+		this.value=value;
+		this.exValue=this.declaration.get('properties')[key];
+	},
+	execute : function( ){
+		this.declaration.setProperty( this.key , this.value );
+	},
+	undo : function( ){
+		if( this.exValue )
+			this.declaration.setProperty( this.key , this.exValue );
+		else
+			this.declaration.removeProperty( this.key );
+	},
+});
+SetProperty.create=function( declaration , key , value ){
+	var c = new SetProperty();
+	c.init( declaration , key , value );
+	return c;
+};
+
+var RemoveProperty=function(){};
+_.extend( RemoveProperty.prototype , AbstractCmd.prototype );
+_.extend( RemoveProperty.prototype , {
+	declaration:null,
+	key:null,
+	exValue:null,
+	init:function( declaration , key ){
+		this.declaration=declaration;
+		this.key=key;
+		this.exValue=this.declaration.get('properties')[key];
+	},
+	execute : function( ){
+		this.declaration.removeProperty( this.key );
+	},
+	undo : function( ){
+		this.declaration.setProperty( this.key , this.exValue );
+	},
+});
+RemoveProperty.create=function( declaration , key ){
+	var c = new RemoveProperty();
+	c.init( declaration , key );
+	return c;
+};
+
+
+var AddPackageToChunk=function(){};
+_.extend( AddPackageToChunk.prototype , AbstractCmd.prototype );
+_.extend( AddPackageToChunk.prototype , {
+	datachunk:null,
+	datapackage:null,
+	init:function( datachunk , datapackage ){
+		this.datachunk=datachunk;
+		this.datapackage=datapackage;
+	},
+	execute : function( ){
+		this.datachunk.addPackage(this.datapackage);
+	},
+	undo : function( ){
+		this.datachunk.removePackage(this.datapackage);
+	},
+});
+AddPackageToChunk.create=function( datachunk , datapackage ){
+	var c = new AddPackageToChunk();
+	c.init( datachunk , datapackage );
+	return c;
+};
+
+var RemovePackageToChunk = CmdInverse( AddPackageToChunk );
+RemovePackageToChunk.create=function( datachunk , datapackage ){
+	var c = new RemovePackageToChunk();
+	c.init( datachunk , datapackage );
+	return c;
+};
+
+
+var AddIntersection=function(){};
+_.extend( AddIntersection.prototype , AbstractCmd.prototype );
+_.extend( AddIntersection.prototype , {
+	datachunk2:null,
+	datachunk1:null,
+	init:function( datachunk1 , datachunk2 ){
+		this.datachunk1=datachunk1;
+		this.datachunk2=datachunk2;
+	},
+	execute : function( ){
+		this.datachunk1.addIntersection(this.datachunk2);
+	},
+	undo : function( ){
+		this.datachunk1.removeIntersection(this.datachunk2);
+	},
+});
+AddIntersection.create=function( datachunk1 , datachunk2 ){
+	var c = new AddIntersection();
+	c.init( datachunk1 , datachunk2 );
+	return c;
+};
+
+var RemoveIntersection = CmdInverse( AddIntersection );
+RemoveIntersection.create=function( datachunk1 , datachunk2 ){
+	var c = new RemoveIntersection();
+	c.init( datachunk1 , datachunk2 );
+	return c;
+};
+
+var AddOrDelete = function(){};
+_.extend( AddOrDelete.prototype , AbstractCmd.prototype );
+_.extend( AddOrDelete.prototype , {
+	o:null,
+	fa:null,
+	fb:null,
+	e:null,
+	init:function(o,fa,fb,e){
+		this.o=o;
+		this.fa=typeof(fa)=='string'?o[fa]:fa;
+		this.fb=typeof(fb)=='string'?o[fb]:fb;
+		this.e=e;
+	},
+	execute:function(){
+		this.fa.call(this.o,this.e);
+	},
+	undo:function(){
+		this.fb.call(this.o,this.e);
+	},
+});
+AddOrDelete.create=function(o,fa,fb,e){
+	var c=new AddOrDelete();
+	c.init(o,fa,fb,e);
+	return c;
+};
+
 
 var CmdMgr = function(){};
 CmdMgr.prototype = {
@@ -1156,9 +1351,28 @@ var mgr=CmdMgr.create();
 
 return{
 	'Multi'				:	CmdMultiple,
+	
 	'AddPackage'		:	AddPackage,
 	'RemovePackage'		:	RemovePackage,
+	
 	'Set'				:	Set,
+	
+	'AddClass'			: 	AddClass,
+	'RemoveClass'		: 	RemoveClass,
+	'ModifyClass'		: 	ModifyClass,
+	
+	'RemoveProperty'	:	RemoveProperty,
+	'SetProperty'		:	SetProperty,
+	
+	
+	'RemovePackageToChunk' 		:	RemovePackageToChunk,
+	'AddPackageToChunk' 		:	AddPackageToChunk,
+	
+	
+	'AddIntersection'	:	AddIntersection,
+	'RemoveIntersection':	RemoveIntersection,
+	
+	'AddOrDelete'		:	AddOrDelete,
 	
 	'execute'			:	function(cmd){mgr.execute(cmd);},
 	'undo'				:	function(){mgr.undo();},

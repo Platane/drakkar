@@ -35,6 +35,9 @@ var AbstractDataElement = Backbone.Model.extend({
     getParent:function(){
 		return this.parent;
 	},
+	hasClass:function(c){
+		return this.get("classes")[c]===true;
+	},
 	addClass: function(c) {
 		var cs=this.get("classes");
 		cs[c]=true;
@@ -284,7 +287,7 @@ var MiddleDataMap=Backbone.Model.extend({
 		},
 		
 		isElementSelected:function(dataelement){
-			return _.find( this.elementSelected ,function(e){return dataelement.getStamp()==e.getStamp();}) == null;
+			return _.find( this.elementSelected ,function(e){return dataelement.getStamp()==e.getStamp();})!=null;
 		},
 		addSelectedElement:function(dataelement,option){
 			option=option||{};
@@ -399,6 +402,13 @@ var rvb2hex = function( r , v , b ){
 	return "#"+new Number(r).toString( 16 )+new Number(v).toString( 16 )+new Number(b).toString( 16 );
 }
 
+var isHex=function(s){
+	return s.match( /^#[0-9abcdef]{6}$/ )!=null;
+};
+var isNumber=function(s){
+	return s.match( /^[0-9.]$/ )!=null;
+};
+
 // structure
 var Selector = function( selector ){
 	this.selector=selector;
@@ -447,11 +457,10 @@ Selector.prototype={
 	 * @param bubbling { boolean } should be let to null, used for reccursive call when the selector match the parent ( yeah never used so )
 	 * @return {boolean}
 	 */
-	match:function(dataelement,selector,bubbling){
+	match:function(dataelement,selectors,bubbling){
 		var accept = true;
 		bubbling = bubbling || false;
-		selector = selector || this.selector;
-		return true;
+		selectors = selectors || this.selector;
 		for( var j = 0 ; j < selectors.length ; j ++ ){
 				var condition = selectors[j];
 				
@@ -464,7 +473,7 @@ Selector.prototype={
 				
 				// condition on id
 				if( condition.id ){
-					if( !(dataelement.id == condition.id) )
+					if( !(dataelement.get('name') == condition.id) )
 						accept = false;
 					continue;
 				}
@@ -492,7 +501,7 @@ Selector.prototype={
 		}
 		if( accept )
 			return true;
-		return ( bubbling && dataelement.getParent() && isConcernBy( dataelement.getParent() , selector , true ) );
+		return ( bubbling && dataelement.getParent() && isConcernBy( dataelement.getParent() , selectors , true ) );
 	},
 	toHTML:function(selector){
 		selector = selector || this.selector;
@@ -573,6 +582,26 @@ var Declaration = Backbone.Model.extend({
 		this.selectors=new SetOfSelector( options.selectors||[] );
 		if(!this.getStamp())
 			this.stamp=this.generateStamp();
+	},
+	removeProperty:function(key,options){
+		options=options||{};
+		this.get('properties')[key]=null;
+		delete this.get('properties')[key];
+		if( !options.silent ){
+			this.trigger('change:properties');
+			this.trigger('change');
+		}
+	},
+	setProperty:function(key,value,options){
+		options=options||{};
+		this.get('properties')[key]=value;
+		if( !options.silent ){
+			this.trigger('change:properties');
+			this.trigger('change');
+		}
+	},
+	destroy:function(){
+		this.trigger('destroy');
 	},
 	generateStamp: function(){
 		return 'dec'+(Declaration.count++);
@@ -693,12 +722,115 @@ var Sheet = Backbone.Collection.extend({
 		});
 		return c;
 	},
+	
+	syntaxChecker:function(key,value){
+		switch(key){
+			case 'strocke-color' :
+				return isHex(value);
+			break;
+			case 'strocke-opacity' :
+				return isNumber(value);
+			break;
+			case 'strocke-width' :
+				return isNumber(value);
+			break;
+			case 'fill-color' :
+				return isHex(value);
+			break;
+			case 'fill-opacity' :
+				return isNumber(value);
+			break;
+			default:
+				return false;
+		}
+	},
 });
 
 
 return Sheet;
 })();
  
+var DataChunk=Backbone.Model.extend({
+	stamp:null,
+	defaults:function(){
+		return {
+			name:null,
+			intersection:[],
+			dependancy:[],
+			packages:[],
+		};
+	},
+	initialize:function(attr,options){
+		this.stamp=this.generateStamp();
+		if(!this.get('name'))
+			this.set('name',this.getStamp());
+	},
+	addPackage:function(datapackage){
+		var d=this.get('packages');
+		if( !_.find(d,function(dp){ return ( dp.getStamp() == datapackage.getStamp() ); } ) ){
+			d.push( datapackage );
+			this.trigger('change');
+			this.trigger('change:packages');
+		}
+	},
+	removePackage:function(datapackage){
+		var d=this.get('packages');
+		var index=0;
+		if( _.find(d,function(dp,i){index=i;return ( dp.getStamp() == datapackage.getStamp() ); } ) ){
+			d.splice(index,1);
+			this.trigger('change');
+			this.trigger('change:packages');
+		}
+	},
+	addDependancy:function(chunkdata){
+		var d=this.get('dependancy');
+		if( !_.find(d,function(cd){ return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
+			d.push( chunkdata );
+			this.trigger('change');
+			this.trigger('change:dependancy');
+		}
+	},
+	removeDependancy:function(chunkData){
+		var d=this.get('dependancy');
+		var index=0;
+		if( _.find(d,function(cd,i){index=i;return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
+			d.splice(index,1);
+			this.trigger('change');
+			this.trigger('change:dependancy');
+		}
+	},
+	addIntersection:function(chunkdata){
+		var d=this.get('intersection');
+		if( !_.find(d,function(cd){ return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
+			d.push( chunkdata );
+			this.trigger('change');
+			this.trigger('change:intersection');
+		}
+	},
+	removeIntersection:function(chunkData){
+		var d=this.get('intersection');
+		var index=0;
+		if( _.find(d,function(cd,i){index=i;return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
+			d.splice(index,1);
+			this.trigger('change');
+			this.trigger('change:intersection');
+		}
+	},
+	getStamp:function(){
+		return this.stamp;
+	},
+	generateStamp:function(){
+		return 'chk'+(DataChunk.count++);
+	},
+});
+DataChunk.count=0;
+
+var DataChunks=Backbone.Collection.extend({
+	model:DataChunk,
+	initialize:function(attr,options){
+	
+	},
+});
 
 $(document).ready(function(){
 
@@ -708,7 +840,6 @@ if(!Backbone.$)Backbone.$=window.jQuery;
 
 var ViewLeafletMap= (function(){
 
-
 var AdaptLeafletMap = Backbone.View.extend({
 	lfe:null, //the leaflet element
 	
@@ -716,13 +847,14 @@ var AdaptLeafletMap = Backbone.View.extend({
 	
 	middledata:null,
 	mcssdata:null,
-	
+	data:null,
 	
 	stockedHiddenElement:null,
 	
-	children:null,
+	children:null,  //keep track of the children because leaflet doenst do so, and then its difficult t odelete something
 	
-	//children:null,		//keep track of the children because leaflet doenst do so, and then its difficult t odelete something
+	listening:false,
+	_event:null,
 	
 	getLeafletAdapt:function(dataelement){
 		
@@ -731,15 +863,17 @@ var AdaptLeafletMap = Backbone.View.extend({
 		options=options||{};
 		this.middledata=options.middledata;
 		this.mcssdata=options.mcssdata;
-		
-		this.listenTo(this.model.children, "add", this.addOne);
-		this.listenTo(this.model.children, "remove", this.removeOne);
-		
+		this.data=this.model;
 		
 		this.stockedHiddenElement=[];
 		this.children=[];
 		
+		this._event=[];
+		
 		this.initLfe(options);
+		
+		this.lfe.ctrl=this;
+		this.listen(true);
 	},
 	initLfe :function(options){
 		
@@ -766,14 +900,9 @@ var AdaptLeafletMap = Backbone.View.extend({
 		
 		if( tmpAppend )
 			this.$el.detach();
-			
-		this.addAll();
-		/*
-		this.lfe.addLayer( new L.Polygon( [new L.LatLng(45,45),new L.LatLng(45,-45),new L.LatLng(-45,-45),new L.LatLng(-45,45)] ) );
-		
-		this.lfe.addLayer( new L.Rectangle( new L.LatLngBounds( new L.LatLng(-10,-10) , new L.LatLng(10,10) ) ) );
-		*/
-		this.lfe.fitWorld();
+	},
+	getLfe:function(){
+		return this.lfe;
 	},
 	addOne:function(dataElement){
 		var type=dataElement.type;
@@ -789,6 +918,13 @@ var AdaptLeafletMap = Backbone.View.extend({
 		}
 		this.lfe.addLayer(al.lfe);
 		this.children.push( al );
+		
+		for(var i=0;i<this._event.length;i++)
+			al.on( this._event[i].types , this._event[i].fn , this._event[i].ctx );
+		
+		
+		if( this.fitToWorld2 )
+			this.fitToWorld2();
 	},
 	addAll:function(){
 		this.model.children.each(this.addOne,this);
@@ -802,7 +938,19 @@ var AdaptLeafletMap = Backbone.View.extend({
 		this.lfe.removeLayer(al.lfe);
 		this.children.splice(index,1);
 	},
-	
+	listen:function(enable){
+		if(enable==this.listening)
+			return;
+		this.listening=enable;
+		
+		if( enable){
+			this.listenTo(this.model.children, "add", this.addOne);
+			this.listenTo(this.model.children, "remove", this.removeOne);
+			this.addAll();
+		}else{
+			this.stopListening(this.model.children);
+		}
+	},
 	fitToWorld2:function(){
 		
 		var b=this.computeWorldBound();
@@ -811,7 +959,7 @@ var AdaptLeafletMap = Backbone.View.extend({
 		
 		b=new L.LatLngBounds( new L.LatLng(b.getNorthEast().lat+marge , b.getNorthEast().lng+marge) , new L.LatLng(b.getSouthWest().lat-marge , b.getSouthWest().lng-marge) );
 		
-		this.lfe.setView( b.getNorthWest() , 3.5 );
+		this.lfe.setView( b.getNorthWest() , 3.5 , true );
 	},
 	
 	//since i can get the leaflet function work, i write my own
@@ -824,6 +972,22 @@ var AdaptLeafletMap = Backbone.View.extend({
 		return bound;
 	},
 	
+	on:function(types, fn, ctx , options ){ 
+		this.lfe.on(types, fn, ctx); 
+		if(options.propage){
+			_.each( this.children , function( e ){ e.on(types, fn, ctx); } );
+			this._event.push( {types:types , fn:fn , ctx:ctx} );
+		}
+		return this;
+	},
+	off:function(types, fn, ctx , options ){
+		this.lfe.off(types, fn, ctx); 
+		if(options.propage){
+			_.each( this.children , function( e ){ e.off(types, fn, ctx); } );
+			this._event=_.filter( this._event , function( e ){return (e.types!=types||e.fn!=e.fn);  } );
+		}
+		return this;
+	},
 });
 
 var AdaptLeafletPackage = function(){
@@ -844,6 +1008,8 @@ _.extend( AdaptLeafletPackage.prototype,{
 	
 	children:null,
 	
+	_event:null,
+	
 	initialize:function(option){
 		this.data=option.data;
 		this.model=this.data		//alias
@@ -861,9 +1027,9 @@ _.extend( AdaptLeafletPackage.prototype,{
 		
 		this.lfe=new L.LayerGroup();
 		this.children=[];
+		this._event=[];
 		this.addAll();
-		
-		
+		this.lfe.ctrl=this;
 		
 	},
 	addOne: AdaptLeafletMap.prototype.addOne,
@@ -880,9 +1046,19 @@ _.extend( AdaptLeafletPackage.prototype,{
 	},
 	
 	computeWorldBound: AdaptLeafletMap.prototype.computeWorldBound,
-
+	
+	
+	on:function(types, fn, ctx , options ){ 
+		_.each( this.children , function( e ){ e.on(types, fn, ctx); } );
+		this._event.push( {types:types , fn:fn , ctx:ctx} );
+		return this;
+	},
+	off:function(types, fn, ctx , options ){
+		_.each( this.children , function( e ){ e.off(types, fn, ctx); } );
+		this._event=_.filter( this._event , function( e ){return (e.types!=types||e.fn!=e.fn);  } );
+		return this;
+	},
 });
-
 
 var AdaptLeafletElement = function(){
 	this.initialize.apply(this,arguments);
@@ -901,7 +1077,7 @@ _.extend( AdaptLeafletElement.prototype,{
 	selected:false,
 	
 	stylechain:null,  	//can be hold by the dataelement
-	
+	llstyle:null,
 	initialize:function(option){
 		this.data=option.data;
 		this.middledata=option.middledata;
@@ -945,12 +1121,19 @@ _.extend( AdaptLeafletElement.prototype,{
 			return;
 		this.selected=!this.selected;
 		this.needRedraw();
+		
+		if(this.selected)
+			this.lfe.setStyle({'fillColor':'#faefe1'});
+		else
+			this.lfe.setStyle(this.llstyle);
 	},
 	changeStyle:function(){
 		this.stylechain=this.mcssdata.computeChain(this.data);
 		var style=this._mergeStyleChain(this.stylechain,this.middledata);
-		var llstyle=this._interpretStyle(style);
-		this.lfe.setStyle(llstyle);
+		this.llstyle=this._interpretStyle(style);
+		this.lfe.setStyle(this.llstyle);
+		if(this.selected)
+			this.lfe.setStyle({'fillColor':'#faefe1'});
 	},
 	remove:function(){
 		// ..
@@ -1010,7 +1193,7 @@ _.extend( AdaptLeafletElement.prototype,{
 		var dec;
 		for( var i = 0 ; i < stylechain.length ; i ++ ){
 			dec = stylechain[i].declaration;
-			if( true ){		// condition on middledata ( on the zoom for example
+			if( true ){		// condition on middledata ( on the zoom for example )
 				var p=dec.get('properties');
 				for( var j in p )
 					style[ j ] = p[j];
@@ -1018,8 +1201,15 @@ _.extend( AdaptLeafletElement.prototype,{
 		}
 		return style;
 	},
+	on:function(types, fn, context ){ 
+		this.lfe.on(types, fn, context);
+		return this;
+	},
+	off:function(types, fn, context ){
+		this.lfe.off(types, fn, context);
+		return this;
+	},
 });
-
 
 var AdaptLeafletPolygon = function(){
 	this.initialize.apply(this,arguments);
@@ -1030,13 +1220,19 @@ _.extend( AdaptLeafletPolygon.prototype,{
 		AdaptLeafletElement.prototype.initialize.call(this,option);
 		
 		this.lfe = new L.LayerGroup();
-		this.lfe.addLayer( new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) ) );
+		var r= new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) );
+		r.ctrl=this;
+		this.lfe.addLayer( r );
 		var s=L.cloneLatLngArray(this.data.get('structure'));
 		for(var i=0;i<s.length;i++){
 			var p=new L.Marker( s[i] );
+			p.ctrl=this;
 			this.lfe.addLayer( p );
 		}
 		this.lfe=new L.Polygon( L.cloneLatLngArray(this.data.get('structure')) );
+		this.lfe.ctrl=this;
+		
+		this.changeStyle();
 	},
 	changeStructure:function(){
 		this.lfe.setLatLngs( L.cloneLatLngArray(this.data.get('structure')) );
@@ -1120,21 +1316,114 @@ return AdaptLeafletMap;
 })();
 
 
+var ViewActionMap=function(){
+	this.initialize.apply(this,arguments);
+};
+_.extend( ViewActionMap.prototype ,{
+	lfe:null,
+	$el:null,
+	viewleafletmap:null,
+	
+	middledata:null,
+	data:null,
+	mcssdata:null,
+	
+	initialize:function(options){
+		options=options||{};
+		
+		this.middledata=options.middledata;
+		this.mcssdata=options.mcssdata;
+		this.data=options.model;
+		
+		var vlm=new ViewLeafletMap(options);
+		this.lfe=vlm.lfe;
+		this.$el=vlm.$el;
+		this.viewleafletmap=vlm;
+		this.initInteraction();
+	},
+	listen:function(enable){
+		this.viewleafletmap.listen(enable);
+	},
+	initInteraction:function(){
+		
+		//elementSelectionnable
+		(function( scope , data , middledata , viewleafletmap ){
+			
+			var acte = function(e){
+				var dataelement = e.target.ctrl.data;
+				switch( dataelement.type ){
+					case 'map' :
+						middledata.removeAllSelectedElement();
+						return;
+					break;
+					default:
+						if(!e.originalEvent.ctrlKey)
+							middledata.removeAllSelectedElement({'silent':true});
+						middledata.addSelectedElement(dataelement);
+					break;
+				}
+			};
+			var bindAllLayer=function(){
+				var i=viewleafletmap.children.length;
+				while(i--)
+					viewleafletmap.children[i].off('click',acte).on('click',acte);
+				
+			};
+			var elementSelectionnable = function( unable ){	
+				if( unable ){			
+					viewleafletmap.on( "click" , acte , this , {propage:true} );
+				}else{
+					viewleafletmap.on( "click" , acte , this , {propage:true} );
+				}
+				return scope;
+			};	
+			scope.elementSelectionnable = elementSelectionnable;
+			
+		})( this , this.data , this.middledata , this.viewleafletmap );
+		
+	},
+	elementSelectionnable:function(){return this;},
+});
+
+
+
 var ViewPackages = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
   middledatamap:null,
-  initialize: function(option) {
   
-	this.toolmodel=option.toolmodel;
-	this.middledatamap=option.middledatamap;
+  hiddable:true,
+  deletable:true,
+  infoable:true,
+  
+  linkage:null,
+  
+  initialize: function(options) {
+	options=options||{};
+	this.hiddable = options.hiddable!=null ? options.hiddable : this.hiddable;
+	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
+	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
+	
+	this.linkage=options.linkage;
+	
+	this.toolmodel=options.toolmodel;
+	this.middledatamap=options.middledatamap;
 	
 	this.listenTo(this.model.children, "add", this.addOne);
     this.$el.html( $('#panel-package-template').html() );
 	this.addAll();
   },
   addOne:function(pack){
-	new ViewPackage({model:pack,toolmodel:this.toolmodel,middledatamap:this.middledatamap}).$el.appendTo( this.$el.find('table') );
+	var vp =new ViewPackage({
+			model:pack,
+			toolmodel:this.toolmodel,
+			middledatamap:this.middledatamap,
+			hiddable:this.hiddable,
+			deletable:this.deletable,
+			infoable:this.infoable,
+		}).$el.appendTo( this.$el.find('table') );
+	if(this.linkage)
+		vp.linkable(this.linkage);
   },
   addAll: function() {
      this.model.children.each(this.addOne, this);
@@ -1142,7 +1431,6 @@ var ViewPackages = Backbone.View.extend({
   render: function() {
       
   },
-  
 });
 
 var ViewPackage = Backbone.View.extend({
@@ -1151,20 +1439,30 @@ var ViewPackage = Backbone.View.extend({
   toolmodel:null,
   middledatamap:null,
   
+  hiddable:true,
+  deletable:true,
+  infoable:true,
+  
   events: {
     "click [data-contain=visible]"          	  : "toggleVisibility",
     "click [data-contain=trash]"       		      : "trash",
     "click [data-contain=pop]"       		      : "pop",
   },
-  initialize: function(option) {
-    this.toolmodel=option.toolmodel;
-    this.middledatamap=option.middledatamap;
+  initialize: function(options) {
+    options=options||{};
+	this.hiddable = options.hiddable!=null ? options.hiddable : this.hiddable;
+	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
+	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
+	
+	this.toolmodel=options.toolmodel;
+    this.middledatamap=options.middledatamap;
 	
 	this.listenTo(this.model, "change:name", this.render);
     this.listenTo(this.model, "destroy", this.remove);
     this.listenTo(this.middledatamap , "change", this.render);
 	
 	this.$el.html( $('#item-package-template').html() );
+	this.$el.data('datapackage',this.model);
 	this.render();
   },
   
@@ -1196,6 +1494,11 @@ var ViewPackage = Backbone.View.extend({
 		this.$el.find('[data-contain=visible]').removeClass('icon-eye-close').addClass('icon-eye-open');
   },
   render: function() {
+  
+	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
+	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
+	if(!this.infoable)this.$el.find('[data-contain=pop]').remove();
+	
 	this.$el.find('[data-contain=name]').html(this.model.get('name'));
 	this.visibilityChange();
     return this;
@@ -1313,12 +1616,381 @@ var ViewResultInfo = Backbone.View.extend({
 });
 
 
+
+var ViewAttributes = Backbone.View.extend({
+  tagName:'div',
+  toolmodel:null,
+  middledatamap:null,
+  binded:null,
+  initialize: function(option) {
+  
+	this.toolmodel=option.toolmodel;
+	this.middledatamap=option.middledatamap;
+	
+    this.$el.html( $('#panel-attributes-template').html() );
+	
+	this.listenTo( this.middledatamap , "change:elementSelected" , this.listenSelectedChange  );
+	
+	this.binded=[];
+	this.render();
+  },
+  listenSelectedChange:function(){
+	var i=this.binded.length;
+	while(i--)
+		this.binded[i].off({
+			"change:name"	:	$.proxy(this.render,this),
+			"change:attributes"	:	$.proxy(this.render,this),
+			"change:classes"	:	$.proxy(this.render,this),
+		});
+		
+	this.binded=[];
+	for(var i=0;i<this.middledatamap.elementSelected.length;i++)
+		this.binded.push( this.middledatamap.elementSelected[i] );
+	
+	var i=this.binded.length;
+	while(i--)
+		this.binded[i].on({
+			"change:name"	:	$.proxy(this.render,this),
+			"change:attributes"	:	$.proxy(this.render,this),
+			"change:classes"	:	$.proxy(this.render,this),
+		});
+	this.render();
+  },
+  computeIntersectElement:function(){
+	var intersect={
+		name:null,
+		classes:{},
+	};
+	if( this.middledatamap.elementSelected.length==0 )
+		return intersect;
+		
+	for( var c in this.middledatamap.elementSelected[0].get('classes') )
+		intersect.classes[c]=true;
+	intersect.name = this.middledatamap.elementSelected[0].get('name');
+	
+	for(var i=1;i<this.middledatamap.elementSelected.length;i++){
+		for( var c in intersect.classes )
+			if( !this.middledatamap.elementSelected[i].get('classes')[c] ){
+				intersect.classes[c]=null;
+				delete intersect.classes[c];
+			}
+		intersect.name=null;
+	}
+	
+	return intersect;
+  },
+  render: function() {
+      
+	  var o=this.computeIntersectElement();
+	  
+	  this.$el.find('[data-contain=name]')
+	  .empty()
+	  .append( $('<span>'+ o.name +'</span>').smartlyEditable({'finish':$.proxy(this.finishName,this) , 'correcter':this.correcter})  ); 
+	  
+	  var cc = this.$el.find('[data-contain=class]')
+	  .empty();
+	  
+	  for(var c in o.classes )
+		cc.append( $('<span>'+ c +'</span>').smartlyEditable({'finish':$.proxy(this.finishClass,this) , 'correcter':this.correcter}) );
+	  
+	  cc.append( $('<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;</span>').smartlyEditable({'finish':$.proxy(this.finishNewClass,this) , 'correcter':this.correcter}) );
+  },
+  correcter:function(v){
+	return v.trim().toLowerCase().replace(" ","-");
+  },
+  finishName:function(element,prevValue){
+	cmd.execute( cmd.Set.create( this.middledatamap.elementSelected[0] , 'name' , element.text() ) );
+  },
+  finishNewClass:function(element,prevValue){
+	var cmds=[];
+	var className=element.text();
+	if( className == "" ){
+		this.render();
+		return;
+	}
+	for(var i=0;i<this.middledatamap.elementSelected.length;i++)
+		cmds.push( cmd.AddClass.create( this.middledatamap.elementSelected[i] , className ) );
+	cmd.execute( cmd.Multi.createWithTab( cmds ) );
+  },
+  finishClass:function(element,prevValue){
+	var cmds=[];
+	var className=element.text();
+	if( className != "" )
+		for(var i=0;i<this.middledatamap.elementSelected.length;i++)
+			cmds.push( cmd.ModifyClass.create( this.middledatamap.elementSelected[i] , prevValue , className ) );
+	else
+		for(var i=0;i<this.middledatamap.elementSelected.length;i++)
+			cmds.push( cmd.RemoveClass.create( this.middledatamap.elementSelected[i] , prevValue  ) );
+	cmd.execute( cmd.Multi.createWithTab( cmds ) );
+  },
+});
+
+
+var ViewPropertyStack = Backbone.View.extend({
+  tagName:'div',
+  toolmodel:null,
+  middledatamap:null,
+  initialize: function(option) {
+  
+	this.toolmodel=option.toolmodel;
+	this.middledatamap=option.middledatamap;
+	
+    this.$el.html( $('#panel-property-stack-template').html() );
+	
+	this.listenTo( this.model , "add" , this.addOne  );
+	this.listenTo( this.model , "reset" , this.addAll  );
+	
+	this.addAll();
+  },
+  addOne:function(declaration){
+	 this.$el.find('[data-contain=stack]').append( new ViewProperty({ 'model':declaration , 'mcssdata':this.model}).$el );
+  },
+  addAll:function() {
+     this.model.each(this.addOne,this);
+  },
+});
+
+ViewProperty = Backbone.View.extend({
+  tagName:'div',
+  toolmodel:null,
+  middledatamap:null,
+  binded:null,
+  _missSpell:null,
+  initialize: function(options) {
+	options=options||{};
+	this.mcssdata=options.mcssdata;
+	this.toolmodel=options.toolmodel;
+	this.middledatamap=options.middledatamap;
+	
+	this.listenTo( this.model , "change" , this.render  );
+	this.listenTo( this.model , 'destroy' , this.remove );
+	
+	this.listenTo( this.model , 'change:properties' , this.render );
+	
+	this._missSpell=[];
+	this.render();
+  },
+  remove:function(){
+	this.$el.remove();
+  },
+  render:function(){
+	
+	this.$el
+	.empty()
+	.append( this.model.toHTML() );		//append the property from the data
+	
+	for(var i=0;i<this._missSpell.length;i++){		//append the invalid properties, they are waiting for correction
+		var prop=$("<span>").addClass("css-property").addClass('invalid');
+		$("<span>").addClass("css-property-name").wrapInner(this._missSpell[i].name).appendTo(prop);
+		$("<span>").addClass("css-property-separator").wrapInner(":").appendTo(prop);
+		$("<span>").addClass("css-property-value").wrapInner(this._missSpell[i].value).appendTo(prop);
+		$("<span>").addClass("css-property-end").wrapInner(";").appendTo(prop);
+		this.$el.find('.css-properties').append( prop );
+	}
+	
+	
+	
+	this.$el.find('.css-property-value').smartlyEditable({'finish':$.proxy(this.finishValue,this) });
+	this.$el.find('.css-property-name').smartlyEditable({'finish':$.proxy(this.finishName,this) })
+	
+	
+	var nameSpan=$("<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;</span>").addClass("css-property-name")
+	var prop=$("<span>")			//append the '+' property, form add
+	.addClass("css-property")
+	.append(nameSpan)
+	.appendTo( this.$el.find('.css-properties') );
+	
+	nameSpan.smartlyEditable({'finish':$.proxy(this.finishNewName,this) });
+	
+	
+	return this;
+  },
+  finishValue:function(element,prevValue){
+	var value=element.text();
+	var name=element.parents('.css-property').find('.css-property-name').text();
+	
+	if( element.parents('.css-property').hasClass('invalid') )
+		this._missSpell=_.filter( this._missSpell , function(o){ return (o.name!=name||o.value!=prevValue); } );
+	
+	if( this.mcssdata.syntaxChecker(name,value) )
+		cmd.execute( cmd.SetProperty.create( this.model , name , value ) );
+	else{
+		element.parents('.css-property').addClass('invalid');
+		this._missSpell.push({name:name, value:value});
+		cmd.execute( cmd.RemoveProperty.create( this.model , name ) );
+	}
+  },
+  finishName:function(element,prevValue){
+	var name=element.text();
+	var value=element.parents('.css-property').find('.css-property-value').text();
+	
+	if( element.parents('.css-property').hasClass('invalid') )
+		this._missSpell=_.filter( this._missSpell , function(o){ return (o.name!=prevValue||o.value!=value); } );
+	
+	if(name=="")
+		cmd.execute( cmd.RemoveProperty.create( this.model , prevValue ) );
+	else{
+		if( this.mcssdata.syntaxChecker(name,value) )
+			cmd.execute( cmd.SetProperty.create( this.model , name , value ) );
+		else{
+			element.parents('.css-property').addClass('invalid');
+			this._missSpell.push({name:name, value:value});
+			cmd.execute( cmd.RemoveProperty.create( this.model , prevValue ) );
+		}
+	}
+  },
+  finishNewName:function(element,prevValue){
+	var name=element.text();
+	var valSpan=$("<span>").addClass("css-property-value");
+	
+	element.parents('.css-property')
+	.append( $("<span>").addClass("css-property-separator").wrapInner(":") )
+	.append( valSpan )
+	.append( $("<span>").addClass("css-property-end").wrapInner(";") );
+	
+	valSpan.smartlyEditable({'finish':$.proxy(this.finishValue,this) })
+	.click();
+  },
+});
+
+
+
+var ViewChunks = Backbone.View.extend({
+  tagName:'div',
+  viewpackage:null,
+  events:{
+	'click .btn[data-contain="addChunk"]'				:	"createChunk",
+  
+  },
+  initialize: function(options) {
+    options=options||{};
+	this.viewpackage=options.viewpackage;
+	
+    this.$el.html( $('#panel-chunk-template').html() );
+	
+	this.listenTo( this.model , "add" , this.addOne  );
+	this.listenTo( this.model , "reset" , this.addAll  );
+	
+	this.addAll();
+	this.render();
+  },
+  createChunk:function(){
+	this.model.add( new DataChunk({}) );
+  },
+  addOne:function(datachunk){
+	 this.$el.find('[data-contain=list-chunk]').append( new ViewChunk({ 'model':datachunk }).$el );
+  },
+  addAll:function() {
+     this.model.each(this.addOne,this);
+  },
+  render:function() {
+	var svg=this.$el.find('svg');
+	var w=this.$el.parent().width(),
+		h=this.$el.parent().height();
+	
+	svg.css({'width':w+'px' , 'height':h+'px'}).attr('width',w).attr('height',h);
+	
+	
+	return this;
+  },
+});
+
+var ViewChunk = Backbone.View.extend({
+  tagName:'div',
+  className:'chunk',
+  initialize: function(options) {
+    options=options||{};
+	
+	this.model.on({
+		'change:name'		:	$.proxy(this.render,this),
+		'change:packages'	:	$.proxy(this.render,this),
+		'destroy'			:	$.proxy(this.remove,this),
+	});
+	
+    this.$el.html( $('#item-chunk-template').html() );
+	
+	this.$el.find('a[data-contain=tic-intersection]').linkable({'selector':'.chunk:not(#'+ this.model.getStamp() +')' , 'finish':this.finishLinkIntersection });
+	this.$el.attr('id',this.model.getStamp());
+	
+	this.$el.data('datachunk',this.model);
+	
+	this.render();
+  },
+  remove:function() {
+	this.$el.remove();
+  },
+  render:function() {
+	
+	var cl=this.$el.find('[data-contain=list-package]');
+	cl.children().remove();
+	
+	_.each( this.model.get('packages') , function(datapackage){
+			cl.append( new ViewPackageChunk( {'model':datapackage , 'datachunk':this.model } ).$el );
+	},this)
+	
+	this.$el.find('[data-contain=name-chunk]')
+	.html( this.model.get('name') )
+	.smartlyEditable({'finish':$.proxy(this.finishName,this) } );
+	
+	return this;
+  },
+  finishName:function(el,prevValue){
+	var name=el.text().trim();
+	if(name=="")
+		this.render();
+	else
+		cmd.execute( cmd.Set.create( this.model , 'name' , name ) );
+  },
+  finishLinkIntersection:function(el,elchunk2){
+	var datachunk1=el.parents('.chunk').data('datachunk');
+	var datachunk2=elchunk2.data('datachunk');
+	
+	cmd.execute( cmd.AddIntersection.create( datachunk1 , datachunk2 ) );
+	cmd.execute( cmd.AddIntersection.create( datachunk2 , datachunk1 ) );
+	
+  },
+ });
+ 
+var ViewPackageChunk = Backbone.View.extend({
+  tagName:'tr',
+  events: {
+    "click [data-contain=trash-package]"       		      : "trash",
+  },
+  initialize: function(options) {
+	options=options||{};
+	this.datachunk=options.datachunk;
+	
+	this.model.on({
+		'change:name'	:	$.proxy(this.render,this),
+		'destroy'		:	$.proxy(this.remove,this),
+	});
+	
+    this.$el.html( $('#item-package-chunk-template').html() );
+	this.render();
+  },
+  trash:function() {
+	cmd.execute( cmd.RemovePackageToChunk.create( this.datachunk , this.model ) );
+  },
+  remove:function() {
+	this.$el.remove();
+  },
+  render:function() {
+	this.$el.find('[data-contain=name-package]').html( this.model.get('name') );
+	return this;
+  },
+});
+
+
+
+
 window.ViewResults = ViewResults;
 window.ViewPackages = ViewPackages;
 window.ViewResultInfo = ViewResultInfo;
 window.ViewLeafletMap = ViewLeafletMap;
-
-
+window.ViewActionMap = ViewActionMap;
+window.ViewAttributes = ViewAttributes;
+window.ViewPropertyStack = ViewPropertyStack;
+window.ViewChunks = ViewChunks;
 /*
 map=new AdaptLeafletMap({'model':middle});
 map.$el.appendTo( $('body') )

@@ -56,7 +56,8 @@ var fillContainer=function(){
 
 
 var datamap=new DataMap();
-var mcssdata=new DatamCSS(null,{'mcss':'a#b.c{strocke-width:4;}e.f{fill:#451231;}'});
+var mcssdata=new DatamCSS(null,{'mcss':'polygon{fill-color:#45aed2;strocke-width:0;strocke-opacity:1;strocke-color:#333333;}polygon.country{fill-color:#aed452;}'});
+var datachunks=new DataChunks();
 
 var fillComponent=function(){
 	
@@ -233,16 +234,102 @@ var fillComponent=function(){
 	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
 	
 	var cm=frame.find('[data-component=Map]');
+	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
+	.elementSelectionnable(true);
 	cm
 	.empty()
-	.append( new ViewLeafletMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() }).$el );
+	.append( vam.$el );
 	
+	var ca=frame.find('[data-component=AttributeMgr]')
+	.empty()
+	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
 	
 	
 	})();
 	
 	
-	window.resultMgr=resultMgr;
+	// decoration panel
+	(function(){
+	var frame=$('#frame-decoration');
+	
+	// the model
+	var mdp=new MiddleDataMap();
+	
+	decorationMgr=new (Backbone.Model.extend({}))();
+	
+	
+	var cpi=frame.find('[data-component=ViewPackages]');
+	cpi
+	.empty()
+	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	
+	var cm=frame.find('[data-component=Map]');
+	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
+	.elementSelectionnable(true);
+	cm
+	.empty()
+	.append( vam.$el );
+	
+	var ca=frame.find('[data-component=AttributeMgr]')
+	.empty()
+	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	
+	
+	var cps=frame.find('[data-component=PropertyStack]')
+	.empty()
+	.append( new ViewPropertyStack({'model':mcssdata , 'toolmodel':decorationMgr , 'middledatamap':mdp }).$el );
+	
+	})();
+	
+	
+	// presentation panel
+	(function(){
+	var frame=$('#frame-presentation');
+	
+	// the model
+	var mdp=new MiddleDataMap();
+	
+	
+	//link viewpackage to viewchunk
+	var finishLinkage=function( elpackage , elchunk ){
+		var datapackage=elpackage.data('datapackage');
+		var datachunk=elchunk.data('datachunk');
+		
+		cmd.execute( cmd.AddPackageToChunk.create( datachunk , datapackage ) );
+	};
+	
+	decorationMgr=new (Backbone.Model.extend({}))();
+	
+	
+	var cpi=frame.find('[data-component=ViewPackages]');
+	cpi
+	.empty()
+	.append( new ViewPackages({
+				model:datamap,
+				middledatamap:mdp,
+				infoable:false,
+				hiddable:true,
+				deletable:false,
+				linkage:{ selector:'#frame-presentation [data-component=FinalUserPanel] .chunk' , finish:finishLinkage },
+				}).$el );
+	
+	var cm=frame.find('[data-component=Map]');
+	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
+	.elementSelectionnable(true);
+	cm
+	.empty()
+	.append( vam.$el );
+	
+	
+	var cfp=frame.find('[data-component=FinalUserPanel]')
+	.empty()
+	.append( new ViewChunks({model:datachunks}).$el );
+	
+	
+	
+	
+	})();
+	
 	window.datamap=datamap;
 	
 };

@@ -15,19 +15,22 @@
 		<link rel="stylesheet" href="src/CSS/layerMgr.css" />
 		<link rel="stylesheet" href="src/CSS/attributeMgr.css" />
 		<link rel="stylesheet" href="src/CSS/structure.css" />
+		<link rel="stylesheet" href="src/CSS/chunk.css" />
 		
 		
 		
+		<script type="text/javascript" src="external/h5utils.js"></script>
 		<script type="text/javascript" src="external/jquery.min.js"></script>
 		<script type="text/javascript" src="external/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="external/bootstrap/js/bootstrap.js"></script>
-		<script type="text/javascript" src="external/leaflet/leaflet.js"></script>
+		<script type="text/javascript" src="external/leaflet/leaflet-src.js"></script>
 		<script type="text/javascript" src="external/Iris/iris.js"></script>
 		<script type="text/javascript" src="external/underscore.js"></script>
 		<script type="text/javascript" src="external/backbone.js"></script>
 		
 
-		<script type="text/javascript" src="src/smartTextInput.js"></script>
+		<script type="text/javascript" src="src/jquery.smarttextinput.js"></script>
+		<script type="text/javascript" src="src/jquery.linkable.js"></script>
 		<script type="text/javascript" src="src/MapCSS/MapCSSParser.js"></script>
 		<script type="text/javascript" src="src/MapCSS/mapCSS.js"></script>
 		<script type="text/javascript" src="src/country.js"></script>
@@ -154,8 +157,8 @@
 					<div class="row-fluid height1" ></div>
 					<div class="row-fluid height11" >
 						<div class="span5 height12" style="max-height:470px" data-component="Map"></div>
-						<div class="span2 height6" data-component="LayerMgr"></div>
-						<div class="offset1 span4 height12" data-component="ToolParam" ></div>
+						<div class="span2 height6" data-component="ViewPackages"></div>
+						<div class="offset1 span4 height12" data-component="PropertyStack" ></div>
 					</div>
 				</div>
 				<div class="row-fluid" >
@@ -172,7 +175,7 @@
 					<div class="span7 height12" >
 						<div class="row-fluid">
 							<div class="span8 height10" data-component="Map" ></div>
-							<div class="span4 height6" data-component="LayerMgr" ></div>
+							<div class="span4 height6" data-component="ViewPackages" ></div>
 						</div>
 					</div>
 					<div class="span5 height12" >
@@ -191,12 +194,17 @@
 		</div>
 		
 		<div>
-			<a id="myanchor">ae</a>
+			<s><a id="myanchor">ae</a></s>
+			<br>
+			<br>
+			<br>
+			<br>
+			<br>
 		</div>
 	</body>
 	
 	<script type="text/template" id="item-result-info-template">
-		<div data-contain="map" style="width:150px;height:150px;"></div>
+		<div data-contain="map" style="width:200px;height:200px;"></div>
 		<h1 data-contain="name"></h1>
 		<h5><span>@</span><span data-contain="author"></span></h5>
 		<a href="http://gravatar.com" target="_blank" ><img src=""></img></a>
@@ -207,6 +215,7 @@
 			<h4 data-contain="name"></h4>
 			<span>@</span><span data-contain="author"></span>
 	</script>
+	
 	<script type="text/template" id="panel-package-template">
 			<table>
 			</table>
@@ -219,6 +228,45 @@
 	</script>
 	<script type="text/template" id="item-package-info-template">
 		      <h1> Hello </h1>
+	</script>
+	
+	<script type="text/template" id="panel-attributes-template">
+		      <span>
+				<span class="label"> name :</span>
+				<span data-contain="name"></span>
+			 </span>
+			 <span>
+				<span class="label"> class :</span>
+				<span data-contain="class"></span>
+			 </span>
+	</script>
+	
+	
+	<script type="text/template" id="panel-property-stack-template">
+		<div data-contain="stack">
+		</div>
+	</script>
+	
+	
+	<script type="text/template" id="panel-chunk-template">
+		<svg style="position:absolute;z-index:-5;"></svg>
+		<div>
+			<div class="btn" data-contain="addChunk">new</div>
+		</div>
+		<div data-contain="list-chunk">
+		</div>
+	</script>
+	<script type="text/template" id="item-chunk-template">
+		<input type='checkbox'></input>
+		<span data-contain="name-chunk"></span>
+		<a data-contain="tic-intersection" class='icon-fire'></a>
+		<a data-contain="tic-dependancy" class='icon-leaf'></a>
+		<table data-contain="list-package">
+		</table>
+	</script>
+	<script type="text/template" id="item-package-chunk-template">
+			  <td><span data-contain="name-package" /></td>
+		      <td><a data-contain="trash-package" class="icon-trash"></a></td>
 	</script>
 	
 </html>

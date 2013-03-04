@@ -1,0 +1,14 @@
+.chunk{
+	width:80%;
+	min-height:110px;
+	border:solid 2px #555;
+	margin-top:20px;
+	
+	-webkit-transition:box-shadow 0.5s ease; 
+	   -moz-transition:box-shadow 0.5s ease; 
+	        transition:box-shadow 0.5s ease; 
+}
+
+.chunk.drag-hover{
+	box-shadow:0 0 5px 5px #a4851d;
+}
