@@ -249,11 +249,14 @@
 	
 	
 	<script type="text/template" id="panel-chunk-template">
-		<svg style="position:absolute;z-index:-5;"></svg>
 		<div>
 			<div class="btn" data-contain="addChunk">new</div>
 		</div>
-		<div data-contain="list-chunk">
+		<div style="overflow-y:auto;height:500px;">
+			<div>
+				<canvas style="position:absolute;z-index:-5"></canvas>
+				<div data-contain="list-chunk"></div>
+			</div>
 		</div>
 	</script>
 	<script type="text/template" id="item-chunk-template">

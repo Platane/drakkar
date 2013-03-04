@@ -357,9 +357,9 @@ var MiddleDataMap=Backbone.Model.extend({
 		},
 });
 
-///////////////////////
+/////////////////////////
 // css wraper  //////////
-///////////////////////
+/////////////////////////
 /*
  *	
  *	strocke : 				[width:Number] [color:Color];				//compact version
@@ -805,6 +805,7 @@ var DataChunk=Backbone.Model.extend({
 			d.push( chunkdata );
 			this.trigger('change');
 			this.trigger('change:intersection');
+			this.collection.trigger('change:intersection');
 		}
 	},
 	removeIntersection:function(chunkData){
@@ -814,6 +815,7 @@ var DataChunk=Backbone.Model.extend({
 			d.splice(index,1);
 			this.trigger('change');
 			this.trigger('change:intersection');
+			this.collection.trigger('change:intersection');
 		}
 	},
 	getStamp:function(){
@@ -1871,6 +1873,8 @@ var ViewChunks = Backbone.View.extend({
 	this.listenTo( this.model , "add" , this.addOne  );
 	this.listenTo( this.model , "reset" , this.addAll  );
 	
+	this.listenTo( this.model , "change:intersection" , this.render );
+	
 	this.addAll();
 	this.render();
   },
@@ -1879,18 +1883,63 @@ var ViewChunks = Backbone.View.extend({
   },
   addOne:function(datachunk){
 	 this.$el.find('[data-contain=list-chunk]').append( new ViewChunk({ 'model':datachunk }).$el );
+	 this.render();
   },
   addAll:function() {
      this.model.each(this.addOne,this);
   },
   render:function() {
-	var svg=this.$el.find('svg');
-	var w=this.$el.parent().width(),
-		h=this.$el.parent().height();
 	
-	svg.css({'width':w+'px' , 'height':h+'px'}).attr('width',w).attr('height',h);
+	var canvas=this.$el.find('canvas');
+	var pa=canvas.parent();
+	var w=pa.width(),
+		h=pa.height();
+	
+	canvas
+	.css({ 'width':w+'px' , 'height':h+'px'}).attr('width',w).attr('height',h);
+	
+	var ctx=canvas[0].getContext('2d');
+	ctx.clearRect(0,0,w,h);
+	ctx.lineWidth=2;
 	
 	
+	var line=[];
+	this.model.each(function(ch1){
+		_.each(ch1.get('intersection'),function(ch2){
+			if(ch1.getStamp()<ch2.getStamp())
+				line.push({a:ch1,b:ch2,type:'intersection'});
+		},this)
+	},this);
+	
+	var pas=12;
+	var pasy=6;
+	for(var i=0;i<line.length;i++){
+		var ela=this.$el.find('#'+line[i].a.getStamp());
+		var elb=this.$el.find('#'+line[i].b.getStamp());
+		
+		var ax=ela.offset().left-pa.offset().left+ela.outerWidth(),
+			ay=ela.offset().top -pa.offset().top +ela.outerHeight()/2;
+			
+		var bx=elb.offset().left-pa.offset().left+elb.outerWidth(),
+			by=elb.offset().top -pa.offset().top +elb.outerHeight()/2;
+		
+		if(line[i].type=='intersection')
+			ctx.strokeStyle="#486ade";
+		
+		ctx.beginPath()
+		ctx.moveTo( ax , ay+(-line.length/2+i)*pasy );
+		ctx.lineTo( (ax+(i+1)*pas) , ay+(-line.length/2+i)*pasy );
+		ctx.lineTo( (ax+(i+1)*pas) , by+(-line.length/2+i)*pasy );
+		ctx.lineTo( ax , by+(-line.length/2+i)*pasy );
+		ctx.stroke();
+		
+	}
+	/*
+	var c=svg.parent();
+	var s=c[0].innerHTML;
+	svg.remove();
+	c[0].innerHTML=s;
+	*/
 	return this;
   },
 });
