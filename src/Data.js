@@ -1,4 +1,343 @@
 
+L.PolyUtil.collisionCircleToPolygon=function( c , r , polygon ){
+
+	// in order to win a few precious second, several adjustement have been done that dont make the code so easy to read,
+	// the object are used the less possible, ( for exemple an object point ( x , y ) is replace by the two number ox , oy
+	// store the value of length for the loop on the array does speed up noticablely the execution
+	// the use of Math.pow for a rise to square is a millisecond pit, compare to a simple a * a
+	
+	
+	// order of the vertex, ( counterclockwise or clockwise )
+	// because the polygone is not restricted to an order ( it can be wether one or the other )
+	var ref = ( polygon[ 1 ].x - polygon[ 0 ].x ) * ( polygon[ 2 ].y - polygon[ 1 ].y ) + ( polygon[ 0 ].y - polygon[ 1 ].y ) * ( polygon[ 2 ].x - polygon[ 1 ].x ) >= 0; 
+	
+	var square_r = r *r;
+	var len = polygon.length;
+	
+	//
+	// first, discard the circle if it is too far from the edge ( and in the wrong side of side of this edge )
+	// lets use the loop to determine the closest vertex, usefull for the second part
+	
+	var ax = polygon[ len-1 ].x , ay = polygon[ len-1 ].y ,
+		cx = c.x , cy = c.y,
+		cbx , cby ,
+		bx , by , 
+		abx, aby,
+		min_dist = Infinity ,
+		det  ,  closest_p , square_CB ;
+		
+	for( var i = 0 ; i < len ; i ++ ){
+		bx = polygon[ i ].x;
+		by = polygon[ i ].y
+		
+		cbx = bx - cx;
+		cby = by - cy;
+		
+		abx = bx - ax;
+		aby = by - ay;
+		
+		det = abx  *  cby - aby  *  cbx ;
+		
+		// check if too far from the edge
+		if( det >= 0 == ref ){
+			// the center is outside the edge a b
+			// if the distance from the line a b to the center is up to it radius, the collision can not be
+			if( square_r < det * det / ( abx*abx + aby*aby ) ) // prevent the use of squareRoot ( rise to square the two hands )
+				return false;
+		}
+		
+		// check for the closest vertex to the center
+		square_CB = cbx*cbx + cby*cby;
+		if( min_dist > square_CB ){
+			//check if the point b is in the circle
+			if( square_CB < square_r ) // notice that this test will be run later, its a test for an early exit, skipping the the edge in the loop 
+				return true;
+			min_dist = square_CB;
+			closest_p = i;
+		}
+		ax = bx;
+		ay = by;
+	}
+	
+	// 
+	// the center is include in a domain that have the shape of the polygon with a expansion of the value of the radius
+	// the only domain remaining where the circle does not collapse is in the corner of this expanded shape, 
+	// lets check if the center of the circle is in the last domain, delimited by the two line that form the closest vertex ( the line formed by the vertex and the previous one, and the vertex and the next one )
+	
+	var prev = polygon[ ( closest_p -1 + len ) % len ];
+	var next = polygon[ ( closest_p +1 ) % len ];
+	
+	var CloseCx = c.x - polygon[ closest_p ].x ,
+		CloseCy = c.y - polygon[ closest_p ].y ;
+	
+	if( 	( prev.x - polygon[ closest_p ].x ) * CloseCx + ( prev.y - polygon[ closest_p ].y ) * CloseCy < 0		
+		 &&	( next.x - polygon[ closest_p ].x ) * CloseCx + ( next.y - polygon[ closest_p ].y ) * CloseCy < 0		// in the domain
+		 &&  CloseCx * CloseCx + CloseCy * CloseCy > square_r  )
+			return false;
+			
+	return true;
+};
+
+L.PolyUtil.collideWrap=function(points,point,r){
+	
+	
+	var ax=points[0].x,
+		ay=points[0].y,
+		
+		cx=point.x,
+		cy=point.y,
+		
+		bx,by,
+		
+		det,
+		scal,
+		
+		ab_square,
+		r_square=r*r,
+		
+		i=points.length;
+	while(i--){
+		bx=points[i].x;
+		by=points[i].y;
+		
+		cbx = bx - cx;
+		cby = by - cy;
+		
+		abx = bx - ax;
+		aby = by - ay;
+		
+		det = abx  *  cby - aby  *  cbx ;	//det
+		
+		ab_square = abx*abx + aby*aby;		// length of ab
+		
+		if( r_square >= det * det /ab_square  ){
+			// c is in the infinite hull of the a b vertex
+			
+			scal= abx*cbx + aby*cby;
+			
+			if( scal > 0 && scal < ab_square ){
+				//the projection of c to ab is on ab
+				//that fact + c in the infinite hull = c is in the limited hull
+				// ???
+				// profit !
+				
+				//compute some usefull elements
+				var n=scal/ab_square;
+				var p={
+					x: bx - abx*n,
+					y: by - aby*n
+				};
+				return {'b':(i+1),
+						'a':(i),
+						'p':p
+						};
+			}
+		}
+		
+		
+		ax=bx;
+		ay=by;
+	}
+	
+	return null;
+};
+
+/**
+ * return an array of Polygon, each one is convexe and all form a partition of the polygon given in argument
+ * @function
+ * @param { Array of Point } polygon
+ * @return { Array of Array of Point }  
+ * Constructor
+ */
+L.PolyUtil.splitInConvexesEars = function(polygon){
+
+	// we will use the det for determinate if the point is in or out a side,
+	// we dont know if a positif mean out or inside, ( because the is no restriction on the order of the corner )
+	// we will perform a check, on all the corner and determine which is the most common 
+
+	// +1 for each positive det , -1 for each neg
+	var sum_order = 0;
+
+	var each_order = new Array( polygon.length );
+
+	var a = polygon[ polygon.length -2 ] , b = polygon[ polygon.length -1 ] , c;
+
+	for( var k = 0 ; k < polygon.length ; k ++ ){
+
+		// a then b then c
+
+		c = polygon[ k ];
+
+		// check if c is on the right side of the edge a b
+
+		var det = ( a.x - b.x ) * ( c.y - b.y ) + ( b.y - a.y ) * ( c.x - b.x );
+
+		if( det >= 0 ){
+			each_order[ ( k-1+polygon.length)%polygon.length ] = true;
+			sum_order ++;
+		} else {
+			each_order[ ( k-1+polygon.length)%polygon.length ] = false;
+			sum_order --;
+		}
+		a = b;
+		b = c;
+	}
+
+	// it is convexe
+	if( Math.abs( sum_order ) == polygon.length )
+		return [ polygon ];
+
+
+	// lets assume the majority of vertex will not be notch
+	// so if sum_order is positive we got a majority of positive det, so assume that a non not vertex has a positive vertex ( respectively negative )
+	var order = sum_order >= 0 ;
+
+
+	var notchs = [];
+	var notch = null;
+	var A , B , Av1 , Av2;
+	for( var i = 0 ; i < each_order.length ; i ++ ){
+		if( each_order[ i ] == order )
+			continue;
+
+		notch = {
+			i : i ,
+			link : [ (i+1)%polygon.length ]
+			};
+
+		A = polygon[ i ];
+		Av2 = { x : A.x - polygon[ (i+1)%polygon.length ].x ,
+				y : A.y - polygon[ (i+1)%polygon.length ].y  }; // prev neightbour vect
+		Av1 = { x : polygon[ (i-1+polygon.length)%polygon.length ].x - A.x ,
+				y : polygon[ (i-1+polygon.length)%polygon.length ].y - A.y }; // next neightbour vect
+
+
+		// check the linkability with all the vertex
+		var j;
+		for( var aj = 2 ; aj < polygon.length - 1 ; aj ++ ){
+
+			j = (i+aj)%polygon.length
+
+			B = polygon[ j ];
+
+			// check the direction of AB ( need to be inside the polygon, at least localy )
+			if( ( B.x - A.x ) * Av1.y + ( A.y - B.y ) * Av1.x > 0 == order 			// right side of first neightbour
+			 && ( B.x - A.x ) * Av2.y + ( A.y - B.y ) * Av2.x > 0 == order )		// right side of second neightbour
+				continue;
+
+			// check the exit on the segment A B
+			var accept = true;
+			for( var k = 1 ; k < polygon.length - 1 ; k ++ ){
+				if( ( j + k + 1 ) % polygon.length == i  ){ // dont check the intersection with a segment that pass by A ( meaning the segment xA and Ax ) 
+					k ++; 	// skip the segment Ax
+					continue;
+				}
+				if( false != cc.Polygon.intersectionSegmentSegment( A , B , polygon[ ( j + k ) % polygon.length ] ,  polygon[ ( j + k + 1 ) % polygon.length ] ) ){
+					accept = false;
+					break;
+				}
+			}
+			if( accept )
+				notch.link.push( j );
+		}
+
+		notch.link.push( ( i-1+polygon.length)%polygon.length );
+
+		notchs.push( notch );
+	}
+
+	// estimation of the largest sub poly
+	for( var i = 0 ; i < notchs.length ; i ++ ){
+
+		var er = [ notchs[ i ].i  ];
+		for( var k = notchs[ i ].link.length-1 ; k >= 0 ; k -- ){
+			var l = notchs[ i ].link[ k ];
+			if( l != ( er[ 0 ] -1 + polygon.length ) % polygon.length || each_order[ l ] != order )
+				break;	
+			var e = polygon[ l ];
+			if( er.length > 2 ){
+
+				// if we add e to the stack, does it stiff form a convex polygon
+				// check for the convexity of the new coner
+				var a  = polygon[ er[ 0 ] ],								// corner next
+					b  = polygon[ er[ 1 ] ];
+				var det = ( a.x - b.x ) * ( e.y - b.y ) + ( b.y - a.y ) * ( e.x - b.x );
+				if( det > 0 != order )
+					break;
+
+				var a  =  polygon[ er[ ( er.length-2 + er.length )% er.length ] ],		// corner prev
+					b  =  polygon[ er[ ( er.length-1 + er.length )% er.length ] ];
+				var det = ( e.x - a.x ) * ( b.y - a.y ) + ( a.y - e.y ) * ( b.x - a.x );
+				if( det > 0 != order )
+					break;
+
+				var a  =  polygon[ er[ ( er.length-1 + er.length )% er.length ] ],		// corner new 
+					b  =  polygon[ er[ 0 ] ];
+				var det = ( a.x - e.x ) * ( b.y - e.y ) + ( e.y - a.y ) * ( b.x - e.x );
+				if( det > 0 != order )
+					break;
+			}
+			er.unshift( l );
+		}
+
+		var ea = [ notchs[ i ].i  ];
+		for( var k = 0 ; k < notchs[ i ].link.length ; k ++ ){
+			var l = notchs[ i ].link[ k ];
+			if( l != ( ea[ ea.length - 1 ] +1 ) % polygon.length || each_order[ l ] != order ) // point have to be consecutive, l have to be next ,
+				break;	
+			var e = polygon[ l ];
+			if( ea.length > 2 ){
+
+				// if we add e to the stack, does it stiff form a convex polygon
+				// check for the convexity of the new coner
+				var a  =  polygon[ ea[ ( ea.length-2 + ea.length )% ea.length ] ],		// corner prev
+					b  =  polygon[ ea[ ( ea.length-1 + ea.length )% ea.length ] ];
+				var det = ( a.x - b.x ) * ( e.y - b.y ) + ( b.y - a.y ) * ( e.x - b.x );
+				if( det > 0 != order )
+					break;
+
+				var a  =  polygon[ ea[ 0% ea.length ] ],										// corner next
+					b  =  polygon[ ea[ 1% ea.length ] ];
+				var det = ( e.x - a.x ) * ( b.y - a.y ) + ( a.y - e.y ) * ( b.x - a.x );
+				if( det > 0 != order )
+					break;
+
+				var a  =  polygon[ ea[ ( ea.length-1 + ea.length )% ea.length ] ],		// corner new 
+					b  =  polygon[ ea[ 0% ea.length ] ];
+				var det = ( a.x - e.x ) * ( b.y - e.y ) + ( e.y - a.y ) * ( b.x - e.x );
+				if( det > 0 != order )
+					break;
+			}
+			ea.push( l );
+		}
+
+		if( er.length > ea.length )
+			ea = er;
+
+		if( ea.length > 2 ){
+			// form the dual polygon
+			var dual = [];
+			var next = ea[ ea.length-1 ];
+			while( next != ea[ 0 ] ){
+				dual.push( polygon[ next ] );
+				next = ( next + 1 ) % polygon.length;
+			}
+			dual.push( polygon[ next ] );
+
+			var stack = [];
+			for( var k = 0 ; k < ea.length ; k ++ )
+				stack.push( polygon[ ea[ k ] ] );
+			return [ stack ].concat( cc.Polygon.splitInConvexesEars( dual ) );
+
+			//return [ stack ];
+		}
+	}
+
+	return null;
+};
+
+
+
 L.cloneLatLngArray = function( a ){
 	var b = new Array( a.length );
 	var i = a.length;
@@ -165,7 +504,16 @@ var DataPolygon = AbstractDataElement.extend({
       structure:[],
     }, 
 	AbstractDataElement.prototype.defaults()
-	),	
+	),
+	setStructure:function(structure,options){
+		options=options||{};
+		if(structure)
+		this.set('structure',structure)
+		if(!options.silent){
+			this.trigger('change');
+			this.trigger('change:structure');
+		}
+	},
 	initialize: function() {
 		DataPolygon.__super__.initialize.call(this);
 		this.type='polygon';
@@ -904,7 +1252,15 @@ var AdaptLeafletMap = Backbone.View.extend({
 	_event:null,
 	
 	getLeafletAdapt:function(dataelement){
-		
+		if(this.data.getStamp()==dataelement.getStamp())
+			return this;
+		if(this.children)
+			for(var i=0;i<this.children.length;i++){
+				var e=this.children[i].getLeafletAdapt(dataelement);
+				if(e!=null)
+					return e;
+			}
+		return null;
 	},
 	initialize: function(options) {
 		options=options||{};
@@ -1094,7 +1450,7 @@ _.extend( AdaptLeafletPackage.prototype,{
 	},
 	
 	computeWorldBound: AdaptLeafletMap.prototype.computeWorldBound,
-	
+	getLeafletAdapt:AdaptLeafletMap.prototype.getLeafletAdapt,
 	
 	on:function(types, fn, ctx , options ){ 
 		_.each( this.children , function( e ){ e.on(types, fn, ctx); } );
@@ -1126,6 +1482,7 @@ _.extend( AdaptLeafletElement.prototype,{
 	
 	stylechain:null,  	//can be hold by the dataelement
 	llstyle:null,
+	getLeafletAdapt:AdaptLeafletMap.prototype.getLeafletAdapt,
 	initialize:function(option){
 		this.data=option.data;
 		this.middledata=option.middledata;
@@ -1463,7 +1820,7 @@ _.extend( ViewActionMap.prototype ,{
 				if( unable ){			
 					viewleafletmap.on( "click" , acte , this , {propage:true} );
 				}else{
-					viewleafletmap.on( "click" , acte , this , {propage:true} );
+					viewleafletmap.off( "click" , acte , this , {propage:true} );
 				}
 				return scope;
 			};	
@@ -1473,24 +1830,129 @@ _.extend( ViewActionMap.prototype ,{
 		
 		
 		//polygonTracable
-		(function( scope , datapolygon , viewleafletmap ){
+		(function( scope , middledata , viewleafletmap ){
+			var datapolygon=null;
+			var viewleafletelement=null;
+			
+			var ctrls=[];
+			
+			var ctrlon,
+				anchorM={x:0,y:0},
+				anchorE={x:0,y:0};
+			
+			var startDragCtrl=function(e){
+				
+				if(e.originalEvent.ctrlKey){
+					//delete the point
+					var newStructure=L.cloneLatLngArray( datapolygon.get('structure') );
+					newStructure.splice(e.target.index,1);
+					
+					cmd.execute( cmd.SetPolygonStructure.create( datapolygon , newStructure ) );
+					
+				}else{
+					//start dragging the point
+					ctrlon=e.target;
+					
+					viewleafletmap.on( "mousemove" , dragCtrl , this , {propage:true} );
+					viewleafletmap.on( "mouseup" , stopDragCtrl , this , {propage:true} );
+					
+					anchorM.x=e.originalEvent.pageX;
+					anchorM.y=e.originalEvent.pageY;
+					
+					anchorE = viewleafletmap.lfe.project( e.target.getLatLng() );
+				}
+				e.originalEvent.stopPropagation();
+				e.originalEvent.preventDefault();
+			};
+			var dragCtrl=function(e){
+				
+				var x = anchorE.x + ( e.originalEvent.pageX - anchorM.x ),
+					y = anchorE.y + ( e.originalEvent.pageY - anchorM.y );
+				
+				var latLng = viewleafletmap.lfe.unproject( new L.Point( x , y ) )
+					
+				// modify the position of the squarre ctrl element
+				ctrlon.setLatLng( latLng );
+				
+				//modify the lfe structure directly
+				viewleafletelement.lfe.getLatLngs()[ ctrlon.index ]=latLng;
+				viewleafletelement.lfe.setLatLngs( viewleafletelement.lfe.getLatLngs() );
+				
+				e.originalEvent.stopPropagation();
+				e.originalEvent.preventDefault();
+			};
+			var stopDragCtrl=function(e){
+				
+				
+				//execute the change
+				newStructure=viewleafletelement.lfe.getLatLngs();
+				cmd.execute( cmd.SetPolygonStructure.create( datapolygon , newStructure ) );
+				
+				viewleafletmap.off( "mousemove" , dragCtrl , this , {propage:true} );
+				viewleafletmap.off( "mouseup" , stopDragCtrl , this , {propage:true} );
+				
+				e.originalEvent.stopPropagation();
+				e.originalEvent.preventDefault();
+			};
+			
+			var placeCtrlPoints=function(e,justDelete){
+				
+				//delete all the old ones
+				_.each( ctrls , function(lf){
+					lf.off('mousedown',$.proxy(startDragCtrl,this));
+					viewleafletmap.lfe.removeLayer(lf);
+				},this);
+				
+				ctrls=[];
+				
+				if( !justDelete ){
+					//place the new ones
+					_.each( datapolygon.get('structure') , function(latlng,i){
+						var m=new L.Marker( new L.LatLng( latlng.lat , latlng.lng ) , {"icon" : L.icons.editableSquare } );
+						viewleafletmap.lfe.addLayer( m );
+						m.on('mousedown',$.proxy(startDragCtrl,this));
+						m.index=i;		// so we now how to acces to the element in the array of latlng
+						ctrls.push(m);
+					},this);
+				}
+			};
 			
 			var acte = function(e){
-				var dataelement = e.target.ctrl.data;
 				
+				var points=viewleafletelement.lfe._originalPoints //(x,y) tab relative to the screen
+				
+				//check if the point is on the polygon hull
+				var res=L.PolyUtil.collideWrap(points,e.layerPoint,20);
+
+				var newStructure=L.cloneLatLngArray( datapolygon.get('structure') );
+				if(!res){
+					//add to the end of the path
+					newStructure.push(e.latlng);
+				}else{
+					//add at the correct position
+					newStructure.splice(res.b,0,e.latlng);
+				}
+				
+				cmd.execute( cmd.SetPolygonStructure.create( datapolygon , newStructure ) );
 				
 			};
-			var elementSelectionnable = function( unable ){	
+			var polygonTracable = function( unable , datapolygon_ ){	
+				datapolygon=datapolygon_;
+				viewleafletelement=viewleafletmap.getLeafletAdapt(datapolygon_);
 				if( unable ){			
 					viewleafletmap.on( "click" , acte , this , {propage:true} );
+					datapolygon_.on('change:structure' , placeCtrlPoints , this );
+					placeCtrlPoints();
 				}else{
-					viewleafletmap.on( "click" , acte , this , {propage:true} );
+					viewleafletmap.off( "click" , acte , this , {propage:true} );
+					datapolygon_.off('change:structure' , placeCtrlPoints , this );
+					placeCtrlPoints(null,true);
 				}
 				return scope;
 			};	
-			scope.elementSelectionnable = elementSelectionnable;
+			scope.polygonTracable = polygonTracable;
 			
-		})( this , this.data , this.middledata , this.viewleafletmap );
+		})( this , this.middledata , this.viewleafletmap );
 		
 	},
 	elementSelectionnable:function(){return this;},

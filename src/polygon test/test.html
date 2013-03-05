@@ -1,0 +1,130 @@
+<html>
+<body>
+<script type="text/javascript" src="../../external/leaflet/leaflet-src.js"></script>
+<script type="text/javascript" src="../data.js"></script>
+
+<script>
+
+
+
+function genRandom(lower, higher) {
+	lower = (lower||lower===0)?lower : 0;
+	higher = (higher||higher===0)?higher : 9999;
+	return Math.floor( (higher - lower + 1) * Math.random() ) + lower;
+}
+
+
+
+function createPoly(x,y,R, n,scaleX,scaleY){
+	if (!R){
+		return [ [x,y] ];
+	}
+	n=n||4;
+		
+	scaleX=scaleX||1 , scaleY=scaleY||1;
+	var poly=[];
+	var perAng=Math.PI*2/n;
+	for (var i=0;i<n;i++ ){
+		var ang=perAng*i;
+		var _x= x+R*Math.cos(ang)*scaleX;
+		var _y= y+R*Math.sin(ang)*scaleY;
+		poly.push( [_x,_y]);
+	}
+	
+	return poly;
+}
+
+
+function getRandomPoly(x,y,minR,maxR,minSide,maxSide){
+	minR=minR||10;
+	maxR=maxR||30;
+	minSide=minSide||3, maxSide=maxSide||9;
+	var scaleX= genRandom(10,20)/10;
+	var scaleY= genRandom(10,20)/10;
+
+	var radius= genRandom(minR,maxR);
+	var n= genRandom(minSide,maxSide);
+
+	var poly=createPoly(x,y,radius, n,scaleX,scaleY)
+
+	return poly;	
+}
+function drawPoly(context , poly, color){
+	context.strokeStyle=color||"black";
+
+	context.beginPath();
+	context.moveTo( poly[0].x ,poly[0].y );
+	for (var i=0,len=poly.length;i<len;i++){
+		var idx=(i+1)%len;	      		
+		context.lineTo( poly[idx].x ,poly[idx].y );
+	}
+	context.stroke();
+	context.closePath();	
+}
+function drawPoint(context , x,y , color,r){
+	context.fillStyle=color||"green";
+	context.beginPath();
+    context.arc(x, y, r||1, 0, 2 * Math.PI, false);
+    context.fill();
+    context.closePath();
+}
+
+
+window.onload=function(){
+	
+	var WIDTH=500,
+		HEIGHT=500;
+	
+	var canvas=document.getElementById("mycanvas");
+	canvas.width=WIDTH;
+	canvas.height=HEIGHT;
+	canvas.style.backgroundColor="white";
+	var ctx=canvas.getContext('2d');
+	
+	var MAIN_POLY=getRandomPoly(WIDTH/2,HEIGHT/2, 50, 80, 4,10);
+	var pol = new Array( MAIN_POLY );
+	for( var i = 0 ; i < MAIN_POLY.length ; i++ )
+		pol[ i ] = { x:MAIN_POLY[ i][0] , y:MAIN_POLY[ i][1] };
+		
+	
+	
+	
+	for(var k=0;k<100000;k++){
+		var x= genRandom(10,WIDTH-10);
+		var y= genRandom(10,HEIGHT-10);
+		
+		var color= L.PolyUtil.collideWrap(pol,{x:x,y:y},20)?'#999':'#eee';
+		
+		drawPoint(ctx , x,y ,color);
+	}
+	
+	drawPoly(ctx , pol );
+	
+	
+	
+	
+	
+	canvas.addEventListener("click",function(event){
+		
+		var x=event.offsetX||(event.pageX-canvas.offsetLeft),
+			y=event.offsetY||(event.pageY-canvas.offsetTop);
+
+		var res=L.PolyUtil.collideWrap(pol,{x:x,y:y},20)
+		
+		if(res){
+			drawPoint(ctx , x,y ,'green');
+			drawPoint(ctx , res.p.x,res.p.y ,'#00ff00',2);
+		}
+	});
+	
+	console.log( L.PolyUtil.splitInConvexesEars( pol ) );
+	
+};
+</script>
+
+
+
+<canvas id="mycanvas" ></canvas>
+
+</body>
+</html>

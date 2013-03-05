@@ -56,6 +56,7 @@ var fillContainer=function(){
 
 
 var datamap=new DataMap();
+window.datamap=datamap;
 var mcssdata=new DatamCSS(null,{'mcss':'polygon{fill-color:#45aed2;strocke-width:0;strocke-opacity:1;strocke-color:#333333;}polygon.country{fill-color:#aed452;}'});
 var datachunks=new DataChunks();
 
@@ -240,8 +241,15 @@ var fillComponent=function(){
 		}).$el );
 	
 	var cm=frame.find('[data-component=Map]');
-	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
-	.elementSelectionnable(true);
+	var vam=new ViewActionMap({
+		'model'		:datamap ,
+		'middledata':mdp ,
+		'mcssdata'	:mcssdata ,
+		'width'		:cm.width() ,
+		'height'	:cm.height() ,
+	})
+	//.elementSelectionnable(true)
+	window.vam=vam;
 	cm
 	.empty()
 	.append( vam.$el );

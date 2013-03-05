@@ -1314,6 +1314,30 @@ AddOrDelete.create=function(o,fa,fb,e){
 };
 
 
+var SetPolygonStructure=function(){};
+_.extend( SetPolygonStructure.prototype , AbstractCmd.prototype );
+_.extend( SetPolygonStructure.prototype , {
+	datapolygon:null,
+	newStructure:null,
+	exStructure:null,
+	init:function(datapolygon,structure){
+		this.datapolygon=datapolygon;
+		this.exStructure=L.cloneLatLngArray(this.datapolygon.get('structure'));
+		this.newStructure=structure;
+	},
+	execute:function(){
+		this.datapolygon.setStructure(this.newStructure);
+	},
+	undo:function(){
+		this.datapolygon.setStructure(this.exStructure);
+	},
+});
+SetPolygonStructure.create=function(datapolygon,structure){
+	var c=new SetPolygonStructure();
+	c.init(datapolygon,structure);
+	return c;
+};
+
 var CmdMgr = function(){};
 CmdMgr.prototype = {
 	_undoable : null,
@@ -1356,7 +1380,7 @@ return{
 	'RemovePackage'		:	RemovePackage,
 	
 	'Set'				:	Set,
-	
+	'SetPolygonStructure'	:	SetPolygonStructure,
 	'AddClass'			: 	AddClass,
 	'RemoveClass'		: 	RemoveClass,
 	'ModifyClass'		: 	ModifyClass,

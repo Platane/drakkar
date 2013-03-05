@@ -190,7 +190,13 @@ $(document).ready(function(){
 	hintdisplayer.pop({title:'hello' , 'body':'i will be your guide' });
 	
 	$("#guide").click(function(){ 
-		window.mapallemagne.children[0 ].children[0].lfe._layers[341].redraw();
+		var dataPackage=new DataPackage();
+		var dataPolygon=new DataPolygon({'structure':[ new L.LatLng(50.378992,3.588184) , new L.LatLng(50.378992,-3.588184) , new L.LatLng(40.378992,-3.588184) ] });
+
+		dataPackage.addElement(dataPolygon);
+		datamap.addPackage(dataPackage);
+		
+		vam.polygonTracable(true,dataPolygon);
 	});
 });
 	
