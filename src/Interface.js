@@ -323,7 +323,7 @@ var fillComponent=function(){
 	
 	var cfp=frame.find('[data-component=FinalUserPanel]')
 	.empty()
-	.append( new ViewChunks({model:datachunks}).$el );
+	.append( new ViewChunks({ 'model':datachunks , 'middledata':mdp }).$el );
 	
 	
 	

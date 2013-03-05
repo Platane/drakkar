@@ -252,18 +252,19 @@
 		<div>
 			<div class="btn" data-contain="addChunk">new</div>
 		</div>
-		<div style="overflow-y:auto;height:500px;">
-			<div>
+		<div>
+			<div style="position:absolute;">
 				<canvas style="position:absolute;z-index:-5"></canvas>
 				<div data-contain="list-chunk"></div>
 			</div>
 		</div>
 	</script>
 	<script type="text/template" id="item-chunk-template">
-		<input type='checkbox'></input>
+		<input type='checkbox' checked="checked" ></input>
 		<span data-contain="name-chunk"></span>
 		<a data-contain="tic-intersection" class='icon-fire'></a>
-		<a data-contain="tic-dependancy" class='icon-leaf'></a>
+		<a data-contain="trash-chunk" class="icon-trash"></a>
+		<!--<a data-contain="tic-dependancy" class='icon-leaf'></a>-->
 		<table data-contain="list-package">
 		</table>
 	</script>

@@ -790,7 +790,7 @@ var DataChunk=Backbone.Model.extend({
 			this.trigger('change:dependancy');
 		}
 	},
-	removeDependancy:function(chunkData){
+	removeDependancy:function(chunkdata){
 		var d=this.get('dependancy');
 		var index=0;
 		if( _.find(d,function(cd,i){index=i;return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
@@ -808,7 +808,7 @@ var DataChunk=Backbone.Model.extend({
 			this.collection.trigger('change:intersection');
 		}
 	},
-	removeIntersection:function(chunkData){
+	removeIntersection:function(chunkdata){
 		var d=this.get('intersection');
 		var index=0;
 		if( _.find(d,function(cd,i){index=i;return ( cd.getStamp() == chunkdata.getStamp() ); } ) ){
@@ -1861,16 +1861,17 @@ var ViewChunks = Backbone.View.extend({
   tagName:'div',
   viewpackage:null,
   events:{
-	'click .btn[data-contain="addChunk"]'				:	"createChunk",
-  
+	'click .btn[data-contain=addChunk]'				:	"createChunk",
+	'click a[data-contain=trash-intersection]'		:	"trashIntersection",
   },
   initialize: function(options) {
     options=options||{};
-	this.viewpackage=options.viewpackage;
+	this.middledata=options.middledata;
 	
     this.$el.html( $('#panel-chunk-template').html() );
 	
 	this.listenTo( this.model , "add" , this.addOne  );
+	this.listenTo( this.model , "remove" , this.render  );
 	this.listenTo( this.model , "reset" , this.addAll  );
 	
 	this.listenTo( this.model , "change:intersection" , this.render );
@@ -1878,11 +1879,19 @@ var ViewChunks = Backbone.View.extend({
 	this.addAll();
 	this.render();
   },
+  trashIntersection:function(e){
+	var datachunk1=$(e.target).data('ch1');
+	var datachunk2=$(e.target).data('ch2');
+	
+	cmd.execute( cmd.RemoveIntersection.create( datachunk1 , datachunk2 ) );
+	cmd.execute( cmd.RemoveIntersection.create( datachunk2 , datachunk1 ) );
+	
+  },
   createChunk:function(){
 	this.model.add( new DataChunk({}) );
   },
   addOne:function(datachunk){
-	 this.$el.find('[data-contain=list-chunk]').append( new ViewChunk({ 'model':datachunk }).$el );
+	 this.$el.find('[data-contain=list-chunk]').append( new ViewChunk({ 'model':datachunk , 'middledata':this.middledata }).$el );
 	 this.render();
   },
   addAll:function() {
@@ -1892,7 +1901,7 @@ var ViewChunks = Backbone.View.extend({
 	
 	var canvas=this.$el.find('canvas');
 	var pa=canvas.parent();
-	var w=pa.width(),
+	var w=this.$el.width(),
 		h=pa.height();
 	
 	canvas
@@ -1911,6 +1920,8 @@ var ViewChunks = Backbone.View.extend({
 		},this)
 	},this);
 	
+	pa.find("[data-contain=trash-intersection]").remove();
+	
 	var pas=12;
 	var pasy=6;
 	for(var i=0;i<line.length;i++){
@@ -1924,15 +1935,24 @@ var ViewChunks = Backbone.View.extend({
 			by=elb.offset().top -pa.offset().top +elb.outerHeight()/2;
 		
 		if(line[i].type=='intersection')
-			ctx.strokeStyle="#486ade";
+			ctx.strokeStyle="#888888";
+		
+		var dx=(i+1)*pas;
+		var dy=(-line.length/2+i)*pasy;
 		
 		ctx.beginPath()
-		ctx.moveTo( ax , ay+(-line.length/2+i)*pasy );
-		ctx.lineTo( (ax+(i+1)*pas) , ay+(-line.length/2+i)*pasy );
-		ctx.lineTo( (ax+(i+1)*pas) , by+(-line.length/2+i)*pasy );
-		ctx.lineTo( ax , by+(-line.length/2+i)*pasy );
+		ctx.moveTo( ax    , ay+dy );
+		ctx.lineTo( ax+dx , ay+dy );
+		ctx.lineTo( ax+dx , by+dy );
+		ctx.lineTo( ax    , by+dy );
 		ctx.stroke();
 		
+		$('<a class="icon-fire" data-contain="trash-intersection" ></a>')
+		.css({'position':'absolute' , 'top':((ay+by)/2+dy-5)+'px' , 'left': (ax+dx-5)+'px' })
+		.appendTo(pa)
+		.data('ch1',line[i].a)
+		.data('ch2',line[i].b)
+		;
 	}
 	/*
 	var c=svg.parent();
@@ -1947,13 +1967,52 @@ var ViewChunks = Backbone.View.extend({
 var ViewChunk = Backbone.View.extend({
   tagName:'div',
   className:'chunk',
+  events:{
+	'change input[type=checkbox]'				:	"toggleVisibility",
+	'click a[data-contain=trash-chunk]'			:	"trash",
+  },
+  
+  toggleVisibility:function(e){
+	var visible=$(e.target).is(":checked");
+	
+	if(visible){
+		//toggle all the packages from chunk that are in conflict ( intersection ) to hidden
+		_.each( this.model.get('intersection') , function(datachunk){
+			_.each( datachunk.get('packages') , function(datapackage){
+				this.middledata.hidePackage(datapackage);
+			},this);
+			//is bad :( but im too tired to make a model of this
+			var cb=this.$el.parent().find('.chunk#'+ datachunk.getStamp() ).find('input[type=checkbox]');
+			if(cb.is(':checked'))
+				cb.click();
+		},this);
+	}
+	//toggle all the packages to visible
+	_.each( this.model.get('packages') , function(datapackage){
+		if(visible)
+			this.middledata.showPackage(datapackage);
+		else
+			this.middledata.hidePackage(datapackage);
+	},this);
+  },
+  trash:function(e){
+	var t=[];
+	_.each( this.model.get('intersection') , function(datachunk){
+			t.push( cmd.AddOrDelete.create( datachunk , 'removeIntersection' , 'addIntersection' , this.model ) );
+	},this);
+	t.push( cmd.AddOrDelete.create(this.model.collection,'remove','add',this.model) );
+	cmd.execute( cmd.Multi.createWithTab(t) );
+  },
+  
   initialize: function(options) {
     options=options||{};
+	this.middledata=options.middledata;
 	
 	this.model.on({
 		'change:name'		:	$.proxy(this.render,this),
 		'change:packages'	:	$.proxy(this.render,this),
 		'destroy'			:	$.proxy(this.remove,this),
+		'remove'			:	$.proxy(this.remove,this),
 	});
 	
     this.$el.html( $('#item-chunk-template').html() );
@@ -1962,6 +2021,8 @@ var ViewChunk = Backbone.View.extend({
 	this.$el.attr('id',this.model.getStamp());
 	
 	this.$el.data('datachunk',this.model);
+	
+	this.toggleVisibility( this.$el.find('input[type=checkbox]') );
 	
 	this.render();
   },
@@ -2008,6 +2069,7 @@ var ViewPackageChunk = Backbone.View.extend({
   initialize: function(options) {
 	options=options||{};
 	this.datachunk=options.datachunk;
+	
 	
 	this.model.on({
 		'change:name'	:	$.proxy(this.render,this),

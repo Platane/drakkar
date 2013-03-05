@@ -107,7 +107,7 @@ nav{
 
 [data-component]{
 	border:solid 1px #aaa;
-	text-align:center;
+	/*text-align:center;*/
 }
 #frame-header {
 	height : 400px;
