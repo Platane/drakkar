@@ -404,8 +404,8 @@ var DataMap = AbstractDataElement.extend({
 	defaults: _.extend({
       
     }, AbstractDataElement.prototype.defaults() ),
-	initialize: function() {
-		DataMap.__super__.initialize.call(this);
+	initialize: function(attr,options) {
+		DataMap.__super__.initialize.call(this,attr,options);
 		this.children=new Backbone.Collection();
 		this.children.model=DataPackage;
 		this.type='map';
@@ -436,8 +436,8 @@ var DataPackage = AbstractDataElement.extend({
 	defaults: _.extend({
       
     }, AbstractDataElement.prototype.defaults() ),	
-	initialize: function() {
-		DataPackage.__super__.initialize.call(this);
+	initialize: function(attr,options) {
+		DataPackage.__super__.initialize.call(this,attr,options);
 		this.type='package';
 		this.children=new Backbone.Collection();
 		this.children.model=AbstractDataElement;
@@ -514,8 +514,8 @@ var DataPolygon = AbstractDataElement.extend({
 			this.trigger('change:structure');
 		}
 	},
-	initialize: function() {
-		DataPolygon.__super__.initialize.call(this);
+	initialize: function(attr,options) {
+		DataPolygon.__super__.initialize.call(this,attr,options);
 		this.type='polygon';
 	},
 	clone:function(cloneStamp){
@@ -627,6 +627,7 @@ var MiddleDataMap=Backbone.Model.extend({
 		packageHidden:null,			//array of datapackage
 		defaults:function(){
 			return {
+				packageSelected:null,
 			};
 		},
 		initialize:function(attr,option){
@@ -1796,6 +1797,7 @@ _.extend( ViewActionMap.prototype ,{
 	},
 	listen:function(enable){
 		this.viewleafletmap.listen(enable);
+		
 	},
 	initInteraction:function(){
 		
@@ -1895,8 +1897,20 @@ _.extend( ViewActionMap.prototype ,{
 				e.originalEvent.preventDefault();
 			};
 			
-			var placeCtrlPoints=function(e,justDelete){
+			var placeCtrlPoints=function(){
+			
+				removeCtrlPoints();
 				
+				//place the new ones
+				_.each( datapolygon.get('structure') , function(latlng,i){
+					var m=new L.Marker( new L.LatLng( latlng.lat , latlng.lng ) , {"icon" : L.icons.editableSquare } );
+					viewleafletmap.lfe.addLayer( m );
+					m.on('mousedown',$.proxy(startDragCtrl,this));
+					m.index=i;		// so we now how to acces to the element in the array of latlng
+					ctrls.push(m);
+				},this);
+			};
+			var removeCtrlPoints=function(){
 				//delete all the old ones
 				_.each( ctrls , function(lf){
 					lf.off('mousedown',$.proxy(startDragCtrl,this));
@@ -1904,17 +1918,6 @@ _.extend( ViewActionMap.prototype ,{
 				},this);
 				
 				ctrls=[];
-				
-				if( !justDelete ){
-					//place the new ones
-					_.each( datapolygon.get('structure') , function(latlng,i){
-						var m=new L.Marker( new L.LatLng( latlng.lat , latlng.lng ) , {"icon" : L.icons.editableSquare } );
-						viewleafletmap.lfe.addLayer( m );
-						m.on('mousedown',$.proxy(startDragCtrl,this));
-						m.index=i;		// so we now how to acces to the element in the array of latlng
-						ctrls.push(m);
-					},this);
-				}
 			};
 			
 			var acte = function(e){
@@ -1922,8 +1925,10 @@ _.extend( ViewActionMap.prototype ,{
 				var points=viewleafletelement.lfe._originalPoints //(x,y) tab relative to the screen
 				
 				//check if the point is on the polygon hull
-				var res=L.PolyUtil.collideWrap(points,e.layerPoint,20);
-
+				var res=null;
+				if( points.length>1 )
+					res=L.PolyUtil.collideWrap(points,e.layerPoint,33);
+				
 				var newStructure=L.cloneLatLngArray( datapolygon.get('structure') );
 				if(!res){
 					//add to the end of the path
@@ -1938,15 +1943,18 @@ _.extend( ViewActionMap.prototype ,{
 			};
 			var polygonTracable = function( unable , datapolygon_ ){	
 				datapolygon=datapolygon_;
-				viewleafletelement=viewleafletmap.getLeafletAdapt(datapolygon_);
+				if(datapolygon_)
+					viewleafletelement=viewleafletmap.getLeafletAdapt(datapolygon_);
 				if( unable ){			
 					viewleafletmap.on( "click" , acte , this , {propage:true} );
 					datapolygon_.on('change:structure' , placeCtrlPoints , this );
 					placeCtrlPoints();
 				}else{
-					viewleafletmap.off( "click" , acte , this , {propage:true} );
-					datapolygon_.off('change:structure' , placeCtrlPoints , this );
-					placeCtrlPoints(null,true);
+					if(viewleafletmap)
+						viewleafletmap.off( "click" , acte , this , {propage:true} );
+					if(datapolygon)
+						datapolygon.off('change:structure' , placeCtrlPoints , this );
+					removeCtrlPoints();
 				}
 				return scope;
 			};	
@@ -1970,6 +1978,7 @@ var ViewPackages = Backbone.View.extend({
   deletable:false,
   infoable:true,
   addable:false,
+  selectionable:false,
   
   linkage:null,
   
@@ -1984,6 +1993,7 @@ var ViewPackages = Backbone.View.extend({
 	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
 	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
 	this.addable = options.addable!=null ? options.addable : this.addable;
+	this.selectionable = options.selectionable!=null ? options.selectionable : this.selectionable;
 	
 	this.linkage=options.linkage;
 	
@@ -2015,6 +2025,7 @@ var ViewPackages = Backbone.View.extend({
 			hiddable:this.hiddable,
 			deletable:this.deletable,
 			infoable:this.infoable,
+			selectionable:this.selectionable,
 		}).$el.appendTo( this.$el.find('table') );
 	if(this.linkage)
 		vp.linkable(this.linkage);
@@ -2039,30 +2050,39 @@ var ViewPackage = Backbone.View.extend({
   hiddable:true,
   deletable:true,
   infoable:true,
+  selectionable:true,
   
   events: {
     "click [data-contain=visible]"          	  : "toggleVisibility",
     "click [data-contain=trash]"       		      : "trash",
     "click [data-contain=pop]"       		      : "pop",
+    "click"       		      					  : "select",
   },
   initialize: function(options) {
     options=options||{};
 	this.hiddable = options.hiddable!=null ? options.hiddable : this.hiddable;
 	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
 	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
+	this.selectionable = options.selectionable!=null ? options.selectionable : this.selectionable;
 	
 	this.toolmodel=options.toolmodel;
     this.middledatamap=options.middledatamap;
 	
 	this.listenTo(this.model, "change:name", this.render);
     this.listenTo(this.model, "destroy", this.remove);
-    this.listenTo(this.middledatamap , "change", this.render);
+    this.listenTo(this.middledatamap , "change:elementSelected", this.visibilityChange);
+	if(this.selectionable)
+		 this.listenTo(this.middledatamap , "change:packageSelected", this.render);
 	
 	this.$el.html( $('#item-package-template').html() );
 	this.$el.data('datapackage',this.model);
 	this.render();
   },
   
+  select:function(){
+	if(this.selectionable)
+		this.middledatamap.set('packageSelected',this.model);
+  },
   pop:function(){
 	var e=this.$el.find('[data-contain=pop]');
 	if(!e.data('popover'))
@@ -2091,7 +2111,9 @@ var ViewPackage = Backbone.View.extend({
 		this.$el.find('[data-contain=visible]').removeClass('icon-eye-close').addClass('icon-eye-open');
   },
   render: function() {
-  
+	this.$el.removeClass('selected');
+	if(this.selectionable && this.middledatamap.get('packageSelected') && this.middledatamap.get('packageSelected').getStamp() == this.model.getStamp() )
+		this.$el.addClass('selected');
 	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
 	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
 	if(!this.infoable)this.$el.find('[data-contain=pop]').remove();
@@ -2702,6 +2724,92 @@ var ViewPackageChunk = Backbone.View.extend({
 
 
 
+var ViewDataTools = Backbone.View.extend({
+  middledata:null,
+  viewactionmap:null,
+  events:{
+	'click .btn[data-contain=add-polygon]'				:	"newPolygon",
+	'click .btn[data-contain=remove-element]'			:	"trashElement",
+	'click .btn[data-contain=edit-element]'				:	"editElement",
+	'click .btn[data-contain=select-mode]'				:	"goSelectMode",
+  },
+  initialize: function(options) {
+    options=options||{};
+	this.middledata=options.middledata;
+	this.toolmodel=options.toolmodel;
+	
+    this.$el.html( $('#data-tool-panel-template').html() );
+	
+	this.listenTo( this.toolmodel , "change:avaibleTool" , this.render  );
+	
+	this.render();
+  },
+  goSelectMode:function(){
+	if(this.toolmodel.get('avaibleTool')['selection'])
+		this.toolmodel.set('state','selection');
+	else
+		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
+  },
+  newMarker:function(){
+   if(this.toolmodel.get('avaibleTool')['marker-creation'])
+		this.toolmodel.newMarker();
+	else
+		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
+  },
+  newPolygon:function(){
+   if(this.toolmodel.get('avaibleTool')['polygon-creation'])
+		 this.toolmodel.newPolygon();
+	else
+		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
+  },
+  trashElement:function(){
+	if(!this.toolmodel.get('avaibleTool')['trash-element']){
+		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
+		return;
+	}
+    var t=[];
+	_.each(this.middledata.elementSelected,function(dataelement){
+		t.push( cmd.AddOrDelete.create( dataelement.getParent() , 'removeElement' , 'addElement' , dataelement ) );
+	});
+	cmd.execute( cmd.Multi.createWithTab(t) );
+  },
+  editElement:function(){
+	if(this.toolmodel.get('avaibleTool')['edition'])
+		this.toolmodel.editElement();
+	else
+		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
+  },
+  render:function(){
+	if(this.toolmodel.get('avaibleTool')['trash-element'])
+		this.$el.find('[data-contain=remove-element]').show();
+	else
+		this.$el.find('[data-contain=remove-element]').hide();
+		
+		
+	if(this.toolmodel.get('avaibleTool')['edition'])
+		this.$el.find('[data-contain=edit-element]').show();
+	else
+		this.$el.find('[data-contain=edit-element]').hide();
+	
+	if(this.toolmodel.get('avaibleTool')['selection'])
+		this.$el.find('[data-contain=select-mode]').show();
+	else
+		this.$el.find('[data-contain=select-mode]').hide();
+	
+	if(this.toolmodel.get('avaibleTool')['polygon-creation'])
+		this.$el.find('[data-contain=add-polygon]').show();
+	else
+		this.$el.find('[data-contain=add-polygon]').hide();
+		
+		
+	if(this.toolmodel.get('avaibleTool')['trash'])
+		this.$el.find('[data-contain=trash-element]').show();
+	else
+		this.$el.find('[data-contain=trash-element]').hide();
+  },
+});
+  
+
 
 window.ViewResults = ViewResults;
 window.ViewPackages = ViewPackages;
@@ -2711,6 +2819,7 @@ window.ViewActionMap = ViewActionMap;
 window.ViewAttributes = ViewAttributes;
 window.ViewPropertyStack = ViewPropertyStack;
 window.ViewChunks = ViewChunks;
+window.ViewDataTools = ViewDataTools;
 /*
 map=new AdaptLeafletMap({'model':middle});
 map.$el.appendTo( $('body') )

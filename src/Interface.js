@@ -226,8 +226,98 @@ var fillComponent=function(){
 	// the model
 	var mdp=new MiddleDataMap();
 	
-	dataMgr=new (Backbone.Model.extend({}))();
-	
+	dataMgr=new (AbstractDataElement.extend({
+		middledata:null,
+		datamap:null,
+		oneditelement:null,
+		
+		initialize:function(attr,options){
+			options=options||{};
+			AbstractDataElement.prototype.initialize.call(this,attr,options);
+			
+			this.middledata=options.middledata;
+			this.datamap=options.datamap;
+			
+			this.middledata.on(  'change:elementSelected' , this.changeAvaibleTool , this );
+			this.middledata.on(  'change:packageSelected' , this.changeAvaibleTool , this );
+			this.on( 'change:state' , this.changeAvaibleTool , this );
+		},
+		changeAvaibleTool:function(){
+			var avaibleTool={};
+			switch(this.get('state')){
+				case 'selection':
+					
+					if(this.oneditelement){
+						this.stopListening( this.oneditelement , 'destroy' , this.destroyonedit );
+						this.oneditelement=null;
+					}
+					if( this.middledata.elementSelected.length == 1 ){
+						switch(this.middledata.elementSelected.type){
+							case 'polygon':
+								avaibleTool['polygon-edition']=true;
+							break;
+						}
+						avaibleTool['edition']=true;
+						avaibleTool['trash-element']=true;
+					}
+					if( this.middledata.get('packageSelected') ){
+						avaibleTool['polygon-creation']=true;
+						avaibleTool['marker-creation']=true;
+					}
+					
+					
+				break;
+				case 'polygon-edition':
+					
+					avaibleTool['selection']=true;
+					
+				case 'marker-edition':
+				
+				break;
+			}
+			
+			this.set('avaibleTool',avaibleTool);
+			/*
+			this.trigger('change');
+			this.trigger('change:avaibleState');
+			*/
+		},
+		defaults: _.extend({
+			state:'selection',
+			avaibleTool:{'selection':true},
+		}, AbstractDataElement.prototype.defaults() ),
+		
+		newPolygon:function(){
+			var datapolygon=new DataPolygon({
+				'name'		:	this.get('name'),
+				'attributes':	_.clone( this.get('attributes') ),
+				'classes'	:	_.clone( this.get('classes') ),
+				});
+			this.middledata.get('packageSelected').addElement( datapolygon ); 
+			this.oneditelement=datapolygon;
+			
+			this.listenTo( this.oneditelement , 'destroy' , this.destroyonedit );
+			this.set('state','polygon-edition');
+		},
+		destroyonedit:function(){
+			this.set('state','selection');
+		},
+		newMarker:function(){
+			
+		},
+		editElement:function(){
+			var dataelement=this.middledata.elementSelected[0];
+			switch(dataelement.type){
+				case 'polygon' :
+					this.oneditelement=dataelement;
+					
+					this.listenTo( this.oneditelement , 'destroy' , this.destroyonedit );
+					this.set('state','polygon-edition');
+				break;
+			}
+		},
+		
+	}))({ 'state':'selection'} , {'middledata':mdp , 'datamap':datamap });
 	
 	var cpi=frame.find('[data-component=ViewPackages]');
 	cpi
@@ -238,17 +328,20 @@ var fillComponent=function(){
 		'middledatamap':mdp,
 		'addable':true,
 		'deletable':true,
+		'selectionable':true,
 		}).$el );
 	
 	var cm=frame.find('[data-component=Map]');
 	var vam=new ViewActionMap({
 		'model'		:datamap ,
+		'toolmodel'	:dataMgr ,
 		'middledata':mdp ,
 		'mcssdata'	:mcssdata ,
 		'width'		:cm.width() ,
 		'height'	:cm.height() ,
 	})
-	//.elementSelectionnable(true)
+	.elementSelectionnable(true)
+	
 	window.vam=vam;
 	cm
 	.empty()
@@ -263,6 +356,29 @@ var fillComponent=function(){
 		}).$el );
 	
 	
+	var ctb=frame.find('[data-component=Tool]')
+	.empty()
+	.append( new ViewDataTools({
+		
+		'toolmodel':dataMgr,
+		'middledata':mdp,
+		}).$el );
+	
+	//change the behavior of 
+	var gate={
+		resolveState:function(){
+			switch( dataMgr.get('state')){
+				case 'selection' :
+					vam.polygonTracable(false).elementSelectionnable(true);
+				break;
+				case 'polygon-edition' :
+					vam.elementSelectionnable(false).polygonTracable(true,dataMgr.oneditelement);
+				break;
+			}
+		},
+	};
+	dataMgr.on( 'change:state' , gate.resolveState , this );
+	
 	})();
 	
 	
@@ -274,6 +390,7 @@ var fillComponent=function(){
 	var mdp=new MiddleDataMap();
 	
 	decorationMgr=new (Backbone.Model.extend({}))();
+	
 	
 	
 	var cpi=frame.find('[data-component=ViewPackages]');
