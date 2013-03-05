@@ -231,7 +231,13 @@ var fillComponent=function(){
 	var cpi=frame.find('[data-component=ViewPackages]');
 	cpi
 	.empty()
-	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	.append( new ViewPackages({
+		'model':datamap,
+		'toolmodel':dataMgr,
+		'middledatamap':mdp,
+		'addable':true,
+		'deletable':true,
+		}).$el );
 	
 	var cm=frame.find('[data-component=Map]');
 	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
@@ -242,7 +248,11 @@ var fillComponent=function(){
 	
 	var ca=frame.find('[data-component=AttributeMgr]')
 	.empty()
-	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	.append( new ViewAttributes({
+		'model':datamap,
+		'toolmodel':dataMgr,
+		'middledatamap':mdp,
+		}).$el );
 	
 	
 	})();

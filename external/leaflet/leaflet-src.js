@@ -3752,7 +3752,7 @@ L.Path = L.Path.extend({
 			this._path.setAttribute('fill-opacity', this.options.fillOpacity);
 		} else {
 			this._path.setAttribute('fill', 'none');
-		}
+		}	
 	},
 
 	_updatePath: function () {

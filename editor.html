@@ -31,6 +31,8 @@
 
 		<script type="text/javascript" src="src/jquery.smarttextinput.js"></script>
 		<script type="text/javascript" src="src/jquery.linkable.js"></script>
+		<script type="text/javascript" src="src/leaflet.patternpolygon.js"></script>
+		
 		<script type="text/javascript" src="src/MapCSS/MapCSSParser.js"></script>
 		<script type="text/javascript" src="src/MapCSS/mapCSS.js"></script>
 		<script type="text/javascript" src="src/country.js"></script>
@@ -195,6 +197,22 @@
 		
 		<div>
 			<s><a id="myanchor">ae</a></s>
+			
+			<svg width="8cm" height="4cm" viewBox="0 0 800 400" version="1.1"	 xmlns="http://www.w3.org/2000/svg">
+			  <defs>
+				<pattern id="TrianglePattern" patternUnits="userSpaceOnUse"
+						 x="0" y="0" width="100" height="100"
+						 viewBox="0 0 10 10" >
+				  <path d="M 0 0 L 7 0 L 3.5 7 z" fill="red" stroke="blue" />
+				</pattern> 
+			  </defs>
+			  
+			  <!-- The ellipse is filled using a triangle pattern paint server
+				   and stroked with black -->
+			  <ellipse fill="url(#TrianglePattern)" stroke="black" stroke-width="5"  
+					   cx="400" cy="200" rx="350" ry="150" />
+			</svg>
+			
 			<br>
 			<br>
 			<br>
@@ -219,6 +237,8 @@
 	<script type="text/template" id="panel-package-template">
 			<table>
 			</table>
+			<div class="btn" data-contain="trash-all">del all</div>
+			<div class="btn" data-contain="new-package">new</div>
 	</script>
 	<script type="text/template" id="item-package-template">
 		      <td><a class="icon-eye-open" data-contain="visible" ></a></td>
