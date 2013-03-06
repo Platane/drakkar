@@ -12,3 +12,7 @@
 .chunk.drag-hover{
 	box-shadow:0 0 5px 5px #a4851d;
 }
+
+.item-package.selected{
+	background-color:#ddd;
+}

@@ -337,6 +337,368 @@ L.PolyUtil.splitInConvexesEars = function(polygon){
 };
 
 
+/** 
+ * return either false if there is no intersection with the two segments 
+ * the segment are A1A2 and B1B2
+ * or { t1 , t2 }  where A1 +  ( A2 - A1 ) * t1 =  B1 +  ( B2 - B1 ) * t2  is the intersection of the two segment   ( yeah, right tA , tB would be better )
+ * the function doesnt not react well with null segment ( A1 = A2 )
+  * @function
+ *  @param { cc.Point } A1
+ *  @param { cc.Point } A2
+ *  @param { cc.Point } B1
+ *  @param { cc.Point } B2
+ *  @return { t1 : number , t2 : number }  
+ * Constructor
+ */
+L.PolyUtil.intersectionSegmentSegment = function( A1 , A2 , B1 , B2 , tol ){
+	tol=tol||0;
+	var 
+	VAx = A2.x - A1.x,
+	VAy = A2.y - A1.y,
+	VBx = B2.x - B1.x,
+	VBy = B2.y - B1.y,
+	PAx = A1.x,
+	PAy = A1.y,
+	PBx = B1.x,
+	PBy = B1.y;
+
+	if( VBy * VAx - VBx * VAy == 0 )		// colineaire
+		return false;
+
+	if( VBy == 0 ){				
+		var ta = ( PBy - PAy )/VAy;			// VAy != 0 sinon VA VB colineaires
+		if( ta < 0 || 1 < ta)
+			return false;
+		var tb = ((PAx-PBx)+VAx*ta)/VBx;	// VBx != 0 sinon B1 == B2
+		if( tb < 0 || 1 < tb)
+			return false;
+		return { ta:ta , tb:tb };
+	}
+	if( VAx == 0 ){
+		var tb = ( PAx - PBx )/VBx;	
+		if( tb < 0 || 1 < tb)
+			return false;
+		var ta = ((PBy-PAy)+VBy*tb)/VAy;
+		if( ta < 0 || 1 < ta)
+			return false;
+		return { ta:ta , tb:tb };
+	}
+	var ta = (  (( PBx - PAx )  + VBx/VBy*(PAy-PBy) )/VAx )/( 1 - VBx * VAy / VAx / VBy );
+	if( ta < 0 || 1 < ta)
+		return false;
+	var tb = ((PAy-PBy)+VAy*ta)/VBy;
+	if( tb < 0 || 1 < tb)
+		return false;
+	return { ta:ta , tb:tb };
+
+}
+
+L.PolyUtil.collisionPointToPolygon = function( polygon , c ){
+	
+	var ref = ( polygon[ 1 ].x - polygon[ 0 ].x ) * ( polygon[ 2 ].y - polygon[ 1 ].y ) + ( polygon[ 0 ].y - polygon[ 1 ].y ) * ( polygon[ 2 ].x - polygon[ 1 ].x ) >= 0; 
+	
+	var len = polygon.length;
+	
+	var ax = polygon[ len-1 ].x , ay = polygon[ len-1 ].y ,
+		cx = c.x , cy = c.y,
+		cbx , cby ,
+		bx , by , 
+		abx, aby,
+		det  ;
+		
+	for( var i = 0 ; i < len ; i ++ ){
+		bx = polygon[ i ].x;
+		by = polygon[ i ].y
+		
+		if( ( bx - ax )  *  ( by - cy ) - ( by - ay )  * ( bx - cx ) >= 0 == ref ) //check the sign of the det  < ab det bc > 
+			return false;
+		
+		ax = bx;
+		ay = by;
+	}
+	return true;
+	
+}
+
+//assuming the polygons are convex
+//should with non convex polygon, assuming we got a point to polygon collision checker
+L.PolyUtil.intersectionPolyPoly = function( points1 , points2 ){
+	
+	var tol=0.0000001;
+	
+	var pa=points1,
+		pb=points2;
+	
+		
+	//search for intersection between the edges
+	//seeking for point of polygonA that belong to polygonB could sound like a good idea, but its not. because such point may not exist and there be still intersection between polyon
+	//see the minkowski sum, an algorithm that help detecting collision ( but not intersection I assume )
+	//I guess the fastest way to seek for intersection between edges is to use a BTree
+	
+	var ia=pa.length,
+		ib,
+		a1x,a1y,a2x=pa[0].x,a2y=pa[0].y,
+		b1x,b1y,b2x,b2y,
+		res,
+		cross=[];
+	while(ia--){
+		ib=pb.length;
+		b2x=pb[0].x;
+		b2y=pb[0].y;
+		
+		a1x=pa[ia].x;
+		a1y=pa[ia].y;
+		
+		while(ib--){
+			b1x=pb[ib].x;
+			b1y=pb[ib].y;
+			
+			if( (res=L.PolyUtil.intersectionSegmentSegment( {x:a1x,y:a1y} , {x:a2x,y:a2y} , {x:b1x,y:b1y} , {x:b2x,y:b2y} ) ) ){
+				cross.push({
+					'sa':ia,		//the first vertex, so the second is ia+1 ( ia+1 can be 0 ( modulo length) )
+					'sb':ib,
+					'saf':(ia+(res.ta))%pa.length,
+					'sbf':(ib+(res.tb))%pb.length,
+					'p':{
+						x: a1x + (a2x-a1x) * res.ta,
+						y: a1y + (a2y-a1y) * res.ta,
+					}
+				});
+			}
+			
+			b2x=b1x;
+			b2y=b1y;
+		}
+		a2x=a1x;
+		a2y=a1y;
+	}
+	
+	if( cross.length==0 )
+		return [];		//nop
+	
+	//check for redondancy
+	var i=cross.length,
+		j;
+	while(i--){
+		j=i;
+		while(j--){
+			if( Math.abs(cross[i].saf-cross[j].saf ) < tol ){
+				cross.splice(i,1);
+				i--;
+			}
+		}
+	}
+	
+	// util fn ..
+	var next=function(i,mod,sens){
+		if(sens)
+			return (i+1)%mod;
+		else
+			return ((i-1)%mod+mod)%mod;
+	};
+	var distance=function(from,to,mod,sens){
+		if(sens)
+			return ((from-to)%mod+mod)%mod;
+		else
+			return ((-from+to)%mod+mod)%mod;
+	};
+	var complete=function(source,from,to,destination,sens){
+		for(var k=from ; k!=next(to,source.length,sens) ; k=next(k,source.length,sens) );
+		for(var k=from ; k!=to ; k=next(k,source.length,sens) )
+			destination.push(source[k]);
+		destination.push(source[k]);
+	};
+	var minDistance=function( c , cross , prop , mod , sens ){
+		var sam=mod+1,
+			im,
+			i=cross.length;
+		while(i--){
+			var tmp=distance( cross[i][prop] , c[prop] , mod , sens );
+			if(tmp<sam){
+				sam=tmp;
+				im=i;
+			}
+		}
+		return im;
+	};
+	var map=function( X , Y ){
+		var i=X.length,
+			j;
+		while(i--){
+			j=Y.length;
+			while(j--){
+				if( X[i].s == Y[j].s )
+					return X[i].f<Y[j].f;
+			}
+		}
+		return null;
+	};
+	
+	
+	var breaker=200;	//just in case ..
+	
+	var p3=[];
+	var c=cross.shift();
+	var closure=c;
+	var side=true;		//is true is the line to follow is on pa, pb if false
+	var sens=true;
+	
+	var sensA=true;
+	var sensB=true;
+	while(breaker--){
+		
+		side=!side;
+		
+		var nextCrossTrue,
+			nextCrossFalse,
+			itrue=null,
+			ifalse=null,
+			sens=null;
+		if(side){
+			// which sens should we go?
+			// the one where the next point is in the instersection
+			
+			if(cross.length>0){
+				// pick the closet cross, going both forward ( true ) and backward ( false )
+				itrue	=minDistance( c , cross , 'saf' , pa.length , true );
+				ifalse	=minDistance( c , cross , 'saf' , pa.length , false );
+				nextCrossTrue	=	cross[itrue];
+				nextCrossFalse	=	cross[ifalse];	
+			}else{
+				// if there is no cross, close the polygon, go to closure
+				nextCrossTrue	= closure;
+				nextCrossFalse	= closure;
+			}
+			
+			// first lets check if we got one cross one the edge where c is
+			// but I we assume that the pic of a polygon can be on one of the second polygon edge ( shit appends ), that a bit tricky because the cross is on two edges
+			// in that case, check the two edges
+			// the cross we are checking can also be on two edges, well lets make a production function to keep it readable
+			
+			// X contains entry with all we need to check if its on the edge, c side
+			// Y contains entry with all we need to check if its on the edge, cross side
+			
+			// lets fill this arrays
+			
+			var fa=(c.saf-c.sa+pa.length)%pa.length;		//position on the vertex
+			
+			var X=[ {s:c.sa,f:fa} ];
+			//if on the edge, check with the other edge of the pic
+			if( fa > 1-tol )
+				X.push( {s:(c.sa+1)%pa.length,f:0} );
+			if( fa < tol )
+				X.push( {s:(c.sa-1+pa.length)%pa.length,f:1} );
+			
+			var faTrue  = (nextCrossTrue.saf  - nextCrossTrue.sa  +pa.length)%pa.length;		
+			var faFalse = (nextCrossFalse.saf - nextCrossFalse.sa +pa.length)%pa.length;	
+			
+			var Y=[  {s:nextCrossTrue.sa , f:faTrue }
+					,{s:nextCrossFalse.sa , f:faFalse }
+					];
+			
+			if( faTrue > 1-tol )
+				Y.push( {s:(nextCrossTrue.sa+1)%pa.length,f:0} );
+			if( faTrue < tol )
+				Y.push( {s:(nextCrossTrue.sa-1+pa.length)%pa.length,f:1} );
+			
+			if( faFalse > 1-tol )
+				Y.push( {s:(nextCrossFalse.sa+1)%pa.length,f:0} );
+			if( faFalse < tol )
+				Y.push( {s:(nextCrossFalse.sa-1+pa.length)%pa.length,f:1} );
+				
+			//proceed to check element with others
+			sens = map( X , Y );
+			
+			//if no result have been found, nevermind no cross share edges with c
+			//in that case, check if the next element ( in both senses ) is in the intersection
+			var nextPointFalse=pa[c.sa];
+			if( sens==null && L.PolyUtil.collisionPointToPolygon( pb , nextPointFalse ) )
+				sens=false;
+			
+			var nextPointTrue=pa[(c.sa+1)%pa.length];
+			if( sens==null && L.PolyUtil.collisionPointToPolygon( pb , nextPointTrue ) )
+				sens=true;
+		}else{
+			if(cross.length>0){
+				itrue	=minDistance( c , cross , 'sbf' , pb.length , true );
+				ifalse	=minDistance( c , cross , 'sbf' , pb.length , false );
+				nextCrossTrue	=	cross[itrue];
+				nextCrossFalse	=	cross[ifalse];	
+			}else{
+				nextCrossTrue	= closure;
+				nextCrossFalse	= closure;
+			}
+			
+			var fb=(c.sbf-c.sb+pb.length)%pb.length;
+			
+			var X=[ {s:c.sb,f:fb} ];
+			
+			if( fb > 1-tol )
+				X.push( {s:(c.sb+1)%pb.length,f:0} );
+			if( fb < tol )
+				X.push( {s:(c.sb-1+pb.length)%pb.length,f:1} );
+			
+			var fbTrue  = (nextCrossTrue.sbf  - nextCrossTrue.sb  +pb.length)%pb.length;		
+			var fbFalse = (nextCrossFalse.sbf - nextCrossFalse.sb +pb.length)%pb.length;	
+			
+			var Y=[  {s:nextCrossTrue.sb , f:fbTrue }
+					,{s:nextCrossFalse.sb , f:fbFalse }
+					];
+			
+			if( fbTrue > 1-tol )
+				Y.push( {s:(nextCrossTrue.sb+1)%pb.length,f:0} );
+			if( fbTrue < tol )
+				Y.push( {s:(nextCrossTrue.sb-1+pb.length)%pb.length,f:1} );
+			
+			if( fbFalse > 1-tol )
+				Y.push( {s:(nextCrossFalse.sb+1)%pb.length,f:0} );
+			if( fbFalse < tol )
+				Y.push( {s:(nextCrossFalse.sb-1+pb.length)%pb.length,f:1} );
+			
+			sens = map( X , Y );
+			
+			var nextPointFalse=pb[c.sb];
+			if( sens==null && L.PolyUtil.collisionPointToPolygon( pa , nextPointFalse ) )
+				sens=false;
+			
+			var nextPointTrue=pb[(c.sb+1)%pb.length];
+			if( sens==null && L.PolyUtil.collisionPointToPolygon( pa , nextPointTrue ) )
+				sens=true;
+			
+		}
+		// the next forward is not in the intersection, nor that that next backward
+		// there is only one explenation, this is a pic and we should jump to the other line
+		// lets do this
+		if(sens==null){
+			continue;	//jump to the other side ( append in case of vertex on edge )
+		}
+		
+		
+		if(cross.length>0)
+			cross.splice( sens?itrue:ifalse , 1 );
+		var cn=sens?nextCrossTrue:nextCrossFalse;
+		
+		if(side){
+			if( c.sa!=cn.sa )
+				complete(pa, sens? (c.sa+1)%pa.length : c.sa    ,    sens?cn.sa:(cn.sa+1)%pa.length    , p3 , sens );
+		}else{
+			if( c.sb!=cn.sb )
+				complete(pb, sens? (c.sb+1)%pb.length : c.sb ,       sens?cn.sb:(cn.sb+1)%pb.length    , p3 , sens );
+		}
+		p3.push(cn.p);
+		
+		c=cn;
+		
+		if(c==closure)
+			break;
+	}
+	
+	if(breaker<1)
+		console.log( "error "+JSON.stringify(points1)+"\n\n"+JSON.stringify(points2) );
+	
+	return p3;
+}
+
 
 L.cloneLatLngArray = function( a ){
 	var b = new Array( a.length );
@@ -2070,7 +2432,7 @@ var ViewPackage = Backbone.View.extend({
 	
 	this.listenTo(this.model, "change:name", this.render);
     this.listenTo(this.model, "destroy", this.remove);
-    this.listenTo(this.middledatamap , "change:elementSelected", this.visibilityChange);
+    this.listenTo(this.middledatamap , "change:packageHidden", this.visibilityChange);
 	if(this.selectionable)
 		 this.listenTo(this.middledatamap , "change:packageSelected", this.render);
 	
@@ -2476,13 +2838,20 @@ ViewProperty = Backbone.View.extend({
 		this.render();
 		return;
 	}
+	
 	element.parents('.css-property')
 	.append( $("<span>").addClass("css-property-separator").wrapInner(":") )
 	.append( valSpan )
 	.append( $("<span>").addClass("css-property-end").wrapInner(";") );
 	
-	valSpan.smartlyEditable({'finish':$.proxy(this.finishValue,this) })
-	.click();
+	if( name.indexOf(':')>=0 ){
+		valSpan.wrapInner( name.substr( name.indexOf(':')+1 ).replace(';','').trim() );
+		element.empty().wrapInner( name.substr(0, name.indexOf(':') ).trim() );
+		this.finishValue(valSpan,"");
+	}else{
+		valSpan.smartlyEditable({'finish':$.proxy(this.finishValue,this) })
+		.click();
+	}
   },
 });
 

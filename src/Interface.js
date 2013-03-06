@@ -258,8 +258,10 @@ var fillComponent=function(){
 							break;
 						}
 						avaibleTool['edition']=true;
-						avaibleTool['trash-element']=true;
+						
 					}
+					if( this.middledata.elementSelected.length > 0 )
+						avaibleTool['trash-element']=true;
 					if( this.middledata.get('packageSelected') ){
 						avaibleTool['polygon-creation']=true;
 						avaibleTool['marker-creation']=true;

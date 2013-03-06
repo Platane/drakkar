@@ -5,7 +5,31 @@
 
 <script>
 
+if( ( pseudoRandom = true ) ){
+		// change the behavior of the random function
+		var _seed = 45678951585432565678;
+		_seed = Math.floor( Math.random() * 10000000000 );
 
+
+		//_seed = 5230449207   ;
+		//_seed=   1448334283 
+		
+		console.log( "seed = "+_seed );
+		var _offset = _seed;
+		Math.random = function(){
+				
+			var s = _seed;
+			var square = s *s;
+			
+			var nseed = Math.floor( square / 1000 ) % 10000000000;
+			
+			if( nseed != _seed )
+				_seed = nseed;
+			else
+				_seed = nseed + _offset;
+			return ( _seed / 10000000000 );
+		}
+	}
 
 function genRandom(lower, higher) {
 	lower = (lower||lower===0)?lower : 0;
@@ -13,7 +37,14 @@ function genRandom(lower, higher) {
 	return Math.floor( (higher - lower + 1) * Math.random() ) + lower;
 }
 
-
+var permutationCirculaire=function(p,k){
+	if(k==null)k=Math.floor(Math.random()*p.length);
+	for(var i=0;i<k;i++){
+		p.push(p[0]);
+		p.shift();
+	}
+	return p;
+};
 
 function createPoly(x,y,R, n,scaleX,scaleY){
 	if (!R){
@@ -70,6 +101,7 @@ function drawPoint(context , x,y , color,r){
 }
 
 
+
 window.onload=function(){
 	
 	var WIDTH=500,
@@ -81,14 +113,25 @@ window.onload=function(){
 	canvas.style.backgroundColor="white";
 	var ctx=canvas.getContext('2d');
 	
-	var MAIN_POLY=getRandomPoly(WIDTH/2,HEIGHT/2, 50, 80, 4,10);
-	var pol = new Array( MAIN_POLY );
+	var MAIN_POLY=getRandomPoly(WIDTH*0.4,HEIGHT/2, 50, 80, 4,10);
+	var pol1 = new Array( MAIN_POLY );
 	for( var i = 0 ; i < MAIN_POLY.length ; i++ )
-		pol[ i ] = { x:MAIN_POLY[ i][0] , y:MAIN_POLY[ i][1] };
+		pol1[ i ] = { x:MAIN_POLY[ i][0] , y:MAIN_POLY[ i][1] };
 		
+	var MAIN_POLY=getRandomPoly(WIDTH*0.6,HEIGHT/2, 50, 80, 4,10);
+	var pol2 = new Array( MAIN_POLY );
+	for( var i = 0 ; i < MAIN_POLY.length ; i++ )
+		pol2[ i ] = { x:MAIN_POLY[ i][0] , y:MAIN_POLY[ i][1] };
 	
 	
 	
+	window.drawP=function(s){
+		for(var i=0;i<s.length;i++){
+			drawPoint(ctx , s[i].x , s[i].y ,'#00ff00',2);
+		}
+	};
+	
+	/*
 	for(var k=0;k<100000;k++){
 		var x= genRandom(10,WIDTH-10);
 		var y= genRandom(10,HEIGHT-10);
@@ -97,13 +140,67 @@ window.onload=function(){
 		var color= L.PolyUtil.collisionPointToPolygon(pol,{x:x,y:y})?'#999':'#eee';
 		
 		drawPoint(ctx , x,y ,color);
+	}*/
+	
+	//cas pathologique
+	if(!true){
+		// no vertex in
+		pol1=[
+			{x:100,y:50},
+			{x:150,y:50},
+			{x:125,y:250},
+		];
+		pol2=[
+			{x:50,y:100},
+			{x:50,y:150},
+			{x:250,y:125},
+		];
 	}
 	
-	drawPoly(ctx , pol );
+	if(!true){
+		// vertex on edge
+		pol1=[
+			{x:100,y:50},
+			{x:250,y:50},
+			{x:100,y:250},
+		];
+		pol2=[
+			{x:100,y:175},
+			{x:300,y:50},
+			{x:300,y:250},
+		];
+	}
+	
+	pol1=permutationCirculaire(pol1);
+	pol2=permutationCirculaire(pol2);
+	
+	if(Math.random()>0.5)pol1=pol1.reverse();
+	if(Math.random()>0.5)pol2=pol2.reverse();
+	
+	if(Math.random()>0.5){
+		var tmp=pol1;
+		pol1=pol2;
+		pol2=tmp;
+	}
 	
 	
+	drawPoly(ctx , pol1 );
+	drawPoly(ctx , pol2 );
 	
+	/*
+	var cross=L.PolyUtil.intersectionPolyPoly(pol1,pol2);
+	for(var i=0;i<cross.length;i++){
+		drawPoint(ctx , pol1[ cross[i].sa ].x , pol1[ cross[i].sa ].y ,'#0ff000',3);
+		drawPoint(ctx , pol1[ (cross[i].sa+1)%pol1.length ].x , pol1[ (cross[i].sa+1)%pol1.length ].y ,'#0ff000',3);
+		drawPoint(ctx , cross[i].p.x , cross[i].p.y ,'#00ff00',2);
+	}*/
 	
+	var p3=L.PolyUtil.intersectionPolyPoly(pol1,pol2);
+	for(var i=0;i<p3.length;i++){
+		drawPoint(ctx , p3[i].x , p3[i].y ,'#00ff00',2);
+	}
+	
+	drawPoly(ctx , p3, '#00ff00');
 	
 	canvas.addEventListener("click",function(event){
 		
@@ -117,6 +214,8 @@ window.onload=function(){
 			drawPoint(ctx , res.p.x,res.p.y ,'#00ff00',2);
 		}
 	});
+	
+	
 	
 	
 };
