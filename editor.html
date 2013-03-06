@@ -4,8 +4,8 @@
 		<!--
 		<link rel="stylesheet" href="external/KNACSS-master/css/knacss-garni.css" />
 		<link rel="stylesheet" href="external/KNACSS-master/css/knacss.css" />
-		<link rel="stylesheet" href="src/CSS/style.css" />
 		-->
+			
 		<link rel="stylesheet" href="external/leaflet/leaflet.css" />
 		<link rel="stylesheet" href="external/bootstrap/css/bootstrap.css" />
 		<link rel="stylesheet" href="src/CSS/editorPanel.css" />
@@ -27,6 +27,10 @@
 		<script type="text/javascript" src="external/Iris/iris.js"></script>
 		<script type="text/javascript" src="external/underscore.js"></script>
 		<script type="text/javascript" src="external/backbone.js"></script>
+		
+		<!--Parallax-->
+		<script type="text/javascript" src="external/jparallax-master/js/jquery.jparallax.min.js"></script>
+		<script type="text/javascript" src="external/jparallax-master/js/jquery.event.frame.js"></script>
 		
 
 		<script type="text/javascript" src="src/jquery.smarttextinput.js"></script>
@@ -51,21 +55,68 @@
 				});
 				init();
 			}
-				
-			
+		</script>
+		<script type="text/javascript">
+			jQuery(document).ready(function() 
+			{
+				$('#parallax .parallax-layer').parallax({
+					mouseport: $('#parallax')
+				});
+			});
 		</script>
 	</head>
 	
 	<body>
 	
+		
+		
+	<!--Menu latéral glissant-->	
 		<nav id="frame-navigator">
-			<input type="checkbox" checked="checked"></input>
-			<div data-action="goto-search" >s</div>
-			<div data-action="goto-data" >dt</div>
-			<div data-action="goto-decoration" >d</div>
-			<div data-action="goto-presentation" >p</div>
+		
+		<div class="BoxMenu" style="top: 200px;">  
+		   <div class="contenu">  
+			  <div data-action="goto-search" > 
+				 <img src="ressources/img/loupe.png" alt="Menu Principal" width="128" height="128" />  
+			  </div>  
+			</div>  
+		   <div class="txt">Search</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 276px;">  
+			<div class="contenu">  
+				<div data-action="goto-data" >
+				<img src="ressources/img/data.png" alt="Menu Principal" width="128" height="128" />  	
+				</div>
+			</div>  
+			<div class="txt">Data</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 352px;">  
+			<div class="contenu">  
+				<div data-action="goto-decoration" >
+					<img src="ressources/img/edit.png" alt="Menu Principal" width="128" height="128"/>
+				</div>  
+			</div>  
+			<div class="txt">Decoration</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 428px;">  
+			<div class="contenu">  
+				<div data-action="goto-presentation" >
+				<img src="ressources/img/presentation.png" alt="Menu Principal" width="128" height="128"/>
+				</div>
+			</div>  
+			<div class="txt">Presentation</div>  
+		</div>  
+	
+	
+			
 		</nav>
 		
+		
+		
+		
+	<!--Trombone windows viking -->	
 		<div id="guide">
 			
 			<div id="guide-portrait">
@@ -76,12 +127,22 @@
 					Please to meet you, i am here to guide u
 			</div>
 		</div>
-		
 		<div id="flow">
 		
-		<div id="frame-header" class="frame">
-			
+		
+		<div id="parallax" class="clear">
+			<div class="parallax-layer" style="width:1200px; height:250px;">
+				<img src="ressources/img/waves.png" />
+			</div>
+			<div class="parallax-layer" style="width:500px; height:250px;">
+				<img src="ressources/img/drakkar.png" />
+			</div>
+		   <div class="parallax-layer" style="width:1200px; height:300px;">
+				<img src="ressources/img/seaguls.png" />
+		   </div>
 		</div>
+			
+		
 		
 		<div id="frame-search" class="frame fullscreen">
 			<div class="row-fluid frame-blank-top" ></div>

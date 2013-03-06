@@ -1,3 +1,15 @@
+#parallax {
+   position:relative; overflow:hidden; width:950px; height:250px;
+   background-image:url(../../ressources/img/background.jpg);
+}
+.parallax-viewport {
+    position: relative;     /* relative, absolute, fixed */
+    overflow: hidden;
+}
+.parallax-layer {
+    position: absolute;
+}
+
 .height12 {
   height: 100%;
   *height: 99.94680851063829%;
@@ -69,8 +81,61 @@ nav{
 	border-radius:0 5px 5px 0;
 	width:30px;
 	padding:5px;
-	background-color:#f1f1f1;
 }
+/* menu lateral gauche */  
+.BoxMenu{  
+    color:black;                /* Couleur du texte */  
+    background-color:#e6ca67;   /* Couleur du fond. Il est possible de 
+                                   changer la couleur de fond par une image 
+                                   dans ce cas, vous ajouterez la ligne suivante 
+                                   background-image: url('url de votre image'); */  
+    overflow:hidden;            /* empêche que le contenu des boites ne dépasse de celles-ci */  
+    width:104px;height:76px;    /* Largeur et hauteur de la boite principale 
+                                   Largeur (width)= largeur de contenu (70) + hauteur txt(22) + bordures (4x3) = 104 px  
+                                   Hauteur (height)=hauteur de contenu (70) + bordures (2x3)=76 px */  
+    position:fixed;                /* Positionnement par rapport à la fenêtre du navigateur */  
+    left:-76px;                    /* On décale vers la gauche de 76 px de manière à ne laisser voir 
+                                   que la boite txt */  
+     -webkit-transition-duration: 0.5s;/* Durée de transition pour un effet de slide */  
+     -moz-transition-duration: 0.5s;  
+     transition-duration: 0.5s;   
+     border-radius:0px 8px 8px 0px;  /* arrondi des coins à droite de la boite de 8 px */   
+      
+}  
+.contenu {   
+    border:3px ridge #fae6a0; /* Bordure de type ridge de 3px d'epaisseur et de couleur lightblue */  
+    height:70px;                  /* hauteur de 70px */  
+    width:70px;                    /* largeur de 70px */  
+    }  
+  
+.contenu img  /* Optionnel */  
+{  
+    width:70px;   /* redimensionne les images de contenu à 70 x 70 px */  
+    height:70px;  
+}  
+.txt{  
+    text-shadow: 1px 1px 2px b67800;  /* Effet d'ombre sur le texte décalage de 1 px, flou de 2px couleur noire */  
+    border:3px #fae6a0 ridge;         /* Bordure de type ridge de 3px d'epaisseur et de couleur lightblue */  
+    font-size:14px;                     /* Taille de la police */  
+    color:4d4c4b;                     /* Couleur de la police */  
+    text-align:center;                 /* Centrage de la police */  
+    position:relative;                 /* Positionnement relatif par rapport à la boite BoxMenu */  
+    left:52px;                       /* Décalage pour un bon positionnement de la boite */  
+    top:-52px;                         /* Voir l'image pour l'explication des valeurs */  
+    width:70px;                         /* Largeur de txt */  
+    height:22px;                     /* Hauteur de txt */  
+    border-radius:0px 0px 8px 8px;   /* arrondi des coins inférieurs de la boite de 8 px */   
+    transform: rotate(270deg);         /* angle de rotation de la boite de 270° */  
+    -ms-transform: rotate(270deg);   
+    -webkit-transform: rotate(270deg);   
+    -o-transform: rotate(270deg);   
+    -moz-transform: rotate(270deg);   
+}  
+.BoxMenu:hover  
+{  
+     left:0px;  /* affiche toute la boite BoxMenu au survol de la souris */  
+}  
+   
 #guide .alert{
 	margin-top:10px;
 	display:inline-block;
@@ -148,6 +213,8 @@ nav{
 .frame-blank-top-compl{
 	height:90%;
 }
+
+
 
 
 html{
