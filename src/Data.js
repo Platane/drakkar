@@ -773,8 +773,19 @@ var DataMap = AbstractDataElement.extend({
 		this.type='map';
 	},
 	addPackage:function(datapackage){
-		this.children.add(datapackage);
 		datapackage.parent=this;
+		this.children.add(datapackage);
+	},
+	swapPackages:function(datapackage1,datapackage2){
+		
+		var index1=datapackage1.getZ();
+		var index2=datapackage2.getZ();
+		
+		var tmp=this.children.models[ index1 ];
+		this.children.models[ index1 ]=this.children.models[ index2 ];
+		this.children.models[ index2 ]=tmp;
+		
+		this.trigger('swappackages');
 	},
 	removePackage:function(p){
 		if( typeof(p)=="string" )
@@ -796,8 +807,17 @@ var DataMap = AbstractDataElement.extend({
 var DataPackage = AbstractDataElement.extend({
     children:null,
 	defaults: _.extend({
-      
+      'z':0,
     }, AbstractDataElement.prototype.defaults() ),	
+	getZ:function(){
+		var c=this.getParent().children;
+		var index=0;
+		c.find(function(datapackage,i){
+			index=i;
+			return datapackage.getStamp()==this.getStamp();
+		},this);
+		return index;
+	},
 	initialize: function(attr,options) {
 		DataPackage.__super__.initialize.call(this,attr,options);
 		this.type='package';
@@ -1713,10 +1733,18 @@ var AdaptLeafletMap = Backbone.View.extend({
 		if( enable){
 			this.listenTo(this.model.children, "add", this.addOne);
 			this.listenTo(this.model.children, "remove", this.removeOne);
+			this.listenTo(this.model , 'swappackages' , this.sortPackages);
 			this.addAll();
 		}else{
 			this.stopListening(this.model.children);
+			this.stopListening(this.model);
 		}
+	},
+	sortPackages:function(){
+		this.model.children.each(function(datapackage){
+			var ctrl=this.getLeafletAdapt(datapackage);
+			ctrl.lfe.bringToBack();
+		},this);
 	},
 	fitToWorld2:function(){
 		
@@ -1789,16 +1817,18 @@ _.extend( AdaptLeafletPackage.prototype,{
 			"add"			:	$.proxy(this.addOne,this),
 			"remove"		:	$.proxy(this.removeOne,this),
 		});
+		
 		if( this.middledata )
 			this.middledata.on( "change:packageHidden" , $.proxy(this.changeHidden,this) );
 		
-		this.lfe=new L.LayerGroup();
+		this.lfe=new L.FeatureGroup();
 		this.children=[];
 		this._event=[];
 		this.addAll();
 		this.lfe.ctrl=this;
 		
 	},
+	
 	addOne: AdaptLeafletMap.prototype.addOne,
 	addAll: AdaptLeafletMap.prototype.addAll,
 	removeOne: AdaptLeafletMap.prototype.removeOne,
@@ -2341,6 +2371,7 @@ var ViewPackages = Backbone.View.extend({
   infoable:true,
   addable:false,
   selectionable:false,
+  swapable:false,
   
   linkage:null,
   
@@ -2355,6 +2386,7 @@ var ViewPackages = Backbone.View.extend({
 	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
 	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
 	this.addable = options.addable!=null ? options.addable : this.addable;
+	this.swapable = options.swapable!=null ? options.swapable : this.swapable;
 	this.selectionable = options.selectionable!=null ? options.selectionable : this.selectionable;
 	
 	this.linkage=options.linkage;
@@ -2362,7 +2394,11 @@ var ViewPackages = Backbone.View.extend({
 	this.toolmodel=options.toolmodel;
 	this.middledatamap=options.middledatamap;
 	
-	this.listenTo(this.model.children, "add", this.addOne);
+	//this.listenTo(this.model.children, "add", this.addOne);
+	this.listenTo(this.model.children, "add", this.reset);
+	this.listenTo(this.model.children, "remove", this.reset);
+	this.listenTo(this.model , 'swappackages' , this.reset);
+	
     this.$el.html( $('#panel-package-template').html() );
 	this.render();
 	this.addAll();
@@ -2387,6 +2423,7 @@ var ViewPackages = Backbone.View.extend({
 			hiddable:this.hiddable,
 			deletable:this.deletable,
 			infoable:this.infoable,
+			swapable:this.swapable,
 			selectionable:this.selectionable,
 		}).$el.appendTo( this.$el.find('table') );
 	if(this.linkage)
@@ -2401,6 +2438,12 @@ var ViewPackages = Backbone.View.extend({
 	  
 	  return this;
   },
+  reset:function(){
+	// i am tired sorry
+	this.$el.html( $('#panel-package-template').html() );
+	this.render();
+	this.addAll();
+  },
 });
 
 var ViewPackage = Backbone.View.extend({
@@ -2413,11 +2456,14 @@ var ViewPackage = Backbone.View.extend({
   deletable:true,
   infoable:true,
   selectionable:true,
+  swapable:true,
   
   events: {
     "click [data-contain=visible]"          	  : "toggleVisibility",
     "click [data-contain=trash]"       		      : "trash",
     "click [data-contain=pop]"       		      : "pop",
+    "click [data-contain=swap-up]"       		  : "swapup",
+    "click [data-contain=swap-down]"       		  : "swapdown",
     "click"       		      					  : "select",
   },
   initialize: function(options) {
@@ -2425,6 +2471,7 @@ var ViewPackage = Backbone.View.extend({
 	this.hiddable = options.hiddable!=null ? options.hiddable : this.hiddable;
 	this.deletable = options.deletable!=null ? options.deletable : this.deletable;
 	this.infoable = options.infoable!=null ? options.infoable : this.infoable;
+	this.swapable = options.swapable!=null ? options.swapable : this.swapable;
 	this.selectionable = options.selectionable!=null ? options.selectionable : this.selectionable;
 	
 	this.toolmodel=options.toolmodel;
@@ -2461,7 +2508,20 @@ var ViewPackage = Backbone.View.extend({
   trash:function(){
 	cmd.execute( cmd.RemovePackage.create(this.model.getParent(),this.model) );
   },
-  
+  swapup:function(){
+	var z=this.model.getZ();
+	var c=this.model.getParent().children;
+	var top=c.at( z-1 );
+	if( top )
+		cmd.execute( cmd.SwapPackages.create( this.model.getParent() , this.model , top ) );
+  },
+  swapdown:function(){
+	var z=this.model.getZ();
+	var c=this.model.getParent().children;
+	var bot=c.at( z+1 );
+	if( bot )
+		cmd.execute( cmd.SwapPackages.create( this.model.getParent() , this.model , bot ) );
+  },
   
   remove:function(){
 	this.$el.remove();
@@ -2479,6 +2539,34 @@ var ViewPackage = Backbone.View.extend({
 	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
 	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
 	if(!this.infoable)this.$el.find('[data-contain=pop]').remove();
+	
+	if(!this.swapable){
+		this.$el.find('[data-contain=swap-up]').remove();
+		this.$el.find('[data-contain=swap-down]').remove();
+	}else{
+		var z=this.model.getZ();
+		var c=this.model.getParent().children;
+		var top=c.at( z-1 );
+		var bot=c.at( z+1 );
+		
+		if(!top)
+			this.$el.find('[data-contain=swap-up]').remove();
+			
+		if(!bot)
+			this.$el.find('[data-contain=swap-down]').remove();
+		
+		/*
+		if(top)
+			this.$el.find('[data-contain=swap-up]').show();
+		else
+			this.$el.find('[data-contain=swap-up]').hide();
+			
+		if(bot)
+			this.$el.find('[data-contain=swap-down]').show();
+		else
+			this.$el.find('[data-contain=swap-down]').hide();
+			*/
+	}
 	
 	this.$el.find('[data-contain=name]').html(this.model.get('name'));
 	this.visibilityChange();

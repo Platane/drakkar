@@ -1338,6 +1338,33 @@ SetPolygonStructure.create=function(datapolygon,structure){
 	return c;
 };
 
+
+var SwapPackages=function(){};
+_.extend( SwapPackages.prototype , AbstractCmd.prototype );
+_.extend( SwapPackages.prototype , {
+	datapackage1:null,
+	datapackage2:null,
+	datamap:null,
+	init:function(datamap,datapackage1,datapackage2){
+		this.datapackage1=datapackage1;
+		this.datapackage2=datapackage2;
+		this.datamap=datamap;
+	},
+	execute:function(){
+		this.datamap.swapPackages( this.datapackage1 , this.datapackage2 );
+	},
+	undo:function(){
+		this.datamap.swapPackages( this.datapackage1 , this.datapackage2 );
+	},
+});
+SwapPackages.create=function(datamap,datapackage1,datapackage2){
+	var c=new SwapPackages();
+	c.init(datamap,datapackage1,datapackage2);
+	return c;
+};
+
+
+
 var CmdMgr = function(){};
 CmdMgr.prototype = {
 	_undoable : null,
@@ -1378,6 +1405,7 @@ return{
 	
 	'AddPackage'		:	AddPackage,
 	'RemovePackage'		:	RemovePackage,
+	'SwapPackages'		:	SwapPackages,
 	
 	'Set'				:	Set,
 	'SetPolygonStructure'	:	SetPolygonStructure,

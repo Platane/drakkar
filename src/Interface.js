@@ -330,6 +330,7 @@ var fillComponent=function(){
 		'middledatamap':mdp,
 		'addable':true,
 		'deletable':true,
+		'swapable':true,
 		'selectionable':true,
 		}).$el );
 	
