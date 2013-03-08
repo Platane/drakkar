@@ -1712,6 +1712,8 @@ var AdaptLeafletMap = Backbone.View.extend({
 		
 		if( this.fitToWorld2 )
 			this.fitToWorld2();
+		if( this.sortPackages )
+			this.sortPackages();
 	},
 	addAll:function(){
 		this.model.children.each(this.addOne,this);
@@ -1743,7 +1745,7 @@ var AdaptLeafletMap = Backbone.View.extend({
 	sortPackages:function(){
 		this.model.children.each(function(datapackage){
 			var ctrl=this.getLeafletAdapt(datapackage);
-			ctrl.lfe.bringToBack();
+			ctrl.bringToBack();
 		},this);
 	},
 	fitToWorld2:function(){
@@ -1821,7 +1823,7 @@ _.extend( AdaptLeafletPackage.prototype,{
 		if( this.middledata )
 			this.middledata.on( "change:packageHidden" , $.proxy(this.changeHidden,this) );
 		
-		this.lfe=new L.FeatureGroup();
+		this.lfe=new L.LayerGroup();
 		this.children=[];
 		this._event=[];
 		this.addAll();
@@ -1844,6 +1846,12 @@ _.extend( AdaptLeafletPackage.prototype,{
 	
 	computeWorldBound: AdaptLeafletMap.prototype.computeWorldBound,
 	getLeafletAdapt:AdaptLeafletMap.prototype.getLeafletAdapt,
+	
+	bringToBack:function(){
+		_.each(this.children,function(ctrlelement){
+			ctrlelement.bringToBack();
+		});
+	},
 	
 	on:function(types, fn, ctx , options ){ 
 		_.each( this.children , function( e ){ e.on(types, fn, ctx); } );
@@ -1872,6 +1880,8 @@ _.extend( AdaptLeafletElement.prototype,{
 	dirty:false,
 	
 	selected:false,
+	packageSelected:false,
+	
 	
 	stylechain:null,  	//can be hold by the dataelement
 	llstyle:null,
@@ -1901,6 +1911,7 @@ _.extend( AdaptLeafletElement.prototype,{
 		if( this.middledata )
 		this.middledata.on({
 			"change:elementSelected"	: $.proxy(this.changeSelected,this),
+			"change:packageSelected"	: $.proxy(this.changePackageSelected,this),
 		});
 		
 		this.mcssdata.on({
@@ -1917,31 +1928,46 @@ _.extend( AdaptLeafletElement.prototype,{
 	changeSelected:function(){
 		if(this.middledata.isElementSelected(this.data)==this.selected)
 			return;
+			
 		this.selected=!this.selected;
-		this.needRedraw();
-		
-		if(this.selected)
-			this.lfe.setStyle({'fillColor':'#faefe1'});
-		else
-			this.lfe.setStyle(this.llstyle);
+		this.setStyle();
+	},
+	changePackageSelected:function(){
+		if( (this.middledata.get('packageSelected').getStamp()==this.data.getParent().getStamp())==this.packageSelected )
+			return;
+			
+		this.packageSelected=!this.packageSelected;
+		this.setStyle();
+	},
+	setStyle:function(){
+		var s=_.clone( this.llstyle );
+		if(this.packageSelected){
+			s[ 'pattern' ] = true;
+			s[ 'patternPath' ] = this.mcssdata.getPatterns()[ 'dot' ];
+			s[ 'patternSize' ] = 13;
+			s[ 'patternScale' ] = 0.4;
+			s[ 'patternColor' ] = "#000000";
+			s[ 'patternOpacity' ] = 0.3;
+		}
+		if(this.selected){
+			s[ 'pattern' ] = true;
+			s[ 'patternPath' ] = this.mcssdata.getPatterns()[ 'dot' ];
+			s[ 'patternSize' ] = 13;
+			s[ 'patternScale' ] = 0.6;
+			s[ 'patternColor' ] = "#000000";
+			s[ 'patternOpacity' ] = 0.6;
+		}
+		this.lfe.setStyle(s);
 	},
 	changeStyle:function(){
 		this.stylechain=this.mcssdata.computeChain(this.data);
 		var style=this._mergeStyleChain(this.stylechain,this.middledata);
 		this.llstyle=this._interpretStyle(style);
 		
-		style['label-text']="hello bitch!";
+		this.setStyle();
 		
-		/*
-		this.llstyle[ 'pattern' ]=true;
-		this.llstyle[ 'patternColor' ]='#481348';
-		this.llstyle[ 'patternSize' ]=18;
-		this.llstyle[ 'patternPath' ]=" M 5 , 5        m -5, 0        a 5,5 0 1,0 10,0        a 5,5 0 1,0 -10,0";
-		this.llstyle[ 'patternScale' ]=0.5;
-		*/
-		this.lfe.setStyle(this.llstyle);
-		if(this.selected)
-			this.lfe.setStyle({'fillColor':'#faefe1'});
+		
+		style['label-text']="hello bitch!";
 		
 		if(style['label-text']){
 			
@@ -1949,6 +1975,9 @@ _.extend( AdaptLeafletElement.prototype,{
 	},
 	remove:function(){
 		// ..
+	},
+	bringToBack:function(){
+		this.lfe.bringToBack();
 	},
 	_interpretStyle:function( mergedStyle ){
 		/* assuming there is no collision in the mergedStyle */
@@ -2364,7 +2393,7 @@ _.extend( ViewActionMap.prototype ,{
 var ViewPackages = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
-  middledatamap:null,
+  middledata:null,
   
   hiddable:true,
   deletable:false,
@@ -2392,7 +2421,7 @@ var ViewPackages = Backbone.View.extend({
 	this.linkage=options.linkage;
 	
 	this.toolmodel=options.toolmodel;
-	this.middledatamap=options.middledatamap;
+	this.middledata=options.middledata;
 	
 	//this.listenTo(this.model.children, "add", this.addOne);
 	this.listenTo(this.model.children, "add", this.reset);
@@ -2419,7 +2448,7 @@ var ViewPackages = Backbone.View.extend({
 	var vp =new ViewPackage({
 			model:pack,
 			toolmodel:this.toolmodel,
-			middledatamap:this.middledatamap,
+			middledata:this.middledata,
 			hiddable:this.hiddable,
 			deletable:this.deletable,
 			infoable:this.infoable,
@@ -2450,7 +2479,7 @@ var ViewPackage = Backbone.View.extend({
   tagName:'tr',
   className:'item-package',
   toolmodel:null,
-  middledatamap:null,
+  middledata:null,
   
   hiddable:true,
   deletable:true,
@@ -2475,13 +2504,13 @@ var ViewPackage = Backbone.View.extend({
 	this.selectionable = options.selectionable!=null ? options.selectionable : this.selectionable;
 	
 	this.toolmodel=options.toolmodel;
-    this.middledatamap=options.middledatamap;
+    this.middledata=options.middledata;
 	
 	this.listenTo(this.model, "change:name", this.render);
     this.listenTo(this.model, "destroy", this.remove);
-    this.listenTo(this.middledatamap , "change:packageHidden", this.visibilityChange);
+    this.listenTo(this.middledata , "change:packageHidden", this.visibilityChange);
 	if(this.selectionable)
-		 this.listenTo(this.middledatamap , "change:packageSelected", this.render);
+		 this.listenTo(this.middledata , "change:packageSelected", this.render);
 	
 	this.$el.html( $('#item-package-template').html() );
 	this.$el.data('datapackage',this.model);
@@ -2490,7 +2519,7 @@ var ViewPackage = Backbone.View.extend({
   
   select:function(){
 	if(this.selectionable)
-		this.middledatamap.set('packageSelected',this.model);
+		this.middledata.set('packageSelected',this.model);
   },
   pop:function(){
 	var e=this.$el.find('[data-contain=pop]');
@@ -2503,7 +2532,7 @@ var ViewPackage = Backbone.View.extend({
 	e.popover('show');
   },
   toggleVisibility:function(){
-	this.middledatamap.toggleVisibility(this.model);
+	this.middledata.toggleVisibility(this.model);
   },
   trash:function(){
 	cmd.execute( cmd.RemovePackage.create(this.model.getParent(),this.model) );
@@ -2527,14 +2556,14 @@ var ViewPackage = Backbone.View.extend({
 	this.$el.remove();
   },
   visibilityChange:function(){
-	if( this.middledatamap.isPackageHidden(this.model) )
+	if( this.middledata.isPackageHidden(this.model) )
 		this.$el.find('[data-contain=visible]').removeClass('icon-eye-open').addClass('icon-eye-close');
 	else
 		this.$el.find('[data-contain=visible]').removeClass('icon-eye-close').addClass('icon-eye-open');
   },
   render: function() {
 	this.$el.removeClass('selected');
-	if(this.selectionable && this.middledatamap.get('packageSelected') && this.middledatamap.get('packageSelected').getStamp() == this.model.getStamp() )
+	if(this.selectionable && this.middledata.get('packageSelected') && this.middledata.get('packageSelected').getStamp() == this.model.getStamp() )
 		this.$el.addClass('selected');
 	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
 	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
@@ -2689,16 +2718,16 @@ var ViewResultInfo = Backbone.View.extend({
 var ViewAttributes = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
-  middledatamap:null,
+  middledata:null,
   binded:null,
   initialize: function(option) {
   
 	this.toolmodel=option.toolmodel;
-	this.middledatamap=option.middledatamap;
+	this.middledata=option.middledata;
 	
     this.$el.html( $('#panel-attributes-template').html() );
 	
-	this.listenTo( this.middledatamap , "change:elementSelected" , this.listenSelectedChange  );
+	this.listenTo( this.middledata , "change:elementSelected" , this.listenSelectedChange  );
 	
 	this.binded=[];
 	this.render();
@@ -2713,8 +2742,8 @@ var ViewAttributes = Backbone.View.extend({
 		});
 		
 	this.binded=[];
-	for(var i=0;i<this.middledatamap.elementSelected.length;i++)
-		this.binded.push( this.middledatamap.elementSelected[i] );
+	for(var i=0;i<this.middledata.elementSelected.length;i++)
+		this.binded.push( this.middledata.elementSelected[i] );
 	
 	var i=this.binded.length;
 	while(i--)
@@ -2730,16 +2759,16 @@ var ViewAttributes = Backbone.View.extend({
 		name:null,
 		classes:{},
 	};
-	if( this.middledatamap.elementSelected.length==0 )
+	if( this.middledata.elementSelected.length==0 )
 		return intersect;
 		
-	for( var c in this.middledatamap.elementSelected[0].get('classes') )
+	for( var c in this.middledata.elementSelected[0].get('classes') )
 		intersect.classes[c]=true;
-	intersect.name = this.middledatamap.elementSelected[0].get('name');
+	intersect.name = this.middledata.elementSelected[0].get('name');
 	
-	for(var i=1;i<this.middledatamap.elementSelected.length;i++){
+	for(var i=1;i<this.middledata.elementSelected.length;i++){
 		for( var c in intersect.classes )
-			if( !this.middledatamap.elementSelected[i].get('classes')[c] ){
+			if( !this.middledata.elementSelected[i].get('classes')[c] ){
 				intersect.classes[c]=null;
 				delete intersect.classes[c];
 			}
@@ -2768,7 +2797,7 @@ var ViewAttributes = Backbone.View.extend({
 	return v.trim().toLowerCase().replace(" ","-");
   },
   finishName:function(element,prevValue){
-	cmd.execute( cmd.Set.create( this.middledatamap.elementSelected[0] , 'name' , element.text() ) );
+	cmd.execute( cmd.Set.create( this.middledata.elementSelected[0] , 'name' , element.text() ) );
   },
   finishNewClass:function(element,prevValue){
 	var cmds=[];
@@ -2777,19 +2806,19 @@ var ViewAttributes = Backbone.View.extend({
 		this.render();
 		return;
 	}
-	for(var i=0;i<this.middledatamap.elementSelected.length;i++)
-		cmds.push( cmd.AddClass.create( this.middledatamap.elementSelected[i] , className ) );
+	for(var i=0;i<this.middledata.elementSelected.length;i++)
+		cmds.push( cmd.AddClass.create( this.middledata.elementSelected[i] , className ) );
 	cmd.execute( cmd.Multi.createWithTab( cmds ) );
   },
   finishClass:function(element,prevValue){
 	var cmds=[];
 	var className=element.text();
 	if( className != "" )
-		for(var i=0;i<this.middledatamap.elementSelected.length;i++)
-			cmds.push( cmd.ModifyClass.create( this.middledatamap.elementSelected[i] , prevValue , className ) );
+		for(var i=0;i<this.middledata.elementSelected.length;i++)
+			cmds.push( cmd.ModifyClass.create( this.middledata.elementSelected[i] , prevValue , className ) );
 	else
-		for(var i=0;i<this.middledatamap.elementSelected.length;i++)
-			cmds.push( cmd.RemoveClass.create( this.middledatamap.elementSelected[i] , prevValue  ) );
+		for(var i=0;i<this.middledata.elementSelected.length;i++)
+			cmds.push( cmd.RemoveClass.create( this.middledata.elementSelected[i] , prevValue  ) );
 	cmd.execute( cmd.Multi.createWithTab( cmds ) );
   },
 });
@@ -2798,11 +2827,11 @@ var ViewAttributes = Backbone.View.extend({
 var ViewPropertyStack = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
-  middledatamap:null,
+  middledata:null,
   initialize: function(option) {
   
 	this.toolmodel=option.toolmodel;
-	this.middledatamap=option.middledatamap;
+	this.middledata=option.middledata;
 	
     this.$el.html( $('#panel-property-stack-template').html() );
 	
@@ -2822,7 +2851,7 @@ var ViewPropertyStack = Backbone.View.extend({
 ViewProperty = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
-  middledatamap:null,
+  middledata:null,
   binded:null,
   mcssdata:null,
   _missSpell:null,
@@ -2830,7 +2859,7 @@ ViewProperty = Backbone.View.extend({
 	options=options||{};
 	this.mcssdata=options.mcssdata;
 	this.toolmodel=options.toolmodel;
-	this.middledatamap=options.middledatamap;
+	this.middledata=options.middledata;
 	
 	this.listenTo( this.model , "change" , this.render  );
 	this.listenTo( this.model , 'destroy' , this.remove );

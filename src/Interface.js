@@ -327,7 +327,7 @@ var fillComponent=function(){
 	.append( new ViewPackages({
 		'model':datamap,
 		'toolmodel':dataMgr,
-		'middledatamap':mdp,
+		'middledata':mdp,
 		'addable':true,
 		'deletable':true,
 		'swapable':true,
@@ -355,7 +355,7 @@ var fillComponent=function(){
 	.append( new ViewAttributes({
 		'model':datamap,
 		'toolmodel':dataMgr,
-		'middledatamap':mdp,
+		'middledata':mdp,
 		}).$el );
 	
 	
@@ -399,7 +399,7 @@ var fillComponent=function(){
 	var cpi=frame.find('[data-component=ViewPackages]');
 	cpi
 	.empty()
-	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	.append( new ViewPackages({model:datamap,toolmodel:dataMgr,middledata:mdp}).$el );
 	
 	var cm=frame.find('[data-component=Map]');
 	var vam=new ViewActionMap({'model':datamap , 'middledata':mdp , 'mcssdata':mcssdata , width:cm.width() , height:cm.height() })
@@ -410,12 +410,12 @@ var fillComponent=function(){
 	
 	var ca=frame.find('[data-component=AttributeMgr]')
 	.empty()
-	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledatamap:mdp}).$el );
+	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledata:mdp}).$el );
 	
 	
 	var cps=frame.find('[data-component=PropertyStack]')
 	.empty()
-	.append( new ViewPropertyStack({'model':mcssdata , 'toolmodel':decorationMgr , 'middledatamap':mdp }).$el );
+	.append( new ViewPropertyStack({'model':mcssdata , 'toolmodel':decorationMgr , 'middledata':mdp }).$el );
 	
 	})();
 	
@@ -444,7 +444,7 @@ var fillComponent=function(){
 	.empty()
 	.append( new ViewPackages({
 				model:datamap,
-				middledatamap:mdp,
+				middledata:mdp,
 				infoable:false,
 				hiddable:true,
 				deletable:false,
