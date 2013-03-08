@@ -826,8 +826,8 @@ var DataPackage = AbstractDataElement.extend({
 	},
 	addElement:function(el){
 		if(el instanceof AbstractDataElement ){
-			this.children.add(el);
 			el.parent=this;
+			this.children.add(el);
 		}else
 			switch(el.type){
 				case "polygon":
@@ -923,86 +923,6 @@ var DataPolygon = AbstractDataElement.extend({
  * middleData got additionnal value that it doesn't share with the true data ( and the others middle data)
  * for other usage, it act like a transparent delegator
  */
-
-var MiddleData = Backbone.Model.extend({
-	model:null,
-	type:null,
-	defaults:function(){
-		return {
-			selected:'none',
-			visible:true,
-		};
-	},
-	initialize:function(options){
-		if(!options.model)throw 'model know found';
-		this.model=options.model;
-		var type=this.model.type;
-		this.type=type;
-		this.listenTo(this.model,'change',this._relayChange);	//simply relay the trigger function
-	},
-	getStamp:function(){
-		return this.model.stamp;
-	},
-	set:function(a){
-		if(!this.model)
-			Backbone.Model.prototype.set.call(this,a);
-		else
-		_.each(a,function(value,key){
-			var o={};
-			o[key]=value;
-			if( Backbone.Model.prototype.get.call(this,key) != null )
-				Backbone.Model.prototype.set.call(this,o);
-			else
-				this.model.set(o);
-		},this);
-	},
-	get:function(a){
-		var r=Backbone.Model.prototype.get.call(this,a);
-		return r || this.model.get(a);
-	},
-	_relayChange:function(e){
-		this.trigger('change',this);
-	},
-});
-
-var MiddleDataPackage = MiddleData.extend({
-	children:null,
-	initialize:function(options){
-		MiddleData.prototype.initialize.call(this,options);
-		
-		this.listenTo(this.model.children,'add',this._relayAdd);	
-		this.listenTo(this.model.children,'remove',this._relayRemove);	
-				
-		this.children=new Backbone.Collection();
-		this.children.model=MiddleDataElement;
-				
-		this.model.children.each(this._relayAdd,this);
-		
-	},
-	addElement:function(el){
-		this.model.addElement(el);
-	},
-	removeElement:function(el){
-		this.model.removeElement(el);
-	},
-	
-	_relayAdd:function(a){
-		this.children.add( new MiddleData( {'model':a} ) );
-	},
-	_relayRemove:function(a){
-		el=this.children.find( function(b){return b.getStamp()==a.getStamp();});
-		this.children.remove( el );
-	},
-});
-
-var MiddleDataElement = MiddleData.extend({
-	initialize:function(options){
-		MiddleData.prototype.initialize.call(this,options);
-		
-	},
-});
-
-
 
 var MiddleDataMap=Backbone.Model.extend({
 		elementSelected:null,		//array of dataelement
@@ -1696,10 +1616,10 @@ var AdaptLeafletMap = Backbone.View.extend({
 		var al;
 		switch(type){	// set up the adaptLeafletElement according to the type of the dataElement added
 			case 'polygon':
-				al = new AdaptLeafletPolygon({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parentlfe' : this.lfe});
+				al = new AdaptLeafletPolygon({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parent' : this});
 			break;
 			case 'package':
-				al = new AdaptLeafletPackage({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parentlfe' : this.lfe});
+				al = new AdaptLeafletPackage({'data':dataElement , 'middledata':this.middledata , 'mcssdata':this.mcssdata , 'parent' : this});
 			break;
 			default: throw 'unkonw type';
 		}
@@ -1709,11 +1629,15 @@ var AdaptLeafletMap = Backbone.View.extend({
 		for(var i=0;i<this._event.length;i++)
 			al.on( this._event[i].types , this._event[i].fn , this._event[i].ctx );
 		
-		
+		if( al.changePackageSelected )
+			al.changePackageSelected();
 		if( this.fitToWorld2 )
 			this.fitToWorld2();
 		if( this.sortPackages )
 			this.sortPackages();
+		else
+		if( this.parent && this.parent.sortPackages )
+			this.parent.sortPackages();
 	},
 	addAll:function(){
 		this.model.children.each(this.addOne,this);
@@ -1745,7 +1669,8 @@ var AdaptLeafletMap = Backbone.View.extend({
 	sortPackages:function(){
 		this.model.children.each(function(datapackage){
 			var ctrl=this.getLeafletAdapt(datapackage);
-			ctrl.bringToBack();
+			if( ctrl ) 		//if not its because a package ask for a redraw while it has add a element, but its not even atatch to the map
+				ctrl.bringToBack();
 		},this);
 	},
 	fitToWorld2:function(){
@@ -1799,7 +1724,7 @@ _.extend( AdaptLeafletPackage.prototype,{
 	mcssdata:null,
 	
 	lfe:null,
-	parentlfe:null,
+	parent:null,
 	
 	hidden:false,
 	
@@ -1813,7 +1738,7 @@ _.extend( AdaptLeafletPackage.prototype,{
 		this.middledata=option.middledata;
 		this.mcssdata=option.mcssdata;
 		
-		this.parentlfe=option.parentlfe;
+		this.parent=option.parent;
 		
 		this.data.children.on({
 			"add"			:	$.proxy(this.addOne,this),
@@ -1839,9 +1764,11 @@ _.extend( AdaptLeafletPackage.prototype,{
 			return;
 		this.hidden=!this.hidden;
 		if(this.hidden)
-			this.parentlfe.removeLayer(this.lfe);
+			this.parent.lfe.removeLayer(this.lfe);
 		else
-			this.parentlfe.addLayer(this.lfe);
+			this.parent.lfe.addLayer(this.lfe);
+			
+		this.parent.sortPackages();
 	},
 	
 	computeWorldBound: AdaptLeafletMap.prototype.computeWorldBound,
@@ -1917,6 +1844,7 @@ _.extend( AdaptLeafletElement.prototype,{
 		this.mcssdata.on({
 			"change"					: $.proxy(this.changeStyle,this),
 		});
+	
 	},
 	needRedraw:function(){
 		this.dirty=true;
@@ -1933,7 +1861,7 @@ _.extend( AdaptLeafletElement.prototype,{
 		this.setStyle();
 	},
 	changePackageSelected:function(){
-		if( (this.middledata.get('packageSelected').getStamp()==this.data.getParent().getStamp())==this.packageSelected )
+		if( !this.data.getParent() || ( this.middledata.get('packageSelected')==null || this.middledata.get('packageSelected').getStamp()!=this.data.getParent().getStamp() )!=this.packageSelected )
 			return;
 			
 		this.packageSelected=!this.packageSelected;

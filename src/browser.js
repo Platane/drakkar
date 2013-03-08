@@ -143,6 +143,83 @@ $(document).ready(function(){
 
 
 
+var ParallaxMgr = function(){
+	
+	this.init();
+	this.initsvg();
+	
+	$(document).on('scroll.parallax',$.proxy(this.scroll,this) );
+	this.scroll();
+};
+ParallaxMgr.prototype={
+	layers:null,
+	path:null,
+	svglayer:null,
+	init:function(){
+		var pool = $('#background-pool');
+		
+		var sceneHeight=document.height;
+		var windowHeight=window.innerHeight;
+		
+		var layers=[];
+		pool.children('.flat').each(function(e){
+			
+			var $el=$(this);
+			var deep=$el.attr('data-deep') || 0.8;
+			var height= ( sceneHeight - windowHeight )*deep + windowHeight;
+			
+			var marge=1000;
+			
+			$el.css({
+				'background-position' : 'center 0',
+				'height' : (marge+height)+'px',
+				'position':'fixed',
+				'width':'100%',
+			});
+			
+			layers.push({ deep:deep , $el:$el }); 
+			
+		});
+		
+		this.layers=layers;
+	},
+	scroll:function(){
+		var i=this.layers.length;
+		var y=window.scrollY;
+		while(i--){
+			var $el=this.layers[i].$el;
+			var deep=this.layers[i].deep;
+			
+			$el.css({'top': (-y*deep)+'px' }); 
+		}
+		this.scrollsvg();
+	},
+	initsvg:function(){
+		var svg=$('#background-pool').find('svg');
+		var sceneHeight=document.height;
+		var windowHeight=window.innerHeight;
+		
+		var $el=$(this);
+		var deep=$el.attr('data-deep') || 0.8;
+		var height= ( sceneHeight - windowHeight )*deep + windowHeight;
+		
+		var marge=1000;
+			
+		$el.css({
+			'height' : (marge+height)+'px',
+			'position':'fixed',
+			'width':'500px',
+		});
+		this.svglayer={ deep:deep , $el:$el };
+	},
+	scrollsvg:function(){
+	
+	},
+};
+$(document).ready(function(){
+	new ParallaxMgr();
+});
+
 // hint displayer
 
 

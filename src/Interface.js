@@ -300,6 +300,9 @@ var fillComponent=function(){
 			
 			this.listenTo( this.oneditelement , 'destroy' , this.destroyonedit );
 			this.set('state','polygon-edition');
+			
+			mdp.removeAllSelectedElement({silent:true});
+			mdp.addSelectedElement(datapolygon);
 		},
 		destroyonedit:function(){
 			this.set('state','selection');
