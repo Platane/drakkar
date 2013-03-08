@@ -699,6 +699,75 @@ L.PolyUtil.intersectionPolyPoly = function( points1 , points2 ){
 	return p3;
 }
 
+L.PolyUtil.unionPolyPoly = function( points1 , points2 ){
+	
+	var tol=0.0000001;
+	
+	var pa=points1,
+		pb=points2;
+	
+		
+	//search for intersection between the edges
+	//seeking for point of polygonA that belong to polygonB could sound like a good idea, but its not. because such point may not exist and there be still intersection between polyon
+	//see the minkowski sum, an algorithm that help detecting collision ( but not intersection I assume )
+	//I guess the fastest way to seek for intersection between edges is to use a BTree
+	
+	var ia=pa.length,
+		ib,
+		a1x,a1y,a2x=pa[0].x,a2y=pa[0].y,
+		b1x,b1y,b2x,b2y,
+		res,
+		nodes=[];
+	while(ia--){
+		ib=pb.length;
+		b2x=pb[0].x;
+		b2y=pb[0].y;
+		
+		a1x=pa[ia].x;
+		a1y=pa[ia].y;
+		
+		while(ib--){
+			b1x=pb[ib].x;
+			b1y=pb[ib].y;
+			
+			if( (res=L.PolyUtil.intersectionSegmentSegment( {x:a1x,y:a1y} , {x:a2x,y:a2y} , {x:b1x,y:b1y} , {x:b2x,y:b2y} ) ) ){
+				nodes.push({
+					'saf':(ia+(res.ta))%pa.length,
+					'sbf':(ib+(res.tb))%pb.length,
+					'p':{
+						x: a1x + (a2x-a1x) * res.ta,
+						y: a1y + (a2y-a1y) * res.ta,
+					}
+				});
+			}
+			
+			b2x=b1x;
+			b2y=b1y;
+		}
+		a2x=a1x;
+		a2y=a1y;
+	}
+	//check for redondancy
+	var i=nodes.length,
+		j;
+	while(i--){
+		j=i;
+		while(j--){
+			if( Math.abs(nodes[i].saf-nodes[j].saf ) < tol ){
+				nodes.splice(i,1);
+				i--;
+			}
+		}
+	}
+	
+	var no=nodes.shift();
+	
+	var graphe=[];
+	
+	
+}
+
+
 
 L.cloneLatLngArray = function( a ){
 	var b = new Array( a.length );
@@ -1631,6 +1700,7 @@ var AdaptLeafletMap = Backbone.View.extend({
 		
 		if( al.changePackageSelected )
 			al.changePackageSelected();
+		
 		if( this.fitToWorld2 )
 			this.fitToWorld2();
 		if( this.sortPackages )
@@ -1681,7 +1751,10 @@ var AdaptLeafletMap = Backbone.View.extend({
 		
 		b=new L.LatLngBounds( new L.LatLng(b.getNorthEast().lat+marge , b.getNorthEast().lng+marge) , new L.LatLng(b.getSouthWest().lat-marge , b.getSouthWest().lng-marge) );
 		
-		this.lfe.setView( b.getNorthWest() , 3.5 , true );
+		//this.lfe.setMaxBounds( b );
+		
+		this.lfe.fitBounds( b );
+		
 	},
 	
 	//since i can get the leaflet function work, i write my own
@@ -1861,7 +1934,7 @@ _.extend( AdaptLeafletElement.prototype,{
 		this.setStyle();
 	},
 	changePackageSelected:function(){
-		if( !this.data.getParent() || ( this.middledata.get('packageSelected')==null || this.middledata.get('packageSelected').getStamp()!=this.data.getParent().getStamp() )!=this.packageSelected )
+		if( !this.data.getParent() || !this.middledata || ( this.middledata.get('packageSelected')==null || this.middledata.get('packageSelected').getStamp()!=this.data.getParent().getStamp() )!=this.packageSelected )
 			return;
 			
 		this.packageSelected=!this.packageSelected;
@@ -2628,12 +2701,14 @@ var ViewResultInfo = Backbone.View.extend({
 		'mcssdata':this.mcssdata ,
 		'width':cm.width() ,
 		'height':cm.height(),
-		'zoomControl':false,
+		'zoomControl':true,
 		'attributionControl':false,
 		});
 	cm
 	.empty()
 	.append( map.$el );
+	
+	map.lfe.invalidateSize();	// recompute the size
 	
 	window[ 'map'+r.get('name') ]=map;
 	

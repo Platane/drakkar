@@ -99,6 +99,8 @@ var fillComponent=function(){
 	.empty()
 	.append(wm.$el);
 	
+	wm.lfe.invalidateSize();	// recompute the size
+	
 	// the go button
 	var cgo=frame.find('[data-component=Go]');
 	cgo
@@ -353,6 +355,8 @@ var fillComponent=function(){
 	.empty()
 	.append( vam.$el );
 	
+	vam.lfe.invalidateSize();	// recompute the size
+	
 	var ca=frame.find('[data-component=AttributeMgr]')
 	.empty()
 	.append( new ViewAttributes({
@@ -411,6 +415,8 @@ var fillComponent=function(){
 	.empty()
 	.append( vam.$el );
 	
+	vam.lfe.invalidateSize();	// recompute the size
+	
 	var ca=frame.find('[data-component=AttributeMgr]')
 	.empty()
 	.append( new ViewAttributes({model:datamap,toolmodel:dataMgr,middledata:mdp}).$el );
@@ -461,6 +467,7 @@ var fillComponent=function(){
 	.empty()
 	.append( vam.$el );
 	
+	vam.lfe.invalidateSize();	// recompute the size
 	
 	var cfp=frame.find('[data-component=FinalUserPanel]')
 	.empty()
