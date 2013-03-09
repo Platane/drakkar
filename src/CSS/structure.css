@@ -209,7 +209,9 @@ nav{
 	height:90%;
 }
 
-
+.popover.large{
+	width:400px;
+}
 
 
 html{

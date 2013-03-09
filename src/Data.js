@@ -877,6 +877,9 @@ var DataPackage = AbstractDataElement.extend({
     children:null,
 	defaults: _.extend({
       'z':0,
+	  'description':"##the decription\n * descibe the package\n * support markdown",
+	  'author':"",
+	  'authorHashMail':"",
     }, AbstractDataElement.prototype.defaults() ),	
 	getZ:function(){
 		var c=this.getParent().children;
@@ -1978,7 +1981,8 @@ _.extend( AdaptLeafletElement.prototype,{
 		// ..
 	},
 	bringToBack:function(){
-		this.lfe.bringToBack();
+		if( this.lfe._map != null )	//if the element is detached ( if its hidden for example )
+			this.lfe.bringToBack();
 	},
 	_interpretStyle:function( mergedStyle ){
 		/* assuming there is no collision in the mergedStyle */
@@ -2491,10 +2495,45 @@ var ViewPackage = Backbone.View.extend({
   events: {
     "click [data-contain=visible]"          	  : "toggleVisibility",
     "click [data-contain=trash]"       		      : "trash",
-    "click [data-contain=pop]"       		      : "pop",
     "click [data-contain=swap-up]"       		  : "swapup",
     "click [data-contain=swap-down]"       		  : "swapdown",
-    "click"       		      					  : "select",
+    "click [data-contain=name]"       		      					  : "select",
+    "click [data-contain=pop]"       		      					  : "pop",
+	"dblclick [data-contain=name]"									  : "selectAllElement",
+  },
+  pop:function(){
+	if(!this.infoable)
+		return;
+	
+	var pop=this.$el.find('[data-contain=pop]');
+	
+	
+	if( pop.data("popover") && pop.data("popover").tip().hasClass('in') ){
+		pop.popover('destroy');
+		return;
+	}
+	
+	pop.popover('destroy');
+	
+	
+	var viewPackageInfo=new ViewPackageInfo({'model':this.model,'middledata':this.middledata});
+	var title=$('<span>Hello<button type="button" class="close">×</button></span>')
+		
+	pop
+	.popover({	"title": title ,
+				"html" : true ,
+				"trigger":"manual",
+				"placement":"right" ,
+				"content":viewPackageInfo.$el,
+				'container':'body' });
+					
+					
+	title.find('button.close').click($.proxy(function(e){
+		pop.data('popover').hide();
+	},this));
+		
+	pop.data('popover').tip().addClass('large');
+	pop.popover('show');
   },
   initialize: function(options) {
     options=options||{};
@@ -2515,22 +2554,34 @@ var ViewPackage = Backbone.View.extend({
 	
 	this.$el.html( $('#item-package-template').html() );
 	this.$el.data('datapackage',this.model);
+	
+	
+	
+	
+	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
+	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
+	if(!this.infoable)this.$el.find('[data-contain=pop]').remove();
+
 	this.render();
   },
-  
   select:function(){
 	if(this.selectionable)
 		this.middledata.set('packageSelected',this.model);
   },
-  pop:function(){
-	var e=this.$el.find('[data-contain=pop]');
-	if(!e.data('popover'))
-		e.popover({
-			'animation' : true,
-			'placement' : 'right',
-			'html'		: new ViewPackageInfo({model:this.model,container:e}).$el,
-		});
-	e.popover('show');
+  selectAllElement:function(){
+	if(this.selectionable){
+		
+		if(this.model.children.length==0)
+			this.middledata.removeAllSelectedElement();
+		else
+			this.middledata.removeAllSelectedElement({silent:true});
+		this.model.children.each( function(dataelement ,i , tab){
+			if( i==tab.length-1)
+				this.middledata.addSelectedElement(dataelement);
+			else
+				this.middledata.addSelectedElement(dataelement,{silent:true});
+		},this);
+	}
   },
   toggleVisibility:function(){
 	this.middledata.toggleVisibility(this.model);
@@ -2566,9 +2617,7 @@ var ViewPackage = Backbone.View.extend({
 	this.$el.removeClass('selected');
 	if(this.selectionable && this.middledata.get('packageSelected') && this.middledata.get('packageSelected').getStamp() == this.model.getStamp() )
 		this.$el.addClass('selected');
-	if(!this.hiddable)this.$el.find('[data-contain=visible]').remove();
-	if(!this.deletable)this.$el.find('[data-contain=trash]').remove();
-	if(!this.infoable)this.$el.find('[data-contain=pop]').remove();
+	
 	
 	if(!this.swapable){
 		this.$el.find('[data-contain=swap-up]').remove();
@@ -2606,11 +2655,120 @@ var ViewPackage = Backbone.View.extend({
 });
 
 var ViewPackageInfo = Backbone.View.extend({
-	initialize: function(option) {
+	events:{
+		"click [data-contain=description] ":"editDescription"
+	},
+	editDescription:function(){
+		//replace
+		var div=this.$el.find("[data-contain=description]");
+		var textArea=$('<textarea rows="3"></textarea>');
+		
+		textArea.insertBefore(div);
+		div.detach();
+		
+		textArea.val(this.model.get('description') );
+		
+		textArea.on('focusout',$.proxy(function(e){
+			
+			var desc=textArea.val();
+			
+			div.insertBefore(textArea);
+			textArea.remove();
+			
+			cmd.execute( cmd.Set.create( this.model , 'description' , desc ) );
+		},this))
+		.focus();
+		
+		
+		var adjustSize=function(e){
+			var textarea=$(e.target);
+			var text=textarea.val()+" a";
+			var rows=Math.max( (text.match(/\n/g)||[]).length+2 , 5 );
+			textarea.attr('rows',rows);
+		};
+		
+		textArea.get(0).oninput=adjustSize
+		
+		adjustSize({target:textArea});
+	},
+	initialize: function(options) {
+		options=options||{};
+		this.middledata=options.middledata;
 		this.$el.html( $('#item-package-info-template').html() );
+		this.$el.find("[data-contain=name]").smartlyEditable({'finish':$.proxy(this.finishName,this) , 'correcter':this.correcter });
+		
+		this.listenTo( this.model.children , "add" , this.render );
+		this.listenTo( this.model.children , "remove" , this.render );
+		this.listenTo( this.model.children , "reset" , this.render );
+		this.listenTo( this.model , "change:name" , this.render );
+		this.listenTo( this.model , "change:description" , this.render );
+		
 		this.render();
 	 },
+	 finishName:function(element,prevValue){
+		var value=element.text();
+		cmd.execute( cmd.Set.create( this.model , 'name' , value ) );
+	 },
+	 correcter:function(v){
+		v=v.trim().toLowerCase().replace(/ /g,"-");
+		if(v=="+")v="";
+		return v;
+	 },
+	 render:function(){
+		this.$el.find("[data-contain=description]")
+		.empty()
+		.html( markdown.toHTML( this.model.get("description" ) ) );
+		
+		this.$el.find("[data-contain=name]")
+		.empty()
+		.html( this.model.get("name" ) );
+		
+		var table=this.$el.find("[data-contain=elements]")
+		.empty()
+		
+		this.model.children.each(function(dataelement){
+			table.append( new ViewPackageInfoElement({'model':dataelement,'middledata':this.middledata}).$el );
+		},this);
+		
+	 },
 });
+
+var ViewPackageInfoElement = Backbone.View.extend({
+	tagName:'tr',
+	events:{
+		"click [data-contain=trash-element] ":"trash",
+		"click":"select",
+	},
+	trash :function(){
+		cmd.execute( cmd.AddOrDelete.create( this.model.getParent() , 'removeElement' , 'addElement' , this.model ) );
+	},
+	select:function(e){
+		if(!this.middledata)
+			return;
+		
+		if(!e.ctrlKey)
+			this.middledata.removeAllSelectedElement({'silent':true});
+		this.middledata.addSelectedElement( this.model );
+	},
+	initialize: function(options) {
+		options=options||{};
+		this.middledata=options.middledata;
+		this.$el.html( $('#item-package-info-element-template').html() );
+		
+		this.listenTo( this.model , "change:name" , this.render );
+		this.listenTo( this.model , "change:description" , this.render );
+		
+		this.render();
+	 },
+	 render:function(){
+		this.$el.find("[data-contain=name-element]")
+		.empty()
+		.html( this.model.get("name" ) );
+		
+	 },
+});
+
+
 
 ///////////////////////////////////
 ////  result displayer
@@ -2797,7 +2955,7 @@ var ViewAttributes = Backbone.View.extend({
 	  cc.append( $('<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;</span>').smartlyEditable({'finish':$.proxy(this.finishNewClass,this) , 'correcter':this.correcter}) );
   },
   correcter:function(v){
-	return v.trim().toLowerCase().replace(" ","-");
+	return v.trim().toLowerCase().replace(/ /g,"-");
   },
   finishName:function(element,prevValue){
 	cmd.execute( cmd.Set.create( this.middledata.elementSelected[0] , 'name' , element.text() ) );
@@ -2908,7 +3066,7 @@ ViewProperty = Backbone.View.extend({
 	return this;
   },
   correcter:function(v){
-	v=v.trim().toLowerCase().replace(" ","-");
+	v=v.trim().toLowerCase().replace(/ /g,"-");
 	if(v=="+")v="";
 	return v;
   },

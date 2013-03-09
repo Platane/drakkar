@@ -293,7 +293,6 @@ var fillComponent=function(){
 		
 		newPolygon:function(){
 			var datapolygon=new DataPolygon({
-				'name'		:	this.get('name'),
 				'attributes':	_.clone( this.get('attributes') ),
 				'classes'	:	_.clone( this.get('classes') ),
 				});
