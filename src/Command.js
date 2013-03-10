@@ -1433,3 +1433,20 @@ return{
 
 })();
 
+
+
+//// ctrl z - ctrl y listener
+$(document).ready(function(){
+	$(document).on('keyup' , function(e){
+		if(!e.ctrlKey)
+			return;
+		switch(e.which){
+			case 90:
+				cmd.undo();
+			break;
+			case 89:
+				cmd.redo();
+			break;
+		}
+	});
+});

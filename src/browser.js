@@ -13,6 +13,7 @@ var frameNavigator = new (Backbone.Model.extend({
 		this.trigger('goto');
 	},
 	instanciate:function(){},
+	
 }))();
 frameNavigator.goto=frameNavigator.setFrame; // alias
 

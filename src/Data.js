@@ -896,14 +896,16 @@ var DataPackage = AbstractDataElement.extend({
 		this.children=new Backbone.Collection();
 		this.children.model=AbstractDataElement;
 	},
-	addElement:function(el){
+	addElement:function(el,options){
+		options=options||{};
+		var at= options.at != null ? options.at : 0;
 		if(el instanceof AbstractDataElement ){
 			el.parent=this;
-			this.children.add(el);
+			this.children.add(el,{at:at});
 		}else
 			switch(el.type){
 				case "polygon":
-					var d=new DataPolygon(el);
+					var d=new DataPolygon(el,{at:at});
 					d.parent=this;
 					this.children.add(d);
 				break;
@@ -1096,6 +1098,7 @@ var MiddleDataMap=Backbone.Model.extend({
  *	
  */
 
+ 
 /*
  * declaration follow this :
  * 
@@ -1602,6 +1605,85 @@ var DataChunks=Backbone.Collection.extend({
 	},
 });
 
+
+//// copy / paste mecanism
+
+var CopyPaste=function(options){
+	this.initialize(options);
+};
+CopyPaste.prototype={
+	buffer:null,
+	middledata:null,
+	datamap:null,
+	$el:null,
+	initialize:function(options){
+		options=options||{};
+		this.middledata=options.middledata;
+		this.$el=options.element || $(document);
+		this.listen(true);
+	},
+	listen:function(enable){
+		this.$el.off( 'keyup.copypaste' );
+		if(enable){
+			this.$el.on( 'keyup.copypaste' , $.proxy( this.handler , this ) );
+		}
+	},
+	handler:function(e){
+		if(!e.ctrlKey)
+			return;
+		switch(e.which){
+			case 67:
+				this.copy();
+			break;
+			case 86:
+				this.paste();
+			break;
+			case 88:
+				this.cut();
+			break;
+			default:
+				return;
+		}
+		e.stopPropagation();
+		e.preventDefault();
+	},
+	copy:function(){
+		if(this.middledata.elementSelected.length==0)
+			return;
+		this.buffer=[];
+		_.each(this.middledata.elementSelected, function(dataelement){
+			this.buffer.push( dataelement.clone() );
+		},this);
+		this.datamap=this.middledata.elementSelected[0].getParent().getParent();
+	},
+	cut:function(){
+		this.copy();
+		if(this.buffer.length==0)
+			return;
+		var t=[];
+		_.each( this.middledata.elementSelected , function(dataelement){
+			t.push( cmd.AddOrDelete.create( dataelement.getParent(), 'removeElement' , 'addElement' , dataelement ) );
+		});
+		this.middledata.removeAllSelectedElement();
+		cmd.execute( cmd.Multi.createWithTab(t) );
+	},
+	paste:function(){
+		if(this.buffer.length==0)
+			return;
+		var datapackage;
+		if(!(datapackage=this.middledata.get('packageSelected')))
+			datapackage=this.datamap.children.get(0);
+		if(!datapackage)
+			return;
+		var t=[];
+		_.each( this.buffer , function(dataelement){
+			t.push( cmd.AddOrDelete.create( datapackage , 'addElement' , 'removeElement' , dataelement.clone() ) );
+		});
+		cmd.execute( cmd.Multi.createWithTab(t) );
+	},
+};
+
+
 $(document).ready(function(){
 
 if(!Backbone.$)Backbone.$=window.jQuery;
@@ -1851,9 +1933,14 @@ _.extend( AdaptLeafletPackage.prototype,{
 	getLeafletAdapt:AdaptLeafletMap.prototype.getLeafletAdapt,
 	
 	bringToBack:function(){
+		this.data.children.each(function(dataelement){
+			var ctrlelement=this.getLeafletAdapt(dataelement);
+			ctrlelement.bringToBack();
+		},this);
+		/*
 		_.each(this.children,function(ctrlelement){
 			ctrlelement.bringToBack();
-		});
+		});*/
 	},
 	
 	on:function(types, fn, ctx , options ){ 
@@ -2208,6 +2295,8 @@ _.extend( ViewActionMap.prototype ,{
 	data:null,
 	mcssdata:null,
 	
+	copypastectrl:null,
+	
 	initialize:function(options){
 		options=options||{};
 		
@@ -2388,6 +2477,17 @@ _.extend( ViewActionMap.prototype ,{
 			
 		})( this , this.middledata , this.viewleafletmap );
 		
+	},
+	copypastable:function(enable){
+		if(enable){
+			if( !this.copypastectrl )
+				this.copypastectrl=new CopyPaste({'middledata':this.middledata,'element':this.$el});
+			this.copypastectrl.listen(true);
+		}else{
+			if( this.copypastectrl )
+				this.copypastectrl.listen(false);
+		}
+		return this;
 	},
 	elementSelectionnable:function(){return this;},
 	polygonTracable:function(){return this;},
@@ -3374,11 +3474,15 @@ var ViewPackageChunk = Backbone.View.extend({
 var ViewDataTools = Backbone.View.extend({
   middledata:null,
   viewactionmap:null,
+  toolmodel:null,
   events:{
 	'click .btn[data-contain=add-polygon]'				:	"newPolygon",
 	'click .btn[data-contain=remove-element]'			:	"trashElement",
 	'click .btn[data-contain=edit-element]'				:	"editElement",
-	'click .btn[data-contain=select-mode]'				:	"goSelectMode",
+	'click .btn[data-contain=validate]'					:	"goSelectMode",
+	'click .btn[data-contain=intersection]'				:	"intersection",
+	'click .btn[data-contain=union]'					:	"union",
+	'click .btn[data-contain=xor]'						:	"xor",
   },
   initialize: function(options) {
     options=options||{};
@@ -3426,6 +3530,15 @@ var ViewDataTools = Backbone.View.extend({
 	else
 		hintdisplayer.pop({'title':'No' , 'body':'I am affraid I can\'t let you do that dave...'});
   },
+  intersection:function(){
+	this.toolmodel.operationOnPolygon('intersection');
+  },
+  union:function(){
+	this.toolmodel.operationOnPolygon('union');
+  },
+  xor:function(){
+	this.toolmodel.operationOnPolygon('xor');
+  },
   render:function(){
 	if(this.toolmodel.get('avaibleTool')['trash-element'])
 		this.$el.find('[data-contain=remove-element]').show();
@@ -3438,10 +3551,10 @@ var ViewDataTools = Backbone.View.extend({
 	else
 		this.$el.find('[data-contain=edit-element]').hide();
 	
-	if(this.toolmodel.get('avaibleTool')['selection'])
-		this.$el.find('[data-contain=select-mode]').show();
+	if(this.toolmodel.get('avaibleTool')['validate'])
+		this.$el.find('[data-contain=validate]').show();
 	else
-		this.$el.find('[data-contain=select-mode]').hide();
+		this.$el.find('[data-contain=validate]').hide();
 	
 	if(this.toolmodel.get('avaibleTool')['polygon-creation'])
 		this.$el.find('[data-contain=add-polygon]').show();
@@ -3453,6 +3566,17 @@ var ViewDataTools = Backbone.View.extend({
 		this.$el.find('[data-contain=trash-element]').show();
 	else
 		this.$el.find('[data-contain=trash-element]').hide();
+		
+	if( this.toolmodel.get('avaibleTool')['polygon-operation'] ){
+		this.$el.find('[data-contain=intersection]').show();
+		this.$el.find('[data-contain=union]').show();
+		this.$el.find('[data-contain=xor]').show();
+	}else{
+		this.$el.find('[data-contain=intersection]').hide();
+		this.$el.find('[data-contain=union]').hide();
+		this.$el.find('[data-contain=xor]').hide();
+	}
+	
   },
 });
   

@@ -264,6 +264,14 @@ var fillComponent=function(){
 					}
 					if( this.middledata.elementSelected.length > 0 )
 						avaibleTool['trash-element']=true;
+					if( this.middledata.elementSelected.length > 1 ){
+						var accepte=true;
+						for( var i=0;i<this.middledata.elementSelected.length;i++)
+							if(this.middledata.elementSelected[i].type != 'polygon' )
+								accepte=false;
+						if(accepte)
+							avaibleTool['polygon-operation']=true;
+					}
 					if( this.middledata.get('packageSelected') ){
 						avaibleTool['polygon-creation']=true;
 						avaibleTool['marker-creation']=true;
@@ -274,6 +282,7 @@ var fillComponent=function(){
 				case 'polygon-edition':
 					
 					avaibleTool['selection']=true;
+					avaibleTool['validate']=true;
 					
 				case 'marker-edition':
 				
@@ -304,6 +313,78 @@ var fillComponent=function(){
 			
 			mdp.removeAllSelectedElement({silent:true});
 			mdp.addSelectedElement(datapolygon);
+		},
+		operationOnPolygon:function(op){
+			
+			var latLngsToXY=function(latlngs){
+				var p=[];
+				for(var i=0;i<latlngs.length;i++)
+					p.push({X:latlngs[i].lat , Y:latlngs[i].lng});
+				return [p];
+			};
+			var XYTolatLngs=function(XY){
+				var p=[];
+				for(var i=0;i<XY.length;i++)
+					p.push( new L.LatLng( XY[i].X , XY[i].Y ) );
+				return p;
+			};
+			
+			//use clipper js to compute the operation
+			
+			var clipType
+			switch( op ){
+				case 'intersection':
+					clipType=ClipperLib.ClipType.ctIntersection;
+				break;
+				case 'union':
+					clipType=ClipperLib.ClipType.ctUnion;
+				break;
+				case 'xor':
+					clipType=ClipperLib.ClipType.ctXor;
+				break;
+			}
+			
+			if( this.middledata.elementSelected.length==0)
+				return;
+			
+			var res= [[]];
+			
+			var cpr = new ClipperLib.Clipper();
+			
+			for( var i=0;i<this.middledata.elementSelected.length;i++){
+				var X = latLngsToXY( this.middledata.elementSelected[i].get('structure') );
+				
+				if(i==0)
+					cpr.AddPolygons( X , ClipperLib.PolyType.ptSubject );
+				else
+					cpr.AddPolygons( X , ClipperLib.PolyType.ptClip );
+			}
+			
+			var subject_fillType = ClipperLib.PolyFillType.pftNonZero;		//duno what is it for, for holes and stuffs I guess
+			var clip_fillType = ClipperLib.PolyFillType.pftNonZero;			
+			
+			if(!cpr.Execute( clipType, res , subject_fillType, clip_fillType ))
+				throw "unable to compute the operation";
+			
+			
+			// add the element create
+			
+			var datapackage=this.middledata.get('packageSelected') || this.middledata.elementSelected[0].getParent();
+			
+			var t=[];
+			for(var i=0;i<res.length;i++){
+				var structure=XYTolatLngs( res[i] );
+				
+				var dataelement=new DataPolygon({
+					'attributes':	_.clone( this.get('attributes') ),
+					'classes'	:	_.clone( this.get('classes') ),
+					'structure' :	structure,
+					'name'		:	op+'-'+i,
+				});
+				
+				 t.push( cmd.AddOrDelete.create( datapackage , 'addElement' , 'removeElement' , dataelement ) );
+			}
+			cmd.execute( cmd.Multi.createWithTab(t) );
 		},
 		destroyonedit:function(){
 			this.set('state','selection');
@@ -348,6 +429,7 @@ var fillComponent=function(){
 		'height'	:cm.height() ,
 	})
 	.elementSelectionnable(true)
+	.copypastable(true);
 	
 	window.vam=vam;
 	cm
@@ -372,6 +454,8 @@ var fillComponent=function(){
 		'toolmodel':dataMgr,
 		'middledata':mdp,
 		}).$el );
+	
+	
 	
 	//change the behavior of 
 	var gate={
