@@ -841,9 +841,11 @@ var DataMap = AbstractDataElement.extend({
 		this.children.model=DataPackage;
 		this.type='map';
 	},
-	addPackage:function(datapackage){
+	addPackage:function(datapackage,options){
+		options=options||{};
+		var at=options.at||0;
 		datapackage.parent=this;
-		this.children.add(datapackage);
+		this.children.add(datapackage,{at:at});
 	},
 	swapPackages:function(datapackage1,datapackage2){
 		
@@ -1314,7 +1316,14 @@ var Declaration = Backbone.Model.extend({
 		return this.selectors.match(dataelement);
 	},
 	initialize:function(attributes,options){
-		this.selectors=new SetOfSelector( options.selectors||[] );
+		options=options||{};
+		if( options.mcssSelector ){
+			var p= mCSS._parser.parse( options.mcssSelector , "selectors" );
+			this.selectors=new SetOfSelector( p );
+		}else{
+			this.selectors=new SetOfSelector( options.selectors||[] );
+		}
+		
 		if(!this.getStamp())
 			this.stamp=this.generateStamp();
 	},
@@ -1340,9 +1349,6 @@ var Declaration = Backbone.Model.extend({
 	},
 	generateStamp: function(){
 		return 'dec'+(Declaration.count++);
-	},
-	parse:function(string){
-		//declaration
 	},
 	getStamp:function(){
 		return this.stamp;
@@ -1474,6 +1480,7 @@ var Sheet = Backbone.Collection.extend({
 		return c;
 	},
 	
+	
 	syntaxChecker:function(key,value){
 		switch(key){
 			case 'strocke-color' :
@@ -1517,6 +1524,8 @@ var Sheet = Backbone.Collection.extend({
 
 Sheet.syntaxChecker=Sheet.prototype.syntaxChecker;
 Sheet.getPatterns=Sheet.prototype.getPatterns;
+
+Sheet.Declaration=Declaration;
 
 return Sheet;
 })();
@@ -1688,6 +1697,37 @@ $(document).ready(function(){
 
 if(!Backbone.$)Backbone.$=window.jQuery;
 
+var Util={
+
+computeIntersectElement:function(elements){
+	var intersect={
+		'name':null,
+		'classes':{},
+		'type':null,
+	};
+	if( elements.length==0 )
+		return intersect;
+		
+	for( var c in elements[0].get('classes') )
+		intersect.classes[c]=true;
+	intersect.name = elements[0].get('name');
+	intersect.type = elements[0].type;
+	
+	for(var i=1;i<elements.length;i++){
+		for( var c in intersect.classes )
+			if( !elements[i].get('classes')[c] ){
+				intersect.classes[c]=null;
+				delete intersect.classes[c];
+			}
+		intersect.name=null;
+		if(intersect.type!=elements[i].type)
+			intersect.type=null;
+	}
+	
+	return intersect;
+},
+
+};
 
 
 var ViewLeafletMap= (function(){
@@ -2617,7 +2657,7 @@ var ViewPackage = Backbone.View.extend({
 	
 	
 	var viewPackageInfo=new ViewPackageInfo({'model':this.model,'middledata':this.middledata});
-	var title=$('<span>Hello<button type="button" class="close">×</button></span>')
+	var title=$('<span>Hello<button type="button" class="close">&times;</button></span>')
 		
 	pop
 	.popover({	"title": title ,
@@ -2974,8 +3014,6 @@ var ViewResultInfo = Backbone.View.extend({
   },
 });
 
-
-
 var ViewAttributes = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
@@ -3063,7 +3101,7 @@ var ViewAttributes = Backbone.View.extend({
   finishNewClass:function(element,prevValue){
 	var cmds=[];
 	var className=element.text();
-	if( className == "" ){
+	if( className == "" || !className.match( /[a-z]/ ) ){
 		this.render();
 		return;
 	}
@@ -3089,6 +3127,9 @@ var ViewPropertyStack = Backbone.View.extend({
   tagName:'div',
   toolmodel:null,
   middledata:null,
+  events:{
+	"click [data-contain=new-property]" : "newProperty",
+  },
   initialize: function(option) {
   
 	this.toolmodel=option.toolmodel;
@@ -3099,7 +3140,114 @@ var ViewPropertyStack = Backbone.View.extend({
 	this.listenTo( this.model , "add" , this.addOne  );
 	this.listenTo( this.model , "reset" , this.addAll  );
 	
+	this.listenTo( this.middledata , "change:elementSelected" , this.proposeSelector  );
+	
 	this.addAll();
+	
+	this.proposeSelector();
+  },
+  newProperty:function(){
+	 
+	 var sel=this.$el.find('[data-contain=selector]');
+	 
+	 if( sel.find( '.css-condition').length <= 1 )
+		return;
+	 
+	 var plus=sel.find( '.css-condition:last').detach();
+	 
+	 var property=new DatamCSS.Declaration({},{'mcssSelector': sel.text() } );
+	 
+	  plus.appendTo(sel);
+	 
+	
+	
+	 cmd.execute( cmd.AddOrDelete.create( this.model , 'add' , 'delete' , property ) );
+	 
+  },
+  proposeSelector:function(){
+	var intersection=Util.computeIntersectElement( this.middledata.elementSelected );
+	
+	var sel=this.$el.find('[data-contain=selector]')
+	.empty();
+	
+	//type
+	if( intersection.type )
+		sel.append( 
+			$('<span>'+ intersection.type +'</span>')
+			.addClass('css-condition')
+			.addClass('css-tag')
+		);
+	
+	//id
+	if( intersection.name )
+		sel.append( 
+			$('<span>#'+ intersection.name +'</span>')
+			.addClass('css-condition')
+			.addClass('css-id')
+		);
+		
+	//class
+	if( intersection.classes )
+		for(var c in intersection.classes )
+			sel.append( 
+				$('<span>.'+ c +'</span>')
+				.addClass('css-condition')
+				.addClass('css-class')
+			);
+	
+	
+	sel.find('.css-condition')
+	.smartlyEditable( {'correcter':this.correcter , 'finish':$.proxy(this.finish,this) } ); 
+	
+	$('<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;</span>')
+	.smartlyEditable( {'correcter':this.correcter , 'finish':$.proxy(this.finishNew,this) } )
+	.addClass('css-condition')
+	.appendTo( sel );
+	
+  },
+  finish:function(element,prevValue){
+	 element
+	 .removeClass('css-class')
+	 .removeClass('css-tag')
+	 .removeClass('css-id')
+	 .removeClass('css-attribute')
+	 
+	 var value=element.text();
+	 
+	 if(value.length==0 || ( value.length==1 && ( value[0]=='+' || !value.match( /[a-z]/ ) ) ) ){
+		
+		element.remove();
+		
+		return;
+	 }
+	 
+	 switch( value[0] ){
+		case '.' :
+			element.addClass('css-class');
+		break;
+		case '#' :
+			element.addClass('css-id');	
+		break;
+		case '[' :
+			element.addClass('css-attribute');
+		break;
+		default:
+			element.addClass('css-tag');
+			element.detach().prependTo( this.$el.find('[data-contain=selector]') );
+		break;
+	}
+	
+  },
+  finishNew:function(element,prevValue){
+	this.finish(element,prevValue);
+	
+	$('<span>&nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;&nbsp;</span>')
+	.smartlyEditable( {'correcter':this.correcter , 'finish':$.proxy(this.finishNew,this) } )
+	.addClass('css-condition')
+	.appendTo( this.$el.find('[data-contain=selector]') );
+  },
+  correcter:function(v){
+	return v.trim().toLowerCase().replace(/ /g,"-");
   },
   addOne:function(declaration){
 	 this.$el.find('[data-contain=stack]').append( new ViewProperty({ 'model':declaration , 'mcssdata':this.model}).$el );
@@ -3138,6 +3286,9 @@ ViewProperty = Backbone.View.extend({
 	this.$el
 	.empty()
 	.append( this.model.toHTML() );		//append the property from the data
+	
+	this.$el.find('.css-declaration')
+	.prepend( $('<button type="button" class="close">&times;</button>') );
 	
 	for(var i=0;i<this._missSpell.length;i++){		//append the invalid properties, they are waiting for correction
 		var prop=$("<span>").addClass("css-property").addClass('invalid');
