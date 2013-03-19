@@ -797,6 +797,7 @@ extend( WorldMap , {
 			center:new L.LatLng(40,-10),
 			zoom:3,
 			maxZoom:7,
+			scrollWheelZoom:false,
 			maxBounds:new L.LatLngBounds(new L.LatLng(-83.7,-180), new L.LatLng(83.7,180))
 		});
 		el.detach()
@@ -968,6 +969,7 @@ var WorldMap2=Backbone.View.extend({
 			center:new L.LatLng(40,-10),
 			zoom:3,
 			maxZoom:7,
+			scrollWheelZoom:false,
 			maxBounds:new L.LatLngBounds(new L.LatLng(-83.7,-180), new L.LatLng(83.7,180))
 		});		//init the lfe
 		

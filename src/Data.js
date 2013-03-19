@@ -2164,6 +2164,11 @@ _.extend( AdaptLeafletElement.prototype,{
 		var JSONstyle = {
 			strocke:false,
 			pattern:false,
+			patternPath:this.mcssdata.getPatterns()[ 'dot' ],
+			patternOpacity:1,
+			patternColor:'#000000',
+			patternSize:10,
+			patternScale:0.5,
 			};
 		for( var p in mergedStyle ){
 			var value = mergedStyle[ p ];
