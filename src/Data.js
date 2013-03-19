@@ -794,8 +794,14 @@ var AbstractDataElement = Backbone.Model.extend({
 	generateStamp: function(){
 		return 'obj'+(AbstractDataElement.count++);
 	},
-    initialize: function() {
-	  this.stamp=this.generateStamp();
+    initialize: function(attr,options) {
+	  options=options||{};
+	  if( options.stamp ){
+		 var id=parseInt( options.stamp.substr(3));
+		 AbstractDataElement.count=id+1;
+		 this.stamp=options.stamp;
+	  }else
+		this.stamp=this.generateStamp();
 	  if(!this.get('name'))
 		this.set({'name':this.getStamp()});
     },
@@ -831,15 +837,35 @@ AbstractDataElement.count=0;
 
 var DataMap = AbstractDataElement.extend({
     children:null,
-	
 	defaults: _.extend({
       
     }, AbstractDataElement.prototype.defaults() ),
 	initialize: function(attr,options) {
+		options=options||{};
 		DataMap.__super__.initialize.call(this,attr,options);
 		this.children=new Backbone.Collection();
 		this.children.model=DataPackage;
 		this.type='map';
+		
+		if( options.children )
+			for(var i=0;i<options.children.length;i++){
+				var p=options.children[i];
+				var name=p.name;
+				var classes=p.classes;
+				var attributes=p.attributes;
+				var children=p.children;
+				
+				var dpackage=new DataPackage({
+					'name' : name,
+					'classes': classes,
+					'attributes': attributes
+				},
+				{
+					'children' : children,
+				});
+				
+				this.addElement( dpackage );
+			}
 	},
 	addPackage:function(datapackage,options){
 		options=options||{};
@@ -893,10 +919,32 @@ var DataPackage = AbstractDataElement.extend({
 		return index;
 	},
 	initialize: function(attr,options) {
+		options=options||{};
 		DataPackage.__super__.initialize.call(this,attr,options);
 		this.type='package';
 		this.children=new Backbone.Collection();
 		this.children.model=AbstractDataElement;
+		
+		if( options.children )
+			for(var i=0;i<options.children.length;i++){
+				var p=options.children[i];
+				var name=p.name;
+				var classes=p.classes;
+				var attributes=p.attributes;
+				var type=p.type;
+				switch( type ){
+					case 'polygon':
+						var structure=p.structure;
+						var delement=new DataPolygon({
+							'name' : name,
+							'classes': classes,
+							'attributes': attributes,
+							'structure':structure,
+						});
+					break;
+				}
+				this.addElement( delement );
+			}
 	},
 	addElement:function(el,options){
 		options=options||{};

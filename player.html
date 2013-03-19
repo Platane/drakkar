@@ -1,0 +1,382 @@
+<html>
+	<head>
+		
+		<!--
+		<link rel="stylesheet" href="external/KNACSS-master/css/knacss-garni.css" />
+		<link rel="stylesheet" href="external/KNACSS-master/css/knacss.css" />
+		-->
+			
+		<link rel="stylesheet" href="external/leaflet/leaflet.css" />
+		<link rel="stylesheet" href="external/bootstrap/css/bootstrap.css" />
+		<link rel="stylesheet" href="src/CSS/editorPanel.css" />
+		<link rel="stylesheet" href="src/CSS/propertyStack.css" />
+		<link rel="stylesheet" href="src/CSS/elementInfo.css" />
+		<link rel="stylesheet" href="src/CSS/timeLine.css" />
+		<link rel="stylesheet" href="src/CSS/layerMgr.css" />
+		<link rel="stylesheet" href="src/CSS/attributeMgr.css" />
+		<link rel="stylesheet" href="src/CSS/structure.css" />
+		<link rel="stylesheet" href="src/CSS/chunk.css" />
+		
+		
+		
+		<script type="text/javascript" src="external/h5utils.js"></script>
+		<script type="text/javascript" src="external/jquery.min.js"></script>
+		<script type="text/javascript" src="external/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="external/bootstrap/js/bootstrap.js"></script>
+		<script type="text/javascript" src="external/leaflet/leaflet-src.js"></script>
+		<script type="text/javascript" src="external/Iris/iris.js"></script>
+		<script type="text/javascript" src="external/underscore.js"></script>
+		<script type="text/javascript" src="external/backbone.js"></script>
+		<script type="text/javascript" src="external/markdown.js"></script>
+		<script type="text/javascript" src="external/clipper_unminified.js"></script>
+		
+		
+
+		<script type="text/javascript" src="src/jquery.smarttextinput.js"></script>
+		<script type="text/javascript" src="src/jquery.linkable.js"></script>
+		<script type="text/javascript" src="src/leaflet.patternpolygon.js"></script>
+		
+		<script type="text/javascript" src="src/MapCSS/MapCSSParser.js"></script>
+		<script type="text/javascript" src="src/MapCSS/mapCSS.js"></script>
+		<script type="text/javascript" src="src/country.js"></script>
+		
+		<script type="text/javascript" src="src/data.js"></script>
+		<script type="text/javascript" src="src/browser.js"></script>
+		
+		<script type="text/javascript" src="src/Command.js"></script>
+		<script type="text/javascript" src="src/Component.js"></script>
+		
+		<script type="text/javascript" src="src/player.js"></script>
+		<script type="text/javascript">
+			
+			window.onload = function(){
+				
+				
+				var element=$("#container");
+				var datamap={};
+				var mcss
+				var presentation
+				new Player( element,datamap,mcss,presentation );
+			}
+		</script>
+		
+	</head>
+	
+	
+	
+	
+	<body>
+	
+		
+		
+	<!--Menu latéral glissant-->	
+		<nav id="frame-navigator">
+		<input type="checkbox" checked="checked" ></input>
+		<div class="BoxMenu" style="top: 200px;">  
+		   <div class="contenu">  
+			  <div data-action="goto-search" > 
+				 <img src="ressources/img/loupe.png" alt="Menu Principal" width="128" height="128" />  
+			  </div>  
+			</div>  
+		   <div class="txt">Search</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 276px;">  
+			<div class="contenu">  
+				<div data-action="goto-data" >
+				<img src="ressources/img/data.png" alt="Menu Principal" width="128" height="128" />  	
+				</div>
+			</div>  
+			<div class="txt">Data</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 352px;">  
+			<div class="contenu">  
+				<div data-action="goto-decoration" >
+					<img src="ressources/img/edit.png" alt="Menu Principal" width="128" height="128"/>
+				</div>  
+			</div>  
+			<div class="txt">Decoration</div>  
+		</div>  
+		
+		<div class="BoxMenu" style="top: 428px;">  
+			<div class="contenu">  
+				<div data-action="goto-presentation" >
+				<img src="ressources/img/presentation.png" alt="Menu Principal" width="128" height="128"/>
+				</div>
+			</div>  
+			<div class="txt">Presentation</div>  
+		</div>  
+	
+	
+			
+		</nav>
+		
+		
+		
+		
+	<!--Trombone windows viking -->	
+		<div id="guide">
+			
+			<div id="guide-portrait">
+			</div>
+			<div class="alert in fade">
+				<button type="button" class="close" >&times;</button>
+				<h4>Hello!</h4>
+					Please to meet you, i am here to guide u
+			</div>
+		</div>
+		
+		<div id="flow">
+		
+		
+		<div id="frame-header" class="frame" >
+		
+		<a id="myanchor">anchor</a>
+		
+		</div>
+		
+		
+		<div class="container-fluid">
+		
+		<div id="frame-search" class="frame fullscreen">
+			<div class="row-fluid frame-blank-top" ></div>
+			<div class="row-fluid frame-blank-top-compl" >
+				<div>
+					<div class="row-fluid">
+						<div class="height11">
+							<div class="offset1 span5 height12 row-fluid">
+								<div class="height10 row-fluid">
+									<div class="height1"></div>	<!-- kind of offset -->
+									<div class="height11" style="max-height:470px" data-component="WorldMap" ></div>
+								</div>
+								<div class="height2 row-fluid">
+									<div class="height12" data-component="TimeLine" ></div>
+								</div>
+							</div>
+							
+							<div class="offset1 span5 height12" data-component="TagQuery" >
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="height1">
+						<div class="height12 offset5 span2" data-component="Go"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="frame-result" class="frame height10 hidden">
+			<div class="row-fluid frame-blank-top" ></div>
+			<div class="row-fluid frame-blank-top-compl" >
+				<div class="row-fluid height8" >
+					<div class="row-fluid height1" ></div>
+					<div class="height11" data-component="PackageInfo"></div>
+				</div>
+				<div class="row-fluid height4" >
+					<div class="offset1 span10 height12" data-component="Results" >
+						<div id="list-result" ></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="frame-data" class="frame fullscreen">
+			<div class="row-fluid frame-blank-top" ></div>
+			<div class="row-fluid frame-blank-top-compl" >
+				<div class="row-fluid height10" >
+					<div class="row-fluid height1" ></div>
+					<div class="row-fluid height11" >
+						<div class="span7 height12" data-component="Map"></div>
+						<div class="span2 height6" data-component="ViewPackages"></div>
+						<div class="span3 height12" >
+							<div class="row-fluid" >
+								<div class="offset5 span7 height5" data-component="Tool"></div>
+							</div>
+							<div class="row-fluid" ><div class="height1"></div></div><!-- kind of offset -->
+							<div class="row-fluid" >
+								<div class="span12 height6" data-component="ToolParam"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row-fluid" >
+					<div class="height2" data-component="AttributeMgr"></div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="frame-decoration" class="frame fullscreen">
+			<div class="row-fluid frame-blank-top" ></div>
+			<div class="row-fluid frame-blank-top-compl" >
+				<div class="row-fluid height10" >
+					<div class="row-fluid height1" ></div>
+					<div class="row-fluid height11" >
+						<div class="span5 height12" style="max-height:470px" data-component="Map"></div>
+						<div class="span2 height6" data-component="ViewPackages"></div>
+						<div class="offset1 span4 height12" data-component="PropertyStack" ></div>
+					</div>
+				</div>
+				<div class="row-fluid" >
+					<div class="height2" data-component="AttributeMgr"></div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="frame-presentation" class="frame fullscreen">
+			<div class="row-fluid frame-blank-top" ></div>
+			<div class="row-fluid frame-blank-top-compl" >
+				<div class="row-fluid height1" ></div>
+				<div class="row-fluid height10" >
+					<div class="span7 height12" >
+						<div class="row-fluid">
+							<div class="span8 height10" data-component="Map" ></div>
+							<div class="span4 height6" data-component="ViewPackages" ></div>
+						</div>
+					</div>
+					<div class="span5 height12" >
+						<div class="row-fluid height2" ></div>
+						<div class="row-fluid height9 span12" data-component="FinalUserPanel" ></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		</div>
+		
+		<div id="frame-footer" class="frame">
+			
+		</div>
+		
+		
+		</div>
+		
+		
+		
+		<!-- <div class="container-fluid" style="background-color:rgba(255,255,255,0.8);z-index:-50;position:fixed;margin-left:auto;margin-right:auto;" ></div> -->
+		
+		<div id="background-pool" style="position:absolute;top:0px;z-index:-99;width:100%;height:100%;" >
+			<div id="background-map" class="flat" data-deep="0.08" style="background-image:url('ressources/background/background-map.png');"></div>
+			<div id="background-cloud" class="flat" data-deep="0.18" style="background-image:url('ressources/background/background-cloud.png');"></div>
+			<svg data-deep="0.4">
+				<path d="M0,0L30,100L-50,150L-10,300L30,400,L50,420L20,500Z"></path>
+			</svg>
+		</div>
+		
+		
+	</body>
+	
+	<script type="text/template" id="item-result-info-template">
+		<div data-contain="map" style="width:200px;height:200px;"></div>
+		<h1 data-contain="name"></h1>
+		<h5><span>@</span><span data-contain="author"></span></h5>
+		<a href="http://gravatar.com" target="_blank" ><img src=""></img></a>
+		<span data-contain="description"></span>
+		<div class="btn">add</div>
+	</script>
+	<script type="text/template" id="item-result-template">
+			<h4 data-contain="name"></h4>
+			<span>@</span><span data-contain="author"></span>
+	</script>
+	
+	<script type="text/template" id="panel-package-template">
+			<table>
+			</table>
+			<div class="btn" data-contain="trash-all">del all</div>
+			<div class="btn" data-contain="new-package">new</div>
+	</script>
+	<script type="text/template" id="item-package-template">
+		      <td><a class="icon-eye-open" data-contain="visible" ></a></td>
+			  <td><span data-contain="name" ></span></td>
+		      <td><a data-contain="trash" class="icon-trash"></a></td>
+		      <td><a data-contain="swap-up" class="icon-chevron-up"></a></td>
+		      <td><a data-contain="swap-down" class="icon-chevron-down"></a></td>
+		      <td><a data-contain="pop" class="icon-info-sign"></a></td>
+	</script>
+	<script type="text/template" id="item-package-info-template">
+		      <div data-contain="name"></div>
+			  <div data-contain="description" style="min-height:80px;border:solid 1px #ccc;" ></div>
+			  <table data-contain="elements"></table>
+	</script>
+	<script type="text/template" id="item-package-info-element-template">
+			  <td><span data-contain="name-element" /></td>
+		      <td><a data-contain="trash-element" class="icon-trash"></a></td>
+	</script>
+	
+	<script type="text/template" id="panel-attributes-template">
+		      <span>
+				<span class="label"> name :</span>
+				<span data-contain="name"></span>
+			 </span>
+			 <span>
+				<span class="label"> class :</span>
+				<span data-contain="class"></span>
+			 </span>
+	</script>
+	
+	
+	<script type="text/template" id="panel-property-stack-template">
+		<div>
+			<div class="accordion-group">
+				<div class="accordion-toggle btn" data-toggle="collapse" data-target="#collapse-new-property" >new..</div>
+				
+				<!--
+				<div class="accordion-heading">
+				  
+				</div>
+				-->
+				<div id="collapse-new-property" class="accordion-body collapse">
+					<div class="accordion-inner">
+						<span data-contain="selector" ></span>
+						<div class="btn" data-contain="new-property" >new</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-contain="stack">
+		</div>
+	</script>
+	
+	
+	<script type="text/template" id="panel-chunk-template">
+		<div>
+			<div class="btn" data-contain="addChunk">new</div>
+		</div>
+		<div>
+			<div style="position:absolute;">
+				<canvas style="position:absolute;z-index:-5"></canvas>
+				<div data-contain="list-chunk"></div>
+			</div>
+		</div>
+	</script>
+	<script type="text/template" id="item-chunk-template">
+		<input type='checkbox' checked="checked" ></input>
+		<span data-contain="name-chunk"></span>
+		<a data-contain="tic-intersection" class='icon-fire'></a>
+		<a data-contain="trash-chunk" class="icon-trash"></a>
+		<!--<a data-contain="tic-dependancy" class='icon-leaf'></a>-->
+		<table data-contain="list-package">
+		</table>
+	</script>
+	<script type="text/template" id="item-package-chunk-template">
+			  <td><span data-contain="name-package" /></td>
+		      <td><a data-contain="trash-package" class="icon-trash"></a></td>
+	</script>
+	
+	
+	<script type="text/template" id="data-tool-panel-template">
+			 <div class="btn" data-contain="add-polygon">add polygon</div>
+			 <div class="btn" data-contain="remove-element">remove</div>
+			 <div class="btn" data-contain="edit-element">edit</div>
+			 <div class="btn" data-contain="validate">valide</div>
+			 <div>
+			 <div class="btn" data-contain="intersection">Intersection</div>
+			 <div class="btn" data-contain="union">Union</div>
+			 <div class="btn" data-contain="xor">Xor</div>
+			 </div>
+	</script>
+	
+</html>
